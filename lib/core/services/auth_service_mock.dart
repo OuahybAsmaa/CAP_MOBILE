@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../../features/auth/models/collaborateur_model.dart';
+import '../api/api_constants.dart';
 
 class AuthServiceMock {
   // faire une simualtion avec des donnes mocker

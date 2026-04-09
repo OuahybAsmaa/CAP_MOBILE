@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../features/auth/models/collaborateur_model.dart';
 import 'dart:io';
+import '../api/api_constants.dart';
 
 class AuthService {
-  static const String _baseUrl = 'https://digitalapi.monchaussea.com/store-api';
+  static const String _baseUrl = ApiConstants.baseUrl;
 
   Future<CollaborateurModel> getCollaborateur(String codeCollab) async {
     final uri = Uri.parse('$_baseUrl/api/collaborateurs/$codeCollab/');

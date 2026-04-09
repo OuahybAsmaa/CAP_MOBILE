@@ -56,32 +56,26 @@ class MainActivity : FlutterActivity(),
         }
     }
 
-    // ✅ Intercepter bouton TC52
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == 103 && event?.repeatCount == 0) {
             android.util.Log.d("RFID_DEBUG", "🔑 Bouton TC52 pressé!")
 
             Thread {
                 try {
-                    // ✅ Étape 1 : Préparer capture
                     singleReadDone = false
 
-                    // ✅ Étape 2 : Notifier Flutter → Flutter appelle readSingleTag()
-                    // readSingleTag() va setter singleReadResult
                     mainHandler.post {
                         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
                             MethodChannel(messenger, METHOD_CHANNEL).invokeMethod("onScanButton", null)
                         }
                     }
 
-                    // ✅ Étape 3 : Attendre que readSingleTag() soit prêt (max 1 sec)
                     var waited = 0
                     while (singleReadResult == null && waited < 10) {
                         Thread.sleep(100)
                         waited++
                     }
 
-                    // ✅ Étape 4 : Démarrer inventory
                     if (singleReadResult != null && !singleReadDone && rfidReader != null) {
                         rfidReader!!.Actions.Inventory.perform()
                         android.util.Log.d("RFID_DEBUG", "▶️ Inventory démarré via bouton TC52")

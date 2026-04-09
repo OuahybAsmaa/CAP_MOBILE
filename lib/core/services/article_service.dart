@@ -2,12 +2,25 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../features/article/models/article_model.dart';
+import '../api/api_constants.dart';
 
 class ArticleService {
-  static const String _baseUrl = 'https://digitalapi.monchaussea.com/store-api';
+  static const String _baseUrl = ApiConstants.baseUrl;
+
+  String _extractGencode(String scannedValue) {
+    try {
+      final uri = Uri.parse(scannedValue);
+      if (uri.hasScheme) {
+        final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+        return segments.last;
+      }
+    } catch (_) {}
+    return scannedValue;
+  }
 
   Future<ArticleModel> getArticle(String gencode) async {
-    final uri = Uri.parse('$_baseUrl/api/articles/$gencode/');
+    final cleanedGencode = _extractGencode(gencode);
+    final uri = Uri.parse('$_baseUrl/api/articles/$cleanedGencode/');
 
     try {
       final response = await http.get(
@@ -23,7 +36,7 @@ class ArticleService {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         return ArticleModel.fromJson(json);
       } else if (response.statusCode == 404) {
-        throw Exception('Article introuvable (gencode: $gencode)');
+        throw Exception('Article introuvable (gencode: $cleanedGencode)');
       } else {
         throw Exception('Erreur serveur: ${response.statusCode}');
       }
@@ -34,7 +47,7 @@ class ArticleService {
     }
   }
 
-  String getPhotoUrl(String gencode) {
-    return '$_baseUrl/image/produit/$gencode.jpg';
+  String getPhotoUrl(String codeMod) {
+    return '$_baseUrl/api/image/produit/$codeMod.jpg';
   }
 }
