@@ -68,6 +68,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
         ref.read(rfidProvider.notifier).loadAvailableReaders();
       }
       ref.read(rfidProvider.notifier).clearScannedTag();
+      ref.read(rfidServiceProvider).reinitHandler();
     });
 
     final rfidService = ref.read(rfidServiceProvider);

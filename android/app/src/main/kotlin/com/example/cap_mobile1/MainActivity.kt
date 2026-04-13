@@ -22,6 +22,12 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.content.Context
 
 class MainActivity : FlutterActivity(),
     Readers.RFIDReaderEventHandler,
@@ -192,6 +198,8 @@ class MainActivity : FlutterActivity(),
                 rfidReader!!.Events.addEventsListener(this@MainActivity)
                 rfidReader!!.Events.setTagReadEvent(true)
                 rfidReader!!.Events.setReaderDisconnectEvent(true)
+                rfidReader!!.Events.setHandheldEvent(true)
+                rfidReader!!.Events.setHandheldEvent(true)
 
                 // ✅ Configurer RFD40P pour accepter trigger logiciel depuis TC52
                 try {
@@ -312,7 +320,6 @@ class MainActivity : FlutterActivity(),
                 }
                 val bytesArray = dataBytes.toByteArray()
                 val wordCount = bytesArray.size / 2
-                android.util.Log.d("RFID_DEBUG", "bytes=${bytesArray.size} words=$wordCount")
 
                 val writeParams = rfidReader!!.Actions.TagAccess.WriteAccessParams()
                 writeParams.accessPassword = 0
@@ -324,7 +331,6 @@ class MainActivity : FlutterActivity(),
                     val field = writeParams.javaClass.getDeclaredField("m_nWriteDataLength")
                     field.isAccessible = true
                     field.set(writeParams, wordCount)
-                    android.util.Log.d("RFID_DEBUG", "m_nWriteDataLength = $wordCount ✅")
                 } catch (e: Throwable) {
                     android.util.Log.e("RFID_DEBUG", "Réflexion erreur: ${e.message}")
                 }
@@ -333,19 +339,115 @@ class MainActivity : FlutterActivity(),
                 rfidReader!!.Actions.TagAccess.writeWait(tagId, writeParams, null, null)
 
                 android.util.Log.d("RFID_DEBUG", "✅ Tag écrit: $tagId → $data")
+
+                // ✅ Succès — bip OK
+                beepSuccess()
+
                 mainHandler.post { result.success("Tag écrit avec succès") }
 
             } catch (e: com.zebra.rfid.api3.InvalidUsageException) {
                 android.util.Log.e("RFID_DEBUG", "InvalidUsageException: ${e.info}")
+                // ✅ Échec — bip KO + vibration
+                beepError()
+                vibrateError()
                 mainHandler.post { result.error("WRITE_ERROR", "Erreur: ${e.info}", null) }
+
             } catch (e: com.zebra.rfid.api3.OperationFailureException) {
                 android.util.Log.e("RFID_DEBUG", "OperationFailureException: ${e.results}")
+                // ✅ Échec — bip KO + vibration
+                beepError()
+                vibrateError()
                 mainHandler.post { result.error("WRITE_ERROR", "Écriture échouée — gardez la puce proche du lecteur", null) }
+
             } catch (e: Throwable) {
                 android.util.Log.e("RFID_DEBUG", "writeTag erreur: ${e.message}", e)
+                // ✅ Erreur inattendue — bip KO + vibration
+                beepError()
+                vibrateError()
                 mainHandler.post { result.error("WRITE_ERROR", e.message ?: "Erreur", null) }
             }
         }.start()
+    }
+
+    private fun triggerDataWedgeScan(start: Boolean) {
+        try {
+            val intent = android.content.Intent()
+            intent.action = "com.symbol.datawedge.api.ACTION"
+            intent.putExtra(
+                "com.symbol.datawedge.api.SOFT_SCAN_TRIGGER",
+                if (start) "START_SCANNING" else "STOP_SCANNING"
+            )
+            sendBroadcast(intent)
+            android.util.Log.d("RFID_DEBUG",
+                if (start) "📷 DataWedge START" else "📷 DataWedge STOP")
+        } catch (e: Throwable) {
+            android.util.Log.e("RFID_DEBUG", "DataWedge erreur: ${e.message}")
+        }
+    }
+
+    // ✅ Bip succès — ton aigu court (style scanner)
+    private fun beepSuccess() {
+        Thread {
+            try {
+                val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME)
+
+                // Premier bip court
+                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
+                Thread.sleep(140)
+                toneGen.stopTone()
+                Thread.sleep(60)
+
+                // Deuxième bip plus long = confirmation finale
+                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
+                Thread.sleep(340)
+                toneGen.stopTone()
+
+                toneGen.release()
+            } catch (_: Throwable) {}
+        }.start()
+    }
+
+    // ✅ Bip échec — ton grave répété (style erreur)
+    private fun beepError() {
+        Thread {
+            try {
+                // ✅ Deux bips descendants graves — style "erreur scanner pro"
+                val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME)
+
+                toneGen.startTone(ToneGenerator.TONE_CDMA_SOFT_ERROR_LITE, 300)
+                Thread.sleep(350)
+                toneGen.stopTone()
+                Thread.sleep(80)
+
+                toneGen.startTone(ToneGenerator.TONE_CDMA_SOFT_ERROR_LITE, 300)
+                Thread.sleep(350)
+                toneGen.stopTone()
+
+                toneGen.release()
+            } catch (_: Throwable) {}
+        }.start()
+    }
+
+    // ✅ Vibration erreur
+    private fun vibrateError() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                val vibrator = vm.defaultVibrator
+                vibrator.vibrate(
+                    VibrationEffect.createOneShot(1500, 255)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(1500, 255))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(1500)
+                }
+            }
+        } catch (_: Throwable) {}
     }
 
     override fun eventReadNotify(e: RfidReadEvents?) {
@@ -374,11 +476,72 @@ class MainActivity : FlutterActivity(),
     }
 
     override fun eventStatusNotify(e: RfidStatusEvents?) {
-        android.util.Log.d("RFID_DEBUG", "📡 Status: ${e?.StatusEventData?.statusEventType}")
-        if (e?.StatusEventData?.statusEventType == STATUS_EVENT_TYPE.DISCONNECTION_EVENT) {
-            mainHandler.post {
-                eventSink?.success(mapOf("event" to "disconnected"))
+        val eventType = e?.StatusEventData?.statusEventType
+        android.util.Log.d("RFID_DEBUG", "📡 Status: $eventType")
+
+        when (eventType) {
+            STATUS_EVENT_TYPE.DISCONNECTION_EVENT -> {
+                mainHandler.post {
+                    eventSink?.success(mapOf("event" to "disconnected"))
+                }
             }
+
+            STATUS_EVENT_TYPE.HANDHELD_TRIGGER_EVENT -> {
+                val triggerData = e?.StatusEventData?.HandheldTriggerEventData
+
+                when (triggerData?.handheldEvent) {
+
+                    com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_PRESSED -> {
+                        android.util.Log.d("RFID_DEBUG", "🔫 RFD40 Trigger PRESSED")
+
+                        Thread {
+                            try {
+                                singleReadDone = false
+
+                                mainHandler.post {
+                                    flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+                                        MethodChannel(messenger, METHOD_CHANNEL)
+                                            .invokeMethod("onScanButton", null)
+                                    }
+                                }
+
+                                var waited = 0
+                                while (singleReadResult == null && waited < 10) {
+                                    Thread.sleep(100)
+                                    waited++
+                                }
+
+                                if (singleReadResult != null && !singleReadDone && rfidReader != null) {
+                                    // ✅ Mode RFID
+                                    rfidReader!!.Actions.Inventory.perform()
+                                    android.util.Log.d("RFID_DEBUG", "▶️ Inventory démarré via trigger RFD40")
+                                } else {
+                                    // ✅ Mode DataWedge — simuler appui bouton TC52 via broadcast
+                                    android.util.Log.d("RFID_DEBUG", "➡️ Mode DataWedge — simulation bouton TC52")
+                                    mainHandler.post {
+                                        triggerDataWedgeScan(true)
+                                    }
+                                }
+
+                            } catch (_: Throwable) {}
+                        }.start()
+                    }
+
+                    com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_RELEASED -> {
+                        android.util.Log.d("RFID_DEBUG", "🔫 RFD40 Trigger RELEASED")
+                        // ✅ Arrêter DataWedge si on était en mode scan code-barres
+                        if (singleReadResult == null) {
+                            mainHandler.post {
+                                triggerDataWedgeScan(false)
+                            }
+                        }
+                    }
+
+                    else -> {}
+                }
+            }
+
+            else -> {}
         }
     }
 

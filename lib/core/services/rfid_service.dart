@@ -9,6 +9,15 @@ class RfidService {
   Function()? onScanButtonPressed;
 
   RfidService() {
+    _initHandler();
+  }
+
+  // Appeler ceci après chaque login
+  void reinitHandler() {
+    _initHandler();
+  }
+
+  void _initHandler() {
     _methodChannel.setMethodCallHandler((call) async {
       if (call.method == 'onScanButton') {
         onScanButtonPressed?.call();

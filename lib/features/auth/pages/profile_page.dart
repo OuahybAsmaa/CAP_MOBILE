@@ -58,6 +58,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   @override
   Widget build(BuildContext context) {
     final authState    = ref.watch(authProvider);
+    if (authState.collaborateur == null) {
+      return const SizedBox.shrink();
+    }
     final collab       = authState.collaborateur!;
     final authNotifier = ref.read(authProvider.notifier);
     final photoUrl     = authNotifier.getPhotoUrl(collab.codeCollab);
@@ -210,8 +213,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                               ),
                             ),
                             onPressed: () {
-                              ref.read(authProvider.notifier).logout();
                               Navigator.of(context).pushReplacementNamed('/');
+                              ref.read(authProvider.notifier).logout();
                             },
                           ),
                         ),

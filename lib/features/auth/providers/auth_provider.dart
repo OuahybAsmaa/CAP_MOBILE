@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/auth_service.dart';
+import '../../rfid/providers/rfid_provider.dart';
 import '../models/collaborateur_model.dart';
 //import '../../../core/services/auth_service_mock.dart';
 
@@ -39,9 +40,10 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   //les choses à modifier
  final AuthService _authService;
+ final Ref _ref;
   //final dynamic _authService;
 
-  AuthNotifier(this._authService) : super(const AuthState());
+ AuthNotifier(this._authService, this._ref) : super(const AuthState());
 
   /// Appelé quand DataWedge envoie le code scanné
   Future<void> authenticate(String codeCollab) async {
@@ -66,9 +68,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   String getPhotoUrl(int codeCollab) =>
       _authService.getPhotoUrl(codeCollab);
 
-  void logout() {
-    state = const AuthState();
-  }
+ void logout() {
+   // On capture ref avant de lire le notifier
+   // Déconnecter le lecteur RFID proprement
+   try {
+     _ref.read(rfidProvider.notifier).disconnectReader();
+   } catch (_) {}
+   state = const AuthState();
+ }
 }
 
 // ─── Providers ────────────────────────────────────────────────────────────────
@@ -92,5 +99,5 @@ final authServiceProvider = Provider<dynamic>((ref) {
 final authProvider =
 StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final service = ref.watch(authServiceProvider);
-  return AuthNotifier(service);
+  return AuthNotifier(service, ref); // ← passer ref
 });

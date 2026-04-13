@@ -80,6 +80,7 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   Widget build(BuildContext context) {
     final authState    = ref.watch(authProvider);
+    if (authState.collaborateur == null) return const SizedBox.shrink();
     final collab       = authState.collaborateur!;
     final authNotifier = ref.read(authProvider.notifier);
     final photoUrl     = authNotifier.getPhotoUrl(collab.codeCollab);
@@ -428,8 +429,8 @@ class _HomePageState extends ConsumerState<HomePage>
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   onPressed: () {
-                    ref.read(authProvider.notifier).logout();
                     Navigator.of(context).pushReplacementNamed('/');
+                    ref.read(authProvider.notifier).logout();
                   },
                 ),
               ),

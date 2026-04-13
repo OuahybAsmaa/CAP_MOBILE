@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/rfid_service.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../models/rfid_reader_model.dart';
 
 // ---- État ----
@@ -170,7 +171,13 @@ class RfidNotifier extends StateNotifier<RfidState> {
 }
 
 // ---- Providers ----
-final rfidServiceProvider = Provider<RfidService>((ref) => RfidService());
+final rfidServiceProvider = Provider<RfidService>((ref) {
+  // Dépend de authProvider → se recrée à chaque changement d'auth
+  ref.watch(authProvider.select((s) => s.isAuthenticated));
+  final service = RfidService();
+  service.reinitHandler(); // Handler frais à chaque session
+  return service;
+});
 
 final rfidProvider =
 StateNotifierProvider<RfidNotifier, RfidState>((ref) {
