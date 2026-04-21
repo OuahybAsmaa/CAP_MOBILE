@@ -1,5 +1,3 @@
-/// Modèle représentant un tag RFID lu lors d'un inventaire.
-/// Placez ce fichier dans : features/inventory/models/tag_model.dart
 class TagModel {
   final String epc;
   final int count;
@@ -15,7 +13,7 @@ class TagModel {
     this.tidData = '',
   });
 
-  /// Crée une copie mise à jour lors d'une nouvelle lecture du même tag.
+
   TagModel copyWithNewRead(
       double newRssi, {
         String memoryBankData = '',
@@ -31,6 +29,6 @@ class TagModel {
     );
   }
 
-  /// Affichage formaté du RSSI (ex: -65 dBm)
+  /// Affichage formaté du RSSI
   String get rssiDisplay => '${rssi.toStringAsFixed(0)} dBm';
 }

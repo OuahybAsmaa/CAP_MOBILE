@@ -5,11 +5,7 @@ class EpcCalculator {
     final sg1Code    = gtin.substring(7, 13);
     return _buildEpcFromParts(companyStr, sg1Code, serialHex);
   }
-/*
-  static String buildEpc(String sg1Code, String serialHex) {
-    return _buildEpcFromParts('361758', sg1Code, serialHex);
-  }
-*/
+
   static String _buildEpcFromParts(
       String companyStr, String sg1Code, String serialHex) {
     final header    = '00110000';                          // 8 bits

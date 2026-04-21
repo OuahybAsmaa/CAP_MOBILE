@@ -23,7 +23,7 @@ class InventoryState {
   final List<TagModel> tags;
   final String? error;
 
-  // NOUVEAU
+
   final List<String> availableReaders;
   final String? connectedReader;
   final bool isConnecting;
@@ -102,7 +102,7 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
     }
   }
 
-  // NOUVEAU ── Connexion ──
+
   Future<void> connectToReader(String readerName) async {
     try {
       state = state.copyWith(isConnecting: true, clearError: true);
@@ -121,7 +121,7 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
     }
   }
 
-  // NOUVEAU ── Déconnexion ──
+
   Future<void> disconnectReader() async {
     try {
       await _service.disconnect();

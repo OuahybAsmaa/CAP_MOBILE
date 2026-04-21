@@ -286,10 +286,10 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Header très réduit ──
+  // ── Header
   Widget _buildHeader() {
     return Container(
-      height: 100, // Réduit de 140 à 100
+      height: 100,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -368,7 +368,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Carte étape très réduite ──
+  // ── Carte étape
   Widget _buildStepCard({
     required int step,
     required String title,
@@ -386,7 +386,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
           ),
         ],
       ),
-      padding: const EdgeInsets.all(8), // Réduit de 12 à 8
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -428,7 +428,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Sélecteur lecteur très réduit ──
+  // ── Sélecteur lecteur
   Widget _buildReaderSelector(RfidState rfidState, List uniqueReaders, connected) {
     return Column(
       children: [
@@ -566,7 +566,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Sélecteur mode très réduit ──
+  // ── Sélecteur mode
   Widget _buildModeSelector(bool readerConnected) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -708,7 +708,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Carte instruction très réduite ──
+  // ── Carte instruction
   Widget _buildInstructionCard(connected, bool isLoading) {
     if (!_readyToScan) {
       return _InstructionCard(
@@ -748,7 +748,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
 }
 
 // ──────────────────────────────────────────────────────────────
-//  INSTRUCTION CARD (très réduite)
+//  INSTRUCTION CARD
 // ──────────────────────────────────────────────────────────────
 class _InstructionCard extends StatelessWidget {
   final IconData icon;

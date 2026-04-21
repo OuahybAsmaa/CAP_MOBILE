@@ -7,7 +7,7 @@ import '../../rfid/pages/rfid_page.dart';
 import '../../inventory/pages/inventory_page.dart';
 
 // ──────────────────────────────────────────────────────────────
-//  DESIGN TOKENS — cohérents avec WelcomePage
+//  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class _C {
   static const bg          = Color(0xFFDCF4F8);

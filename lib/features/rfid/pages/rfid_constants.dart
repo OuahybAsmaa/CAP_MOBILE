@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // ──────────────────────────────────────────────────────────────
-//  DESIGN TOKENS — partagés entre toutes les pages RFID
+//  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class AppColors {
   static const bg          = Color(0xFFDCF4F8);
@@ -19,7 +19,7 @@ class AppColors {
 }
 
 // ──────────────────────────────────────────────────────────────
-//  MODÈLE MODE RFID — partagé entre RfidPage et RfidEncodingPage
+//  MODÈLE MODE RFID
 // ──────────────────────────────────────────────────────────────
 class RfidMode {
   final String id;

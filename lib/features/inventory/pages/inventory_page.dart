@@ -6,7 +6,7 @@ import '../providers/inventory_provider.dart';
 import 'tags_detail_page.dart';
 
 // ──────────────────────────────────────────────────────────────
-//  DESIGN TOKENS — identiques à HomePage
+//  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class _C {
   static const bg            = Color(0xFFDCF4F8);
