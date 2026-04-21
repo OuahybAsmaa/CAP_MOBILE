@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
+import '../../inventory/pages/inventory_page.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS — cohérents avec WelcomePage
@@ -103,7 +104,16 @@ class _HomePageState extends ConsumerState<HomePage>
         icon: Icons.inventory_2_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
-        available: false,
+        available: true,                        // ← était false
+        onTap: () => Navigator.push(            // ← ajouter onTap
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const InventoryPage(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        ),
       ),
       _Module(
         title: 'Commandes',

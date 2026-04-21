@@ -178,16 +178,31 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     });
 
     try {
-      // Étape 1 — Lire l'EPC usine
-      await ref.read(rfidProvider.notifier).readSingleTag();
+      // Étape 1 — Lire l'EPC usine AVEC timeout
+      await ref.read(rfidProvider.notifier).readSingleTag()
+          .timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Aucune puce détectée (timeout).\nVérifiez que la puce est bien positionnée\nsur le lecteur et réessayez.');
+        },
+      );
+
       final epc = ref.read(rfidProvider).lastScannedTag;
 
-      if (epc == null || epc.isEmpty) {
-        _showError('Aucun tag détecté.\nVérifiez que la puce est bien positionnée\nsur le lecteur et réessayez.');
+      // Étape 2 — Vérifier présence + validité de la puce
+      if (epc == null || epc.trim().isEmpty) {
+        _showError('Aucune puce détectée.\nVérifiez que la puce est bien positionnée\nsur le lecteur et réessayez.');
         return;
       }
 
-      // Étape 2 — Vérifier puce vierge
+      // Puce endommagée : EPC trop court ou non hexadécimal
+      final isValidEpc = RegExp(r'^[0-9A-Fa-f]{16,24}$').hasMatch(epc.trim());
+      if (!isValidEpc) {
+        _showError('Puce endommagée ou illisible.\nEPC invalide détecté : $epc\nUtilisez une puce vierge.');
+        return;
+      }
+
+      // Étape 3 — Vérifier puce vierge
       if (!epc.toUpperCase().startsWith(widget.header.toUpperCase())) {
         _showError('Puce déjà encodée !\nEPC détecté : $epc\nUtilisez une puce vierge.');
         return;
@@ -201,7 +216,14 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       _encodingEntranceCtrl.forward(from: 0);
 
       // Étape 4 — Écrire dans la puce
-      await ref.read(rfidProvider.notifier).writeTag(tagId: epc, data: newEpc);
+      await ref.read(rfidProvider.notifier)
+          .writeTag(tagId: epc, data: newEpc)
+          .timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Échec d\'écriture (timeout).\nLa puce est peut-être endommagée.');
+        },
+      );
 
       // Étape 5 — POST SSE (non bloquant si échec)
       _postSse(

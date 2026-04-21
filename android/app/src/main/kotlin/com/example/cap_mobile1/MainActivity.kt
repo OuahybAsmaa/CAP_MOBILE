@@ -39,6 +39,9 @@ class MainActivity : FlutterActivity(),
     }
 
     private var readersBluetooth: Readers? = null
+
+    private var readersInternal: Readers? = null
+
     private var availableRFIDReaderList: MutableList<ReaderDevice> = mutableListOf()
     private var rfidReader: RFIDReader? = null
     private var eventSink: EventChannel.EventSink? = null
@@ -46,6 +49,7 @@ class MainActivity : FlutterActivity(),
 
     @Volatile private var singleReadResult: MethodChannel.Result? = null
     @Volatile private var singleReadDone = false
+    @Volatile private var inventoryRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +68,7 @@ class MainActivity : FlutterActivity(),
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == 103 && event?.repeatCount == 0) {
-            android.util.Log.d("RFID_DEBUG", "🔑 Bouton TC52 pressé!")
+            android.util.Log.d("RFID_DEBUG", "Bouton TC52 presse!")
 
             Thread {
                 try {
@@ -84,9 +88,9 @@ class MainActivity : FlutterActivity(),
 
                     if (singleReadResult != null && !singleReadDone && rfidReader != null) {
                         rfidReader!!.Actions.Inventory.perform()
-                        android.util.Log.d("RFID_DEBUG", "▶️ Inventory démarré via bouton TC52")
+                        android.util.Log.d("RFID_DEBUG", "Inventory demarre via bouton TC52")
                     } else {
-                        android.util.Log.e("RFID_DEBUG", "❌ readSingleTag pas prêt après attente")
+                        android.util.Log.e("RFID_DEBUG", "readSingleTag pas pret apres attente")
                     }
 
                 } catch (_: Throwable) {}
@@ -119,6 +123,13 @@ class MainActivity : FlutterActivity(),
                     call.argument("data")!!,
                     result
                 )
+                "getBatteryLevel"     -> getBatteryLevel(result)
+                "startInventory"      -> startInventory(result)
+                "stopInventory"       -> stopInventory(result)
+                "configureMemoryBank" -> configureMemoryBank(
+                    call.argument("memoryBank")!!,
+                    result
+                )
                 else -> result.notImplemented()
             }
         }
@@ -136,6 +147,8 @@ class MainActivity : FlutterActivity(),
         })
     }
 
+    // MODIFIE : getAvailableReaders cherche sur BLUETOOTH (sled RFD40)
+    //           ET sur INTERNAL (TC53E et appareils a RFID integre)
     private fun getAvailableReaders(result: MethodChannel.Result) {
         Thread {
             try {
@@ -144,15 +157,50 @@ class MainActivity : FlutterActivity(),
 
                 try { Readers.deattach(this@MainActivity) } catch (_: Throwable) {}
                 try { readersBluetooth?.Dispose() } catch (_: Throwable) {}
+                try { readersInternal?.Dispose() }  catch (_: Throwable) {}
                 readersBluetooth = null
+                readersInternal  = null
                 Thread.sleep(500)
 
-                readersBluetooth = Readers(applicationContext, ENUM_TRANSPORT.BLUETOOTH)
-                val found = readersBluetooth!!.GetAvailableRFIDReaderList()
-                android.util.Log.d("RFID_DEBUG", "BLUETOOTH: ${found?.size ?: 0} lecteur(s)")
-                found?.forEach {
-                    android.util.Log.d("RFID_DEBUG", "  → name=[${it.name}] address=[${it.address}]")
-                    availableRFIDReaderList.add(it)
+                // 1. Recherche Bluetooth (sled RFD40, RFD8500)
+                try {
+                    readersBluetooth = Readers(applicationContext, ENUM_TRANSPORT.BLUETOOTH)
+                    val foundBT = readersBluetooth!!.GetAvailableRFIDReaderList()
+                    android.util.Log.d("RFID_DEBUG", "BLUETOOTH: ${foundBT?.size ?: 0} lecteur(s)")
+                    foundBT?.forEach {
+                        android.util.Log.d("RFID_DEBUG", "  [BT] name=[${it.name}] address=[${it.address}]")
+                        availableRFIDReaderList.add(it)
+                    }
+                } catch (e: Throwable) {
+                    android.util.Log.e("RFID_DEBUG", "Bluetooth scan erreur: ${e.message}")
+                }
+
+                // 2. Recherche tous les transports disponibles (TC53E RFID integre)
+                // On itere sur toutes les valeurs de l'enum ENUM_TRANSPORT pour trouver
+                // le bon transport selon la version du SDK installee sur l'appareil
+                val transportsToTry = try {
+                    ENUM_TRANSPORT::class.java.enumConstants
+                        ?.filter { it != ENUM_TRANSPORT.BLUETOOTH } // Bluetooth deja fait
+                        ?: emptyList()
+                } catch (_: Throwable) { emptyList() }
+
+                for (transport in transportsToTry) {
+                    try {
+                        val readers = Readers(applicationContext, transport)
+                        val found = readers.GetAvailableRFIDReaderList()
+                        android.util.Log.d("RFID_DEBUG", "$transport: ${found?.size ?: 0} lecteur(s)")
+                        found?.forEach {
+                            android.util.Log.d("RFID_DEBUG", "  [$transport] name=[${it.name}] address=[${it.address}]")
+                            if (availableRFIDReaderList.none { existing -> existing.name == it.name }) {
+                                availableRFIDReaderList.add(it)
+                                if (transport != ENUM_TRANSPORT.BLUETOOTH) {
+                                    readersInternal = readers
+                                }
+                            }
+                        }
+                    } catch (e: Throwable) {
+                        android.util.Log.d("RFID_DEBUG", "$transport: non supporte (${e.message})")
+                    }
                 }
 
                 android.util.Log.d("RFID_DEBUG", "=== TOTAL: ${availableRFIDReaderList.size} ===")
@@ -175,7 +223,7 @@ class MainActivity : FlutterActivity(),
     private fun connect(readerName: String, result: MethodChannel.Result) {
         Thread {
             try {
-                android.util.Log.d("RFID_DEBUG", ">>> connect() appelé pour: $readerName")
+                android.util.Log.d("RFID_DEBUG", ">>> connect() appele pour: $readerName")
 
                 try {
                     rfidReader?.Events?.removeEventsListener(this@MainActivity)
@@ -193,7 +241,7 @@ class MainActivity : FlutterActivity(),
                 android.util.Log.d("RFID_DEBUG", "Tentative connect()...")
                 rfidReader = device.rfidReader
                 rfidReader!!.connect()
-                android.util.Log.d("RFID_DEBUG", "✅ connect() terminé")
+                android.util.Log.d("RFID_DEBUG", "connect() termine")
 
                 rfidReader!!.Events.addEventsListener(this@MainActivity)
                 rfidReader!!.Events.setTagReadEvent(true)
@@ -201,7 +249,6 @@ class MainActivity : FlutterActivity(),
                 rfidReader!!.Events.setHandheldEvent(true)
                 rfidReader!!.Events.setHandheldEvent(true)
 
-                // ✅ Configurer RFD40P pour accepter trigger logiciel depuis TC52
                 try {
                     val startTrigger = rfidReader!!.Config.getStartTrigger()
                     val stopTrigger  = rfidReader!!.Config.getStopTrigger()
@@ -209,19 +256,18 @@ class MainActivity : FlutterActivity(),
                     android.util.Log.d("RFID_DEBUG", "StartTrigger actuel: ${startTrigger?.triggerType}")
                     android.util.Log.d("RFID_DEBUG", "StopTrigger actuel: ${stopTrigger?.triggerType}")
 
-                    // Forcer trigger IMMEDIATE = inventory démarre dès Inventory.perform()
                     startTrigger?.triggerType = com.zebra.rfid.api3.START_TRIGGER_TYPE.START_TRIGGER_TYPE_IMMEDIATE
                     stopTrigger?.triggerType  = com.zebra.rfid.api3.STOP_TRIGGER_TYPE.STOP_TRIGGER_TYPE_IMMEDIATE
 
                     rfidReader!!.Config.setStartTrigger(startTrigger)
                     rfidReader!!.Config.setStopTrigger(stopTrigger)
 
-                    android.util.Log.d("RFID_DEBUG", "✅ Trigger IMMEDIATE configuré sur RFD40P")
+                    android.util.Log.d("RFID_DEBUG", "Trigger IMMEDIATE configure")
                 } catch (e: Throwable) {
                     android.util.Log.e("RFID_DEBUG", "Trigger config erreur: ${e.message}")
                 }
 
-                mainHandler.post { result.success("Connecté à $readerName") }
+                mainHandler.post { result.success("Connecte a $readerName") }
             } catch (e: Throwable) {
                 android.util.Log.e("RFID_DEBUG", "connect erreur: ${e.message}", e)
                 mainHandler.post { result.error("CONNECT_ERROR", e.message ?: "Erreur", null) }
@@ -232,14 +278,12 @@ class MainActivity : FlutterActivity(),
     private fun disconnect(result: MethodChannel.Result) {
         Thread {
             try {
-                android.util.Log.d("RFID_DEBUG", ">>> disconnect() appelé")
+                inventoryRunning = false
                 rfidReader?.Events?.removeEventsListener(this@MainActivity)
                 rfidReader?.disconnect()
                 rfidReader = null
-                android.util.Log.d("RFID_DEBUG", "✅ disconnect() terminé")
-                mainHandler.post { result.success("Déconnecté") }
+                mainHandler.post { result.success("Deconnecte") }
             } catch (e: Throwable) {
-                android.util.Log.e("RFID_DEBUG", "disconnect erreur: ${e.message}", e)
                 mainHandler.post { result.error("DISCONNECT_ERROR", e.message ?: "Erreur", null) }
             }
         }.start()
@@ -251,23 +295,20 @@ class MainActivity : FlutterActivity(),
                 android.util.Log.d("RFID_DEBUG", ">>> readSingleTag() - attente bouton TC52")
 
                 if (rfidReader == null) {
-                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecté", null) }
+                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecte", null) }
                     return@Thread
                 }
 
                 if (singleReadResult != null) {
-                    mainHandler.post { result.error("BUSY", "Scan déjà en cours", null) }
+                    mainHandler.post { result.error("BUSY", "Scan deja en cours", null) }
                     return@Thread
                 }
 
                 singleReadResult = result
                 singleReadDone   = false
 
-                // ✅ PAS de Inventory.perform() ici
-                // Le bouton TC52 va déclencher onKeyDown → Inventory.perform()
-                android.util.Log.d("RFID_DEBUG", "⏳ Prêt — appuyez sur bouton TC52...")
+                android.util.Log.d("RFID_DEBUG", "Pret appuyez sur bouton TC52...")
 
-                // ✅ Attendre max 30 secondes
                 var waited = 0
                 while (!singleReadDone && waited < 300) {
                     Thread.sleep(100)
@@ -279,12 +320,12 @@ class MainActivity : FlutterActivity(),
                     Thread.sleep(500)
                 } catch (_: Throwable) {}
 
-                android.util.Log.d("RFID_DEBUG", "⏹️ Inventory stoppé")
+                android.util.Log.d("RFID_DEBUG", "Inventory stoppe")
 
                 if (!singleReadDone) {
                     singleReadResult = null
                     mainHandler.post {
-                        result.error("TIMEOUT", "Timeout — appuyez sur le bouton TC52", null)
+                        result.error("TIMEOUT", "Timeout appuyez sur le bouton TC52", null)
                     }
                 }
 
@@ -302,7 +343,7 @@ class MainActivity : FlutterActivity(),
                 android.util.Log.d("RFID_DEBUG", ">>> writeTag() tagId=$tagId data=$data")
 
                 if (rfidReader == null) {
-                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecté", null) }
+                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecte", null) }
                     return@Thread
                 }
 
@@ -332,39 +373,127 @@ class MainActivity : FlutterActivity(),
                     field.isAccessible = true
                     field.set(writeParams, wordCount)
                 } catch (e: Throwable) {
-                    android.util.Log.e("RFID_DEBUG", "Réflexion erreur: ${e.message}")
+                    android.util.Log.e("RFID_DEBUG", "Reflexion erreur: ${e.message}")
                 }
 
-                android.util.Log.d("RFID_DEBUG", "Écriture en cours sur tagId=$tagId...")
+                android.util.Log.d("RFID_DEBUG", "Ecriture en cours sur tagId=$tagId...")
                 rfidReader!!.Actions.TagAccess.writeWait(tagId, writeParams, null, null)
 
-                android.util.Log.d("RFID_DEBUG", "✅ Tag écrit: $tagId → $data")
+                android.util.Log.d("RFID_DEBUG", "Tag ecrit: $tagId")
 
-                // ✅ Succès — bip OK
                 beepSuccess()
 
-                mainHandler.post { result.success("Tag écrit avec succès") }
+                mainHandler.post { result.success("Tag ecrit avec succes") }
 
             } catch (e: com.zebra.rfid.api3.InvalidUsageException) {
                 android.util.Log.e("RFID_DEBUG", "InvalidUsageException: ${e.info}")
-                // ✅ Échec — bip KO + vibration
                 beepError()
                 vibrateError()
                 mainHandler.post { result.error("WRITE_ERROR", "Erreur: ${e.info}", null) }
 
             } catch (e: com.zebra.rfid.api3.OperationFailureException) {
                 android.util.Log.e("RFID_DEBUG", "OperationFailureException: ${e.results}")
-                // ✅ Échec — bip KO + vibration
                 beepError()
                 vibrateError()
-                mainHandler.post { result.error("WRITE_ERROR", "Écriture échouée — gardez la puce proche du lecteur", null) }
+                mainHandler.post { result.error("WRITE_ERROR", "Ecriture echouee gardez la puce proche du lecteur", null) }
 
             } catch (e: Throwable) {
                 android.util.Log.e("RFID_DEBUG", "writeTag erreur: ${e.message}", e)
-                // ✅ Erreur inattendue — bip KO + vibration
                 beepError()
                 vibrateError()
                 mainHandler.post { result.error("WRITE_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
+
+    private fun getBatteryLevel(result: MethodChannel.Result) {
+        Thread {
+            try {
+                if (rfidReader == null) {
+                    mainHandler.post { result.success(-1) }
+                    return@Thread
+                }
+                var batteryLevel = -1
+                try {
+                    val batteryStats = rfidReader!!.Config.getBatteryStats()
+                    val field = batteryStats?.javaClass?.getDeclaredField("percentage")
+                    field?.isAccessible = true
+                    val value = field?.get(batteryStats)
+                    if (value is Int && value in 0..100) {
+                        batteryLevel = value
+                    }
+                } catch (e: Throwable) {
+                    android.util.Log.e("RFID_DEBUG", "getBatteryStats erreur: ${e.message}")
+                }
+                mainHandler.post { result.success(batteryLevel) }
+            } catch (e: Throwable) {
+                mainHandler.post { result.success(-1) }
+            }
+        }.start()
+    }
+
+    private fun startInventory(result: MethodChannel.Result) {
+        Thread {
+            try {
+                if (rfidReader == null) {
+                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecte", null) }
+                    return@Thread
+                }
+                if (inventoryRunning) {
+                    mainHandler.post { result.error("ALREADY_RUNNING", "Inventaire deja en cours", null) }
+                    return@Thread
+                }
+                inventoryRunning = true
+                rfidReader!!.Actions.Inventory.perform()
+                mainHandler.post { result.success("Inventaire demarre") }
+            } catch (e: Throwable) {
+                inventoryRunning = false
+                mainHandler.post { result.error("INVENTORY_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
+
+    private fun stopInventory(result: MethodChannel.Result) {
+        Thread {
+            try {
+                inventoryRunning = false
+                rfidReader?.Actions?.Inventory?.stop()
+                mainHandler.post { result.success("Inventaire arrete") }
+            } catch (e: Throwable) {
+                mainHandler.post { result.error("INVENTORY_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
+
+    private fun configureMemoryBank(memoryBank: String, result: MethodChannel.Result) {
+        Thread {
+            try {
+                if (rfidReader == null) {
+                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecte", null) }
+                    return@Thread
+                }
+                try {
+                    val tagFieldClass = Class.forName("com.zebra.rfid.api3.TAG_FIELD")
+                    val settings = rfidReader!!.Config.getTagStorageSettings()
+                    val fieldName = when (memoryBank.uppercase()) {
+                        "NONE"     -> "ALL_TAG_FIELDS"
+                        "EPC"      -> "PC"
+                        "TID"      -> "TID"
+                        "USER"     -> "USER"
+                        "RESERVED" -> "ALL_TAG_FIELDS"
+                        "TAMPER"   -> "ALL_TAG_FIELDS"
+                        else       -> "ALL_TAG_FIELDS"
+                    }
+                    val tagFieldValue = tagFieldClass.getField(fieldName).get(null)
+                    val setMethod = settings?.javaClass?.getMethod("setTagFields", tagFieldClass)
+                    setMethod?.invoke(settings, tagFieldValue)
+                    rfidReader!!.Config.setTagStorageSettings(settings)
+                } catch (e: Throwable) {
+                    android.util.Log.e("RFID_DEBUG", "configureMemoryBank erreur: ${e.message}")
+                }
+                mainHandler.post { result.success("Banque configuree: $memoryBank") }
+            } catch (e: Throwable) {
+                mainHandler.post { result.success("Banque par defaut") }
             }
         }.start()
     }
@@ -379,64 +508,50 @@ class MainActivity : FlutterActivity(),
             )
             sendBroadcast(intent)
             android.util.Log.d("RFID_DEBUG",
-                if (start) "📷 DataWedge START" else "📷 DataWedge STOP")
+                if (start) "DataWedge START" else "DataWedge STOP")
         } catch (e: Throwable) {
             android.util.Log.e("RFID_DEBUG", "DataWedge erreur: ${e.message}")
         }
     }
 
-    // ✅ Bip succès — ton aigu court (style scanner)
     private fun beepSuccess() {
         Thread {
             try {
                 val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME)
-
-                // Premier bip court
                 toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
                 Thread.sleep(140)
                 toneGen.stopTone()
                 Thread.sleep(60)
-
-                // Deuxième bip plus long = confirmation finale
                 toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
                 Thread.sleep(340)
                 toneGen.stopTone()
-
                 toneGen.release()
             } catch (_: Throwable) {}
         }.start()
     }
 
-    // ✅ Bip échec — ton grave répété (style erreur)
     private fun beepError() {
         Thread {
             try {
-                // ✅ Deux bips descendants graves — style "erreur scanner pro"
                 val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME)
-
                 toneGen.startTone(ToneGenerator.TONE_CDMA_SOFT_ERROR_LITE, 300)
                 Thread.sleep(350)
                 toneGen.stopTone()
                 Thread.sleep(80)
-
                 toneGen.startTone(ToneGenerator.TONE_CDMA_SOFT_ERROR_LITE, 300)
                 Thread.sleep(350)
                 toneGen.stopTone()
-
                 toneGen.release()
             } catch (_: Throwable) {}
         }.start()
     }
 
-    // ✅ Vibration erreur
     private fun vibrateError() {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 val vibrator = vm.defaultVibrator
-                vibrator.vibrate(
-                    VibrationEffect.createOneShot(1500, 255)
-                )
+                vibrator.vibrate(VibrationEffect.createOneShot(1500, 255))
             } else {
                 @Suppress("DEPRECATION")
                 val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -454,10 +569,10 @@ class MainActivity : FlutterActivity(),
         val tags: Array<TagData>? = rfidReader?.Actions?.getReadTags(100)
         tags?.forEach { tag ->
             val tagId = tag.tagID ?: return@forEach
-            android.util.Log.d("RFID_DEBUG", "🏷️ Tag lu: $tagId")
 
+            // Mode lecture unique
             if (singleReadResult != null && !singleReadDone) {
-                singleReadDone   = true
+                singleReadDone    = true
                 val pendingResult = singleReadResult!!
                 singleReadResult  = null
                 try { rfidReader!!.Actions.Inventory.stop() } catch (_: Throwable) {}
@@ -465,19 +580,44 @@ class MainActivity : FlutterActivity(),
                 return
             }
 
-            mainHandler.post {
-                eventSink?.success(mapOf(
-                    "event" to "tag",
-                    "tagId" to tagId,
-                    "rssi"  to tag.peakRSSI.toString()
-                ))
+            // Mode inventaire
+            if (inventoryRunning) {
+                val tidData = try {
+                    val f = tag.javaClass.getDeclaredField("tid")
+                    f.isAccessible = true
+                    (f.get(tag) as? String) ?: ""
+                } catch (_: Throwable) { "" }
+
+                val memoryBankData = try {
+                    val f = tag.javaClass.getDeclaredField("memoryBankData")
+                    f.isAccessible = true
+                    (f.get(tag) as? String) ?: ""
+                } catch (_: Throwable) { "" }
+
+                mainHandler.post {
+                    eventSink?.success(mapOf(
+                        "event"          to "tag",
+                        "tagId"          to tagId,
+                        "rssi"           to tag.peakRSSI.toDouble(),
+                        "memoryBankData" to memoryBankData,
+                        "tidData"        to tidData,
+                    ))
+                }
+            } else {
+                mainHandler.post {
+                    eventSink?.success(mapOf(
+                        "event" to "tag",
+                        "tagId" to tagId,
+                        "rssi"  to tag.peakRSSI.toString()
+                    ))
+                }
             }
         }
     }
 
     override fun eventStatusNotify(e: RfidStatusEvents?) {
         val eventType = e?.StatusEventData?.statusEventType
-        android.util.Log.d("RFID_DEBUG", "📡 Status: $eventType")
+        android.util.Log.d("RFID_DEBUG", "Status: $eventType")
 
         when (eventType) {
             STATUS_EVENT_TYPE.DISCONNECTION_EVENT -> {
@@ -492,7 +632,7 @@ class MainActivity : FlutterActivity(),
                 when (triggerData?.handheldEvent) {
 
                     com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_PRESSED -> {
-                        android.util.Log.d("RFID_DEBUG", "🔫 RFD40 Trigger PRESSED")
+                        android.util.Log.d("RFID_DEBUG", "RFD40 Trigger PRESSED")
 
                         Thread {
                             try {
@@ -512,12 +652,10 @@ class MainActivity : FlutterActivity(),
                                 }
 
                                 if (singleReadResult != null && !singleReadDone && rfidReader != null) {
-                                    // ✅ Mode RFID
                                     rfidReader!!.Actions.Inventory.perform()
-                                    android.util.Log.d("RFID_DEBUG", "▶️ Inventory démarré via trigger RFD40")
+                                    android.util.Log.d("RFID_DEBUG", "Inventory demarre via trigger RFD40")
                                 } else {
-                                    // ✅ Mode DataWedge — simuler appui bouton TC52 via broadcast
-                                    android.util.Log.d("RFID_DEBUG", "➡️ Mode DataWedge — simulation bouton TC52")
+                                    android.util.Log.d("RFID_DEBUG", "Mode DataWedge simulation bouton TC52")
                                     mainHandler.post {
                                         triggerDataWedgeScan(true)
                                     }
@@ -528,8 +666,8 @@ class MainActivity : FlutterActivity(),
                     }
 
                     com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_RELEASED -> {
-                        android.util.Log.d("RFID_DEBUG", "🔫 RFD40 Trigger RELEASED")
-                        // ✅ Arrêter DataWedge si on était en mode scan code-barres
+                        android.util.Log.d("RFID_DEBUG", "RFD40 Trigger RELEASED")
+
                         if (singleReadResult == null) {
                             mainHandler.post {
                                 triggerDataWedgeScan(false)
@@ -546,18 +684,20 @@ class MainActivity : FlutterActivity(),
     }
 
     override fun RFIDReaderAppeared(readerDevice: ReaderDevice?) {
-        android.util.Log.d("RFID_DEBUG", "🎉 Lecteur apparu: ${readerDevice?.name}")
+        android.util.Log.d("RFID_DEBUG", "Lecteur apparu: ${readerDevice?.name}")
     }
 
     override fun RFIDReaderDisappeared(readerDevice: ReaderDevice?) {
         android.util.Log.d("RFID_DEBUG", "Lecteur disparu: ${readerDevice?.name}")
     }
 
+    // MODIFIE : onDestroy dispose aussi readersInternal
     override fun onDestroy() {
         try { rfidReader?.Events?.removeEventsListener(this) } catch (_: Throwable) {}
         try { rfidReader?.disconnect() }            catch (_: Throwable) {}
         try { Readers.deattach(this@MainActivity) } catch (_: Throwable) {}
         try { readersBluetooth?.Dispose() }         catch (_: Throwable) {}
+        try { readersInternal?.Dispose() }          catch (_: Throwable) {}
         super.onDestroy()
     }
 }

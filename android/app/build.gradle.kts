@@ -56,4 +56,6 @@ dependencies {
     implementation(files("libs/BarcodeScannerLibrary.aar"))
     implementation(files("libs/API3_ZIOTC-release-2.0.5.238.aar"))
     implementation(files("libs/API3_ZIOTCTRANSPORT-release-2.0.5.238.aar"))
+    implementation(files("libs/rfidhostlib.aar"))
+    implementation(files("libs/rfidseriallib.aar"))
 }
