@@ -88,7 +88,7 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final modules = <_Module>[
       _Module(
-        title: 'Lecteur RFID',
+        title: 'Encodage (RFID)',
         subtitle: 'Encoder & lire les puces',
         icon: Icons.nfc_rounded,
         color: _C.primary,
@@ -104,8 +104,8 @@ class _HomePageState extends ConsumerState<HomePage>
         icon: Icons.inventory_2_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
-        available: true,                        // ← était false
-        onTap: () => Navigator.push(            // ← ajouter onTap
+        available: true,
+        onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const InventoryPage(),
@@ -114,38 +114,6 @@ class _HomePageState extends ConsumerState<HomePage>
             transitionDuration: const Duration(milliseconds: 300),
           ),
         ),
-      ),
-      _Module(
-        title: 'Commandes',
-        subtitle: 'Suivi & traitement',
-        icon: Icons.receipt_long_rounded,
-        color: const Color(0xFF7C3AED),
-        bgColor: const Color(0xFFF5F3FF),
-        available: false,
-      ),
-      _Module(
-        title: 'Paiement',
-        subtitle: 'Transactions en caisse',
-        icon: Icons.payment_rounded,
-        color: const Color(0xFFD97706),
-        bgColor: const Color(0xFFFFFBEB),
-        available: false,
-      ),
-      _Module(
-        title: 'Rapports',
-        subtitle: 'Analyses & statistiques',
-        icon: Icons.bar_chart_rounded,
-        color: const Color(0xFFDC2626),
-        bgColor: const Color(0xFFFEF2F2),
-        available: false,
-      ),
-      _Module(
-        title: 'Paramètres',
-        subtitle: 'Configuration terminal',
-        icon: Icons.settings_rounded,
-        color: _C.textSecondary,
-        bgColor: const Color(0xFFF1F5F9),
-        available: false,
       ),
     ];
 

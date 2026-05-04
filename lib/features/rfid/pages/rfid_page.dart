@@ -9,7 +9,6 @@ import '../providers/rfid_provider.dart';
 import 'rfid_encoding_page.dart';
 import 'rfid_constants.dart';
 
-
 // ──────────────────────────────────────────────────────────────
 //  RFID PAGE
 // ──────────────────────────────────────────────────────────────
@@ -32,10 +31,12 @@ class _RfidPageState extends ConsumerState<RfidPage>
   Timer? _focusKeepAliveTimer;
 
   // ── State ──
-  RfidMode? _selectedMode;
+  // Mode encodage fixe — plus de sélection
+  late final RfidMode _selectedMode;
   bool _readyToScan = false;
   int _totalEncodedCount = 0;
   String _header = '3034';
+  static const _headerOptions = ['3034', '3035'];
   final _headerController = TextEditingController(text: '3034');
   bool _headerValidated = true;
   final _headerFocusNode = FocusNode();
@@ -49,6 +50,9 @@ class _RfidPageState extends ConsumerState<RfidPage>
   void initState() {
     super.initState();
 
+    // Encodage est le seul mode — on le fixe d'emblée
+    _selectedMode = rfidModes.firstWhere((m) => m.id == 'encoding');
+
     _entranceCtrl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 800),
     )..forward();
@@ -61,13 +65,23 @@ class _RfidPageState extends ConsumerState<RfidPage>
       vsync: this, duration: const Duration(milliseconds: 500),
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final rfidState = ref.read(rfidProvider);
-      if (rfidState.connectedReader == null &&
-          rfidState.availableReaders.isEmpty) {
-        ref.read(rfidProvider.notifier).loadAvailableReaders();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final rfidNotifier = ref.read(rfidProvider.notifier);
+      final rfidState    = ref.read(rfidProvider);
+
+      if (rfidState.connectedReader == null) {
+        // 1. Charger les lecteurs disponibles
+        await rfidNotifier.loadAvailableReaders();
+
+        // 2. Connecter automatiquement au premier lecteur trouvé
+        final updatedState = ref.read(rfidProvider);
+        if (updatedState.availableReaders.isNotEmpty &&
+            updatedState.connectedReader == null) {
+          rfidNotifier.connectToReader(updatedState.availableReaders.first);
+        }
       }
-      ref.read(rfidProvider.notifier).clearScannedTag();
+
+      rfidNotifier.clearScannedTag();
       ref.read(rfidServiceProvider).reinitHandler();
     });
 
@@ -94,9 +108,8 @@ class _RfidPageState extends ConsumerState<RfidPage>
   void _checkReadyToScan() {
     final rfidState = ref.read(rfidProvider);
     final wasReady = _readyToScan;
-    _readyToScan = rfidState.connectedReader != null
-        && _selectedMode != null
-        && _headerValidated;
+    // Plus besoin de vérifier _selectedMode (toujours défini)
+    _readyToScan = rfidState.connectedReader != null && _headerValidated;
     if (_readyToScan && !wasReady) {
       _instructionCtrl.forward(from: 0);
       Future.delayed(const Duration(milliseconds: 600), () {
@@ -142,7 +155,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
       context,
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => RfidEncodingPage(
-          mode: _selectedMode!,
+          mode: _selectedMode,
           initialCode: trimmed,
           initialEncodedCount: _totalEncodedCount,
           header: _header,
@@ -253,20 +266,16 @@ class _RfidPageState extends ConsumerState<RfidPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const SizedBox(height: 8),
+                            // Étape 1 — Lecteur RFID (inchangée)
                             _buildStepCard(
                               step: 1,
                               title: 'Lecteur RFID',
                               child: _buildReaderSelector(rfidState, uniqueReaders, connected),
                             ),
                             const SizedBox(height: 8),
+                            // Étape 2
                             _buildStepCard(
                               step: 2,
-                              title: 'Opération',
-                              child: _buildModeSelector(connected != null),
-                            ),
-                            const SizedBox(height: 8),
-                            _buildStepCard(
-                              step: 3,
                               title: 'Header étiquette vierge',
                               child: _buildHeaderInput(),
                             ),
@@ -349,7 +358,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
                         ),
                       ),
                       Text(
-                        'Gestion des puces & encodage',
+                        'Encodage des puces',
                         style: TextStyle(
                           fontSize: 9,
                           color: Colors.white.withOpacity(.75),
@@ -566,141 +575,80 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Sélecteur mode
-  Widget _buildModeSelector(bool readerConnected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: _selectedMode != null ? _selectedMode!.color.withOpacity(.06) : AppColors.bg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _selectedMode != null ? _selectedMode!.color.withOpacity(.4) : AppColors.border,
-          width: _selectedMode != null ? 1.5 : 1,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedMode?.id,
-          isExpanded: true,
-          hint: Text(
-            readerConnected ? 'Choisir une opération' : 'Connectez un lecteur',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
-          ),
-          items: readerConnected
-              ? rfidModes.map((mode) => DropdownMenuItem<String>(
-            value: mode.id,
-            child: Row(
-              children: [
-                Container(
-                  width: 24, height: 24,
-                  decoration: BoxDecoration(
-                    color: mode.available ? mode.color.withOpacity(.1) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(mode.icon,
-                      color: mode.available ? mode.color : AppColors.textMuted, size: 12),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    mode.label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: mode.available ? AppColors.textPrimary : AppColors.textMuted,
-                    ),
-                  ),
-                ),
-                if (!mode.available)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: const Text('Bientôt',
-                        style: TextStyle(fontSize: 7, color: AppColors.textMuted, fontWeight: FontWeight.w700)),
-                  ),
-              ],
-            ),
-          )).toList()
-              : [],
-          onChanged: readerConnected
-              ? (id) {
-            final mode = rfidModes.firstWhere((m) => m.id == id);
-            if (!mode.available) return;
-            setState(() => _selectedMode = mode);
-            _checkReadyToScan();
-          }
-              : null,
-        ),
-      ),
-    );
-  }
-
   Widget _buildHeaderInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _headerController,
-                focusNode: _headerFocusNode,
-                readOnly: _articleScanMode,
-                onTap: () {
-                  setState(() {
-                    _articleScanMode = false;
-                    _headerValidated = false;
-                    _readyToScan     = false;
-                  });
-                  _focusKeepAliveTimer?.cancel();
-                },
-                onChanged: (val) {
-                  setState(() {
-                    _header          = val.trim();
-                    _headerValidated = false;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Ex: 3034 ou 3035',
-                  hintStyle: const TextStyle(fontSize: 10),
-                  prefixIcon: const Icon(Icons.tag_rounded, color: AppColors.primary, size: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: _headerValidated
+                ? AppColors.success.withOpacity(.06)
+                : AppColors.bg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _headerValidated ? AppColors.success : AppColors.border,
+              width: _headerValidated ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.tag_rounded, color: AppColors.primary, size: 14),
+              const SizedBox(width: 6),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _headerOptions.contains(_header) ? _header : null,
+                    isExpanded: true,
+                    hint: const Text(
+                      'Choisir un header',
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 10),
+                    ),
+                    items: _headerOptions
+                        .map((h) => DropdownMenuItem<String>(
+                      value: h,
+                      child: Text(
+                        h,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() {
+                        _header          = val;
+                        _headerValidated = true;
+                      });
+                      _headerController.text = val;
+                      _headerFocusNode.unfocus();
+                      FocusScope.of(context).unfocus();
+                      _checkReadyToScan();
+                    },
+                  ),
                 ),
-                style: const TextStyle(fontSize: 11),
               ),
-            ),
-            const SizedBox(width: 4),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                elevation: 0,
-                minimumSize: const Size(0, 0),
-              ),
-              onPressed: _header.isNotEmpty ? () {
-                setState(() => _headerValidated = true);
-                _headerFocusNode.unfocus();
-                FocusScope.of(context).unfocus();
-                _checkReadyToScan();
-              } : null,
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
-            ),
-          ],
+              if (_headerValidated)
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.success, size: 16),
+            ],
+          ),
         ),
         if (_headerValidated)
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 10),
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.success, size: 10),
                 const SizedBox(width: 3),
-                Text('Header validé : $_header',
-                    style: const TextStyle(fontSize: 9, color: AppColors.success, fontWeight: FontWeight.w600)),
+                Text(
+                  'Header validé : $_header',
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -719,8 +667,8 @@ class _RfidPageState extends ConsumerState<RfidPage>
         title: 'Configuration requise',
         lines: const [
           '① Connectez un lecteur RFID',
-          '② Sélectionnez le mode',
-          '③ Scan démarre auto',
+          '② Validez le header',
+          '③ Scan démarre automatiquement',
         ],
         lineColor: AppColors.textSecondary,
       );
@@ -733,11 +681,11 @@ class _RfidPageState extends ConsumerState<RfidPage>
         iconColor: AppColors.primary,
         bgColor: AppColors.primarySoft,
         borderColor: AppColors.primary.withOpacity(.25),
-        title: 'Prêt — scannez le code',
+        title: 'Prêt — scannez le code article',
         lines: const [
           '✓ Lecteur RFID connecté',
-          '✓ Mode encodage sélectionné',
-          '→ Pointez le scanner vers le code',
+          '✓ Header validé',
+          '→ Pointez le scanner vers le code-barres',
         ],
         lineColor: AppColors.primary,
         animated: true,

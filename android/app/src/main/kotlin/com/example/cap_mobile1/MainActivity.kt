@@ -51,6 +51,11 @@ class MainActivity : FlutterActivity(),
     @Volatile private var singleReadDone = false
     @Volatile private var inventoryRunning = false
 
+    @Volatile private var rewriteScanResult: MethodChannel.Result? = null
+    @Volatile private var rewriteScanDone = false
+    @Volatile private var rewriteScanRunning = false
+    private val rewriteCandidates = mutableMapOf<String, Int>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
@@ -130,6 +135,7 @@ class MainActivity : FlutterActivity(),
                     call.argument("memoryBank")!!,
                     result
                 )
+                "readTagForRewrite" -> readTagForRewrite(result)
                 else -> result.notImplemented()
             }
         }
@@ -220,6 +226,71 @@ class MainActivity : FlutterActivity(),
         }.start()
     }
 
+
+    private fun readTagForRewrite(result: MethodChannel.Result) {
+        Thread {
+            try {
+                if (rfidReader == null) {
+                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecte", null) }
+                    return@Thread
+                }
+
+                // Stop propre
+                try { rfidReader!!.Actions.Inventory.stop() } catch (_: Throwable) {}
+                Thread.sleep(1000)
+
+                // Vider buffer
+                try {
+                    rfidReader!!.Actions.purgeTags()
+                    android.util.Log.d("RFID_DEBUG", "readTagForRewrite: purgeTags OK")
+                } catch (e: Throwable) {
+                    android.util.Log.e("RFID_DEBUG", "purgeTags erreur: ${e.message}")
+                }
+
+                Thread.sleep(300)
+
+                // Activer capture via eventReadNotify AVANT perform
+                synchronized(rewriteCandidates) { rewriteCandidates.clear() }
+                rewriteScanRunning = true
+
+                rfidReader!!.Actions.Inventory.perform()
+                android.util.Log.d("RFID_DEBUG", "readTagForRewrite: inventaire lancé")
+
+                // Attendre jusqu'à 5s ou premier tag trouvé
+                var elapsed = 0
+                while (elapsed < 5000) {
+                    Thread.sleep(200)
+                    elapsed += 200
+                    val count = synchronized(rewriteCandidates) { rewriteCandidates.size }
+                    if (count > 0) {
+                        android.util.Log.d("RFID_DEBUG", "readTagForRewrite: tag capturé après ${elapsed}ms")
+                        break
+                    }
+                }
+
+                rewriteScanRunning = false
+                try { rfidReader!!.Actions.Inventory.stop() } catch (_: Throwable) {}
+                Thread.sleep(300)
+
+                val bestEpc = synchronized(rewriteCandidates) {
+                    rewriteCandidates.entries.maxByOrNull { it.value }?.key
+                }
+
+                android.util.Log.d("RFID_DEBUG", "readTagForRewrite terminé: bestEpc=$bestEpc")
+
+                if (bestEpc != null) {
+                    mainHandler.post { result.success(bestEpc) }
+                } else {
+                    mainHandler.post { result.error("NO_TAG_FOUND", "Aucune puce detectee", null) }
+                }
+
+            } catch (e: Throwable) {
+                rewriteScanRunning = false
+                android.util.Log.e("RFID_DEBUG", "readTagForRewrite erreur: ${e.message}", e)
+                mainHandler.post { result.error("REWRITE_SCAN_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
     private fun connect(readerName: String, result: MethodChannel.Result) {
         Thread {
             try {
@@ -389,19 +460,40 @@ class MainActivity : FlutterActivity(),
                 android.util.Log.e("RFID_DEBUG", "InvalidUsageException: ${e.info}")
                 beepError()
                 vibrateError()
-                mainHandler.post { result.error("WRITE_ERROR", "Erreur: ${e.info}", null) }
+
+                // 🔥 Envoyer des messages d'erreur explicites et différents
+                val errorDetail = e.info?.toString() ?: ""
+                when {
+                    errorDetail.contains("already", ignoreCase = true) ||
+                            errorDetail.contains("exists", ignoreCase = true) -> {
+                        mainHandler.post { result.error("WRITE_ERROR", "ETIQUETTE_DEJA_ENCODEE", null) }
+                    }
+                    else -> {
+                        mainHandler.post { result.error("WRITE_ERROR", "PUCE_ABSENTE_OU_MAL_POSITIONNEE", null) }
+                    }
+                }
 
             } catch (e: com.zebra.rfid.api3.OperationFailureException) {
                 android.util.Log.e("RFID_DEBUG", "OperationFailureException: ${e.results}")
                 beepError()
                 vibrateError()
-                mainHandler.post { result.error("WRITE_ERROR", "Ecriture echouee gardez la puce proche du lecteur", null) }
+
+                val errorDetail = e.results?.toString() ?: ""
+                when {
+                    errorDetail.contains("no such tag", ignoreCase = true) ||
+                            errorDetail.contains("tag not found", ignoreCase = true) -> {
+                        mainHandler.post { result.error("WRITE_ERROR", "PUCE_ABSENTE_OU_MAL_POSITIONNEE", null) }
+                    }
+                    else -> {
+                        mainHandler.post { result.error("WRITE_ERROR", "ETIQUETTE_DEJA_ENCODEE", null) }
+                    }
+                }
 
             } catch (e: Throwable) {
                 android.util.Log.e("RFID_DEBUG", "writeTag erreur: ${e.message}", e)
                 beepError()
                 vibrateError()
-                mainHandler.post { result.error("WRITE_ERROR", e.message ?: "Erreur", null) }
+                mainHandler.post { result.error("WRITE_ERROR", "ERREUR_TECHNIQUE: ${e.message}", null) }
             }
         }.start()
     }
@@ -566,11 +658,25 @@ class MainActivity : FlutterActivity(),
     }
 
     override fun eventReadNotify(e: RfidReadEvents?) {
+        android.util.Log.d("RFID_DEBUG", "eventReadNotify appelé - rewriteScanRunning=$rewriteScanRunning inventoryRunning=$inventoryRunning")
         val tags: Array<TagData>? = rfidReader?.Actions?.getReadTags(100)
         tags?.forEach { tag ->
             val tagId = tag.tagID ?: return@forEach
 
-            // Mode lecture unique
+            // ── Priorité 1 : Mode rewrite scan (Cas 2) ──
+            if (rewriteScanRunning) {
+                val rssi = tag.peakRSSI.toInt()
+                synchronized(rewriteCandidates) {
+                    val current = rewriteCandidates[tagId] ?: Int.MIN_VALUE
+                    if (rssi > current) {
+                        rewriteCandidates[tagId] = rssi
+                    }
+                }
+                android.util.Log.d("RFID_DEBUG", "rewriteScan: tag=$tagId rssi=$rssi")
+                return@forEach
+            }
+
+            // ── Priorité 2 : Mode lecture unique ──
             if (singleReadResult != null && !singleReadDone) {
                 singleReadDone    = true
                 val pendingResult = singleReadResult!!
@@ -580,7 +686,7 @@ class MainActivity : FlutterActivity(),
                 return
             }
 
-            // Mode inventaire
+            // ── Priorité 3 : Mode inventaire normal ──
             if (inventoryRunning) {
                 val tidData = try {
                     val f = tag.javaClass.getDeclaredField("tid")
@@ -601,14 +707,6 @@ class MainActivity : FlutterActivity(),
                         "rssi"           to tag.peakRSSI.toDouble(),
                         "memoryBankData" to memoryBankData,
                         "tidData"        to tidData,
-                    ))
-                }
-            } else {
-                mainHandler.post {
-                    eventSink?.success(mapOf(
-                        "event" to "tag",
-                        "tagId" to tagId,
-                        "rssi"  to tag.peakRSSI.toString()
                     ))
                 }
             }
@@ -646,7 +744,7 @@ class MainActivity : FlutterActivity(),
                                 }
 
                                 var waited = 0
-                                while (singleReadResult == null && waited < 10) {
+                                while (singleReadResult == null && waited < 4) {
                                     Thread.sleep(100)
                                     waited++
                                 }

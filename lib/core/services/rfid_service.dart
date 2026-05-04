@@ -50,6 +50,9 @@ class RfidService {
       'data':  data,
     });
   }
+  Future<String> readTagForRewrite() async {
+    return await _methodChannel.invokeMethod('readTagForRewrite');
+  }
 
   Stream<dynamic> get tagStream =>
       _eventChannel.receiveBroadcastStream();

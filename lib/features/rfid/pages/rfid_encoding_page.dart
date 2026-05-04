@@ -77,6 +77,8 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   bool    _isBlocked    = false;
   bool    _successShown = false;
   int     _encodedCount = 0;
+  String? _scannedSerial;
+  bool _waitingInventory = false;
 
   // ── DataWedge — rescan article depuis cette page ──
   final _articleScanController = TextEditingController();
@@ -115,7 +117,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       ref.read(articleProvider.notifier).fetchArticle(widget.initialCode);
     });
 
-    // Focus listener — garde le focus DataWedge actif
     _articleFocusNode.addListener(() {
       if (_articleScanMode && !_articleFocusNode.hasFocus) {
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -124,17 +125,19 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       }
     });
 
-    // ── Bouton latéral Zebra ──
-    // DataWedge est déjà pré-activé après chaque succès,
-    // donc le bouton encode simplement la puce quand on est en attente
     final rfidService = ref.read(rfidServiceProvider);
     rfidService.onScanButtonPressed = () {
-      if (!_articleScanMode &&
-          ref.read(articleProvider).article != null &&
-          !_isProcessing &&
-          !_isBlocked &&
-          !_successShown) {
-        _scanAndWrite();
+      if (_articleScanMode) return;
+
+      // ── Inventaire en cours : scanner bloqué, on avertit l'utilisateur ──
+      if (_waitingInventory || _isProcessing) {
+        _showScanBlockedWarning();
+        return;
+      }
+
+      final article = ref.read(articleProvider).article;
+      if (article != null && !_isProcessing && !_isBlocked && !_successShown) {
+        _startSerialScan();
       }
     };
   }
@@ -153,105 +156,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     _scanRingCtrl.dispose();
     ref.read(rfidServiceProvider).onScanButtonPressed = null;
     super.dispose();
-  }
-
-  // ──────────────────────────────────────────────────────────────
-  //  LOGIQUE : scan + écriture + POST SSE
-  // ──────────────────────────────────────────────────────────────
-  Future<void> _scanAndWrite() async {
-    final article    = ref.read(articleProvider).article;
-    final rfidState  = ref.read(rfidProvider);
-    final codeCollab = ref.read(authProvider).collaborateur?.codeCollab ?? 0;
-
-    if (article == null ||
-        rfidState.connectedReader == null ||
-        _isProcessing ||
-        _isBlocked) return;
-
-    setState(() {
-      _isProcessing = true;
-      _isBlocked    = false;
-      _error        = null;
-      _factoryEpc   = null;
-      _newEpc       = null;
-      _successShown = false;
-    });
-
-    try {
-      // Étape 1 — Lire l'EPC usine AVEC timeout
-      await ref.read(rfidProvider.notifier).readSingleTag()
-          .timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          throw Exception('Aucune puce détectée (timeout).\nVérifiez que la puce est bien positionnée\nsur le lecteur et réessayez.');
-        },
-      );
-
-      final epc = ref.read(rfidProvider).lastScannedTag;
-
-      // Étape 2 — Vérifier présence + validité de la puce
-      if (epc == null || epc.trim().isEmpty) {
-        _showError('Aucune puce détectée.\nVérifiez que la puce est bien positionnée\nsur le lecteur et réessayez.');
-        return;
-      }
-
-      // Puce endommagée : EPC trop court ou non hexadécimal
-      final isValidEpc = RegExp(r'^[0-9A-Fa-f]{16,24}$').hasMatch(epc.trim());
-      if (!isValidEpc) {
-        _showError('Puce endommagée ou illisible.\nEPC invalide détecté : $epc\nUtilisez une puce vierge.');
-        return;
-      }
-
-      // Étape 3 — Vérifier puce vierge
-      if (!epc.toUpperCase().startsWith(widget.header.toUpperCase())) {
-        _showError('Puce déjà encodée !\nEPC détecté : $epc\nUtilisez une puce vierge.');
-        return;
-      }
-
-      // Étape 3 — Calculer le nouvel EPC
-      final serial = EpcCalculator.extractSerialFromEpc(epc);
-      final newEpc = EpcCalculator.buildEpcFromGtin(article.gtin, serial);
-
-      setState(() { _factoryEpc = epc; _newEpc = newEpc; });
-      _encodingEntranceCtrl.forward(from: 0);
-
-      // Étape 4 — Écrire dans la puce
-      await ref.read(rfidProvider.notifier)
-          .writeTag(tagId: epc, data: newEpc)
-          .timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          throw Exception('Échec d\'écriture (timeout).\nLa puce est peut-être endommagée.');
-        },
-      );
-
-      // Étape 5 — POST SSE (non bloquant si échec)
-      _postSse(
-        serial:     serial,
-        gencode:    article.gencode,
-        newEpc:     newEpc,
-        codeCollab: codeCollab,
-        article:    article,
-      );
-
-      // Succès
-      setState(() {
-        _successShown = true;
-        _encodedCount++;
-        _isProcessing = false;
-        _isBlocked    = false;
-      });
-      _successCtrl.forward(from: 0);
-      _counterCtrl.forward(from: 0);
-      HapticFeedback.heavyImpact();
-
-      // ── Pré-activer DataWedge immédiatement après le succès ──
-      // Ainsi le prochain appui Zebra scanne et charge l'article en une seule action
-      _startArticleScan();
-
-    } catch (e) {
-      _showError('Erreur: $e');
-    }
   }
 
   // ── POST SSE — fire and forget ──
@@ -292,12 +196,44 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     }
   }
 
+  // ── Avertissement : scan bloqué pendant l'inventaire ──
+  void _showScanBlockedWarning() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        backgroundColor: const Color(0xFF7B5800),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+        content: Row(
+          children: const [
+            Icon(Icons.block_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Scanner désactivé — inventaire en cours.\nAttendez la fin de l\'opération.',
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    height: 1.4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    HapticFeedback.mediumImpact();
+  }
+
   // ── Afficher erreur + bloquer ──
   void _showError(String msg) {
     setState(() {
       _error        = msg;
       _isProcessing = false;
-      _isBlocked    = true; // bloque jusqu'à ce que l'user appuie sur Réessayer
+      _isBlocked    = true;
     });
     _shakeCtrl.reset();
     _shakeCtrl.forward();
@@ -307,12 +243,13 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   // ── Reset + lance le scan du prochain article ──
   void _resetForNextTag() {
     setState(() {
-      _factoryEpc   = null;
-      _newEpc       = null;
-      _error        = null;
-      _successShown = false;
-      _isProcessing = false;
-      _isBlocked    = false;
+      _factoryEpc    = null;
+      _newEpc        = null;
+      _error         = null;
+      _successShown  = false;
+      _isProcessing  = false;
+      _isBlocked     = false;
+      _scannedSerial = null;
     });
     _encodingEntranceCtrl.reset();
     _successCtrl.reset();
@@ -334,14 +271,15 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   }
 
   // ──────────────────────────────────────────────────────────────
-  //  DATAWEDGE — rescan article dans cette page
+  //  DATAWEDGE
   // ──────────────────────────────────────────────────────────────
+  String _scanTarget = 'article';
 
-  /// Active le mode scan article (champ invisible DataWedge)
   void _startArticleScan() {
     if (!mounted) return;
     setState(() {
       _articleScanMode = true;
+      _scanTarget      = 'article';
       _scanBuffer      = '';
       _articleScanController.clear();
     });
@@ -350,24 +288,396 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     });
     _focusKeepAliveTimer?.cancel();
     _focusKeepAliveTimer = Timer.periodic(
-      const Duration(seconds: 2), (_) {
+        const Duration(seconds: 2), (_) {
       if (mounted && _articleScanMode && !_articleFocusNode.hasFocus) {
         _articleFocusNode.requestFocus();
       }
-    },
-    );
+    });
   }
 
-  /// Appelé quand DataWedge envoie un code article
+  void _startSerialScan() {
+    if (!mounted) return;
+    setState(() {
+      _articleScanMode = true;
+      _scanTarget      = 'serial';
+      _scanBuffer      = '';
+      _articleScanController.clear();
+      _scannedSerial   = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _articleFocusNode.requestFocus();
+    });
+    _focusKeepAliveTimer?.cancel();
+    _focusKeepAliveTimer = Timer.periodic(
+        const Duration(seconds: 2), (_) {
+      if (mounted && _articleScanMode && !_articleFocusNode.hasFocus) {
+        _articleFocusNode.requestFocus();
+      }
+    });
+  }
+
   void _onArticleCodeScanned(String code) {
     final trimmed = code.trim();
     if (trimmed.isEmpty) return;
     _focusKeepAliveTimer?.cancel();
     setState(() { _articleScanMode = false; });
 
-    // Reset zone encodage + charger le nouvel article
-    _resetForNextTag();
-    ref.read(articleProvider.notifier).fetchArticle(trimmed);
+    if (_scanTarget == 'serial') {
+      setState(() { _scannedSerial = trimmed; });
+      _encodeWithSerial(trimmed);
+    } else {
+      _resetForNextTag();
+      ref.read(articleProvider.notifier).fetchArticle(trimmed);
+    }
+  }
+
+  Future<void> _encodeWithSerial(String serialDecimal) async {
+    final article    = ref.read(articleProvider).article;
+    final rfidState  = ref.read(rfidProvider);
+    final codeCollab = ref.read(authProvider).collaborateur?.codeCollab ?? 0;
+
+    if (article == null || rfidState.connectedReader == null) return;
+
+    setState(() {
+      _isProcessing = true;
+      _isBlocked    = false;
+      _error        = null;
+      _factoryEpc   = null;
+      _newEpc       = null;
+      _successShown = false;
+    });
+
+    String? factoryEpc;
+    String? newEpc;
+
+    try {
+      factoryEpc = EpcCalculator.buildFactoryEpc(serialDecimal);
+      final serialHex = EpcCalculator.extractSerialHexFromFactoryEpc(factoryEpc);
+      newEpc = EpcCalculator.buildEpcFromGtin(article.gtin, serialHex);
+
+      setState(() { _newEpc = newEpc; });
+
+      await ref.read(rfidProvider.notifier)
+          .writeTag(tagId: factoryEpc, data: newEpc)
+          .timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Échec d\'écriture (timeout).\nLa puce est peut-être mal positionnée.');
+        },
+      );
+
+      setState(() {
+        _factoryEpc = factoryEpc;
+        _newEpc     = newEpc;
+      });
+      _encodingEntranceCtrl.forward(from: 0);
+
+      _postSse(
+        serial:     serialDecimal,
+        gencode:    article.gencode,
+        newEpc:     newEpc,
+        codeCollab: codeCollab,
+        article:    article,
+      );
+
+      setState(() {
+        _successShown = true;
+        _encodedCount++;
+        _isProcessing = false;
+        _isBlocked    = false;
+      });
+      _successCtrl.forward(from: 0);
+      _counterCtrl.forward(from: 0);
+      HapticFeedback.heavyImpact();
+      _startArticleScan();
+
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains('ETIQUETTE_DEJA_ENCODEE') && newEpc != null) {
+        try {
+          await ref.read(rfidProvider.notifier)
+              .writeTag(tagId: newEpc!, data: newEpc!)
+              .timeout(const Duration(seconds: 5));
+
+          setState(() {
+            _factoryEpc = newEpc;
+            _newEpc     = newEpc;
+          });
+          _encodingEntranceCtrl.forward(from: 0);
+
+          _postSse(
+            serial:     serialDecimal,
+            gencode:    article.gencode,
+            newEpc:     newEpc!,
+            codeCollab: codeCollab,
+            article:    article,
+          );
+
+          setState(() {
+            _successShown = true;
+            _encodedCount++;
+            _isProcessing = false;
+            _isBlocked    = false;
+          });
+          _successCtrl.forward(from: 0);
+          _counterCtrl.forward(from: 0);
+          HapticFeedback.heavyImpact();
+          _startArticleScan();
+          return;
+
+        } catch (e2) {
+          if (mounted) {
+            setState(() {
+              _isProcessing     = false;
+              _waitingInventory = true;
+              _error            = null;
+              _newEpc           = newEpc;
+            });
+          }
+          return;
+        }
+      }
+
+      if (msg.contains('PUCE_ABSENTE_OU_MAL_POSITIONNEE')) {
+        _showError(
+          'PUCE NON DÉTECTÉE\n\n'
+              'La puce est absente ou mal positionnée\n'
+              'sur le lecteur.\n\n',
+        );
+      } else if (msg.contains('ERREUR_TECHNIQUE')) {
+        _showError('ERREUR TECHNIQUE\n\n$msg');
+      } else {
+        _showError('ÉCHEC ÉCRITURE\n\n$msg');
+      }
+    }
+  }
+
+  String _extractSerialFromEncodedEpc(String epc) {
+    final String binaire = epc.split('').map((c) =>
+        int.parse(c, radix: 16).toRadixString(2).padLeft(4, '0')
+    ).join();
+
+    final String serialBin = binaire.substring(58, 96);
+
+    return int.parse(serialBin, radix: 2).toString();
+  }
+
+  Future<void> _launchRewriteInventory() async {
+    final article    = ref.read(articleProvider).article;
+    final rfidState  = ref.read(rfidProvider);
+    final codeCollab = ref.read(authProvider).collaborateur?.codeCollab ?? 0;
+
+    if (article == null || rfidState.connectedReader == null) return;
+
+    setState(() {
+      _waitingInventory = false;
+      _isProcessing     = true;
+      _error            = null;
+    });
+
+    try {
+      final rfidService = ref.read(rfidServiceProvider);
+
+      final vraiEpc = await rfidService.readTagForRewrite().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('TIMEOUT_INVENTAIRE'),
+      );
+
+      final String serialAffiche = _extractSerialFromEncodedEpc(vraiEpc);
+
+      setState(() => _isProcessing = false);
+
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icône
+                Container(
+                  width: 52, height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.wifi_tethering_rounded,
+                    color: AppColors.warning,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Titre
+                const Text(
+                  'Confirmer la puce détectée',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Vérifiez que ce numéro de série\ncorrespond à l\'étiquette physique.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Serial mis en avant
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Numéro de série détecté',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          letterSpacing: .4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        serialAffiche,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primaryDark,
+                          letterSpacing: 2,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                // Boutons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: BorderSide(color: AppColors.border),
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text(
+                          'Annuler',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(Icons.nfc_rounded, size: 16),
+                        label: const Text(
+                          'Encoder',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, true),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // 4. Si l'user annule → retour à l'état waitingInventory
+      if (confirmed != true) {
+        if (mounted) {
+          setState(() {
+            _waitingInventory = true;
+            _isProcessing     = false;
+          });
+        }
+        return;
+      }
+
+      //L'user a confirmé → écriture
+      setState(() => _isProcessing = true);
+
+      final newEpc = _newEpc;
+      if (newEpc == null) throw Exception('EPC non calculé');
+
+      await ref.read(rfidProvider.notifier)
+          .writeTag(tagId: vraiEpc, data: newEpc)
+          .timeout(const Duration(seconds: 5));
+
+      setState(() {
+        _factoryEpc = vraiEpc;
+        _newEpc     = newEpc;
+      });
+      _encodingEntranceCtrl.forward(from: 0);
+
+      _postSse(
+        serial:     _scannedSerial ?? '',
+        gencode:    article.gencode,
+        newEpc:     newEpc,
+        codeCollab: codeCollab,
+        article:    article,
+      );
+
+      setState(() {
+        _successShown = true;
+        _encodedCount++;
+        _isProcessing = false;
+        _isBlocked    = false;
+      });
+      _successCtrl.forward(from: 0);
+      _counterCtrl.forward(from: 0);
+      HapticFeedback.heavyImpact();
+      _startArticleScan();
+
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('TIMEOUT_INVENTAIRE') || msg.contains('NO_TAG_FOUND')) {
+        _showError(
+          'AUCUNE PUCE DÉTECTÉE\n\n'
+              'Aucune puce n\'a été trouvée après 10 secondes.\n'
+              'Repositionnez la puce et réessayez.',
+        );
+      } else {
+        _showError('ÉCHEC RÉÉCRITURE\n\n$msg');
+      }
+    }
   }
 
   void _checkScanComplete() {
@@ -381,7 +691,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   }
 
   // ──────────────────────────────────────────────────────────────
-  //  BUILD — Layout fixe 3 zones, zéro scroll
+  //  BUILD
   // ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -390,11 +700,17 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
 
     ref.listen<ArticleState>(articleProvider, (prev, next) {
       if (next.article != null && prev?.article == null) {
-        // Nouvel article chargé → reset la zone encodage
         _resetForNextTag();
         _articleEntranceCtrl.forward(from: 0);
       }
+      // ← Article introuvable : relancer le scan automatiquement
+      if (next.error != null && prev?.error == null && mounted) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) _startArticleScan();
+        });
+      }
     });
+
     ref.listen<RfidState>(rfidProvider, (_, next) {
       if (next.error != null && mounted) _showError(next.error!);
     });
@@ -408,8 +724,8 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           backgroundColor: AppColors.bg,
           body: Stack(
             children: [
-              // ── Champ DataWedge invisible — scan article ──
-              if (_articleScanMode)
+              // ── Champ DataWedge invisible — désactivé pendant inventaire ──
+              if (_articleScanMode && !_waitingInventory && !_isProcessing)
                 Positioned(
                   top: -100,
                   child: SizedBox(
@@ -441,15 +757,14 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 physics: const ClampingScrollPhysics(),
                 child: Column(
                   children: [
-                    // ① HEADER
+
                     _buildHeader(),
 
-                    // ② BANNER scan article en attente
-                    // Masqué après un succès : DataWedge écoute en silence
-                    if (_articleScanMode && !_successShown)
+
+                    if (_articleScanMode && !_successShown && _scanTarget == 'article')
                       _buildScanArticleBanner(),
 
-                    // ③ CARTE ARTICLE
+
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                       child: articleState.isLoading
@@ -457,12 +772,11 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                           : article != null
                           ? _buildArticleCard(article)
                           : articleState.error != null
-                          ? _buildErrorBanner(articleState.error!)
+                          ? _buildArticleErrorBanner(articleState.error!)
                           : const SizedBox.shrink(),
                     ),
 
-                    // ④ ZONE ENCODAGE
-                    // Reste visible pendant le scan post-succès (_successShown + _articleScanMode)
+
                     if (article != null && (!_articleScanMode || _successShown))
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
@@ -496,7 +810,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
           child: Row(
             children: [
-              // Bouton retour
               GestureDetector(
                 onTap: () => Navigator.pop(context, {
                   'encodedCount': _encodedCount,
@@ -514,7 +827,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               ),
               const SizedBox(width: 12),
 
-              // Titre
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,7 +847,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 ),
               ),
 
-              // COMPTEUR cliquable avec animation
               GestureDetector(
                 onTap: _encodedCount > 0 ? _openSseList : null,
                 child: AnimatedBuilder(
@@ -545,16 +856,14 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                     return Transform.scale(
                       scale: scale,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
                           color: _encodedCount > 0
                               ? Colors.white.withOpacity(.25)
                               : Colors.white.withOpacity(.12),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white
-                                .withOpacity(_encodedCount > 0 ? .5 : .2),
+                            color: Colors.white.withOpacity(_encodedCount > 0 ? .5 : .2),
                           ),
                         ),
                         child: Row(
@@ -591,7 +900,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   }
 
   // ──────────────────────────────────────────────────────────────
-  //  BANNER — scan article en attente
+  //  BANNER scan article
   // ──────────────────────────────────────────────────────────────
   Widget _buildScanArticleBanner() {
     return Container(
@@ -604,7 +913,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       ),
       child: Row(
         children: [
-          // Icône scan animée
           AnimatedBuilder(
             animation: _scanRingCtrl,
             builder: (_, __) {
@@ -642,7 +950,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               ],
             ),
           ),
-          // Bouton annuler
           GestureDetector(
             onTap: () {
               _focusKeepAliveTimer?.cancel();
@@ -667,7 +974,60 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   }
 
   // ──────────────────────────────────────────────────────────────
-  //  CARTE ARTICLE — compacte pour laisser de la place en bas
+  //  ERREUR ARTICLE — avec bouton rescanner
+  // ──────────────────────────────────────────────────────────────
+  Widget _buildArticleErrorBanner(String error) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.error.withOpacity(.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.error.withOpacity(.25), width: 1.5),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34, height: 34,
+                decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(.1),
+                    shape: BoxShape.circle),
+                child: const Icon(Icons.error_outline_rounded,
+                    color: AppColors.error, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Article introuvable',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.error),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      error,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.error, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+        ],
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  //  CARTE ARTICLE
   // ──────────────────────────────────────────────────────────────
   Widget _buildArticleCard(ArticleModel article) {
     final photoUrl =
@@ -694,18 +1054,14 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           ),
           child: Row(
             children: [
-              // Photo
               ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                    left: Radius.circular(15)),
+                borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
                 child: Image.network(
                   photoUrl,
-                  width: 80,
-                  height: 88,
+                  width: 80, height: 88,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
-                    width: 80,
-                    height: 88,
+                    width: 80, height: 88,
                     color: AppColors.bg,
                     child: const Icon(Icons.image_outlined,
                         size: 28, color: AppColors.textMuted),
@@ -713,8 +1069,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   loadingBuilder: (_, child, progress) {
                     if (progress == null) return child;
                     return Container(
-                      width: 80,
-                      height: 88,
+                      width: 80, height: 88,
                       color: AppColors.bg,
                       child: const Center(
                         child: CircularProgressIndicator(
@@ -724,16 +1079,12 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   },
                 ),
               ),
-
-              // Infos
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Nom + marque
                       Text(article.libArticle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -748,21 +1099,16 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                               color: AppColors.primary,
                               fontWeight: FontWeight.w700)),
                       const SizedBox(height: 6),
-
-                      // Chips taille + coloris
                       Wrap(spacing: 5, runSpacing: 4, children: [
                         if (article.libTaille.isNotEmpty)
                           _Chip(article.libTaille, AppColors.primary),
                         if (article.libColoris.isNotEmpty)
-                          _Chip(article.libColoris,
-                              const Color(0xFF7C3AED)),
+                          _Chip(article.libColoris, const Color(0xFF7C3AED)),
                       ]),
                     ],
                   ),
                 ),
               ),
-
-              // Prix + badge prêt
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Column(
@@ -775,8 +1121,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                             color: AppColors.success)),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.success.withOpacity(.1),
                         borderRadius: BorderRadius.circular(6),
@@ -785,8 +1130,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                              width: 5,
-                              height: 5,
+                              width: 5, height: 5,
                               decoration: const BoxDecoration(
                                   color: AppColors.success,
                                   shape: BoxShape.circle)),
@@ -818,8 +1162,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       child: const Center(
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           SizedBox(
-              width: 16,
-              height: 16,
+              width: 16, height: 16,
               child: CircularProgressIndicator(
                   strokeWidth: 2, color: AppColors.primary)),
           SizedBox(width: 10),
@@ -831,7 +1174,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   }
 
   // ──────────────────────────────────────────────────────────────
-  //  ZONE ENCODAGE — centrée dans l'Expanded, zéro scroll
+  //  ZONE ENCODAGE
   // ──────────────────────────────────────────────────────────────
   Widget _buildEncodingZone() {
     return Column(
@@ -839,57 +1182,113 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // État initial : attente scan
-        if (!_successShown &&
-            _factoryEpc == null &&
-            !_isProcessing &&
-            _error == null)
+        if (!_successShown && _factoryEpc == null && !_isProcessing && _error == null)
           _buildScanInstruction(),
 
-        // En cours
         if (_isProcessing) _buildProcessingCard(),
 
-        // Erreur + bouton réessayer
         if (_error != null)
           AnimatedBuilder(
             animation: _shakeCtrl,
             builder: (_, child) {
               final dx = math.sin(_shakeCtrl.value * math.pi * 6) *
-                  6 *
-                  (1 - _shakeCtrl.value);
-              return Transform.translate(
-                  offset: Offset(dx, 0), child: child);
+                  6 * (1 - _shakeCtrl.value);
+              return Transform.translate(offset: Offset(dx, 0), child: child);
             },
             child: _buildErrorCard(_error!),
           ),
 
-        // Résultat EPC (usine → nouveau)
         if (_factoryEpc != null && _newEpc != null) ...[
           _buildEpcTransformCard(),
           const SizedBox(height: 10),
         ],
 
-        // Succès + actions (MODIF 2 : bouton "Scanner autre article" supprimé)
         if (_successShown) _buildSuccessCard(),
+
+        if (_waitingInventory) _buildWaitingInventoryCard(),
       ],
     );
   }
 
-  // ── Instruction initiale ──
+  Widget _buildWaitingInventoryCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3E0),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.warning.withOpacity(.4), width: 1.5),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.wifi_tethering_rounded,
+                    color: AppColors.warning, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Puce déjà utilisée',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF7B5800))),
+                    SizedBox(height: 3),
+                    Text(
+                      'Cette puce appartient à un autre article.\n'
+                          'Approchez-la du lecteur et appuyez\n'
+                          'sur le bouton Zebra pour la réécrire.',
+                      style: TextStyle(
+                          fontSize: 11, color: Color(0xFF7B5800), height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.warning,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.wifi_tethering_rounded, size: 16),
+              label: const Text('Lancer l\'inventaire',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+              onPressed: _launchRewriteInventory,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildScanInstruction() {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(16),
-        border:
-        Border.all(color: AppColors.primary.withOpacity(.2), width: 1.5),
+        border: Border.all(color: AppColors.primary.withOpacity(.2), width: 1.5),
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 48,
-            height: 48,
+            width: 48, height: 48,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -907,8 +1306,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.primary
-                                  .withOpacity((1 - v) * .45),
+                              color: AppColors.primary.withOpacity((1 - v) * .45),
                               width: 1.5,
                             ),
                           ),
@@ -918,8 +1316,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   );
                 }),
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 32, height: 32,
                   decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(.15),
                       shape: BoxShape.circle),
@@ -955,28 +1352,23 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     );
   }
 
-  // ── En cours ──
   Widget _buildProcessingCard() {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.warning.withOpacity(.06),
         borderRadius: BorderRadius.circular(16),
-        border:
-        Border.all(color: AppColors.warning.withOpacity(.25), width: 1.5),
+        border: Border.all(color: AppColors.warning.withOpacity(.25), width: 1.5),
       ),
       child: Row(
         children: [
           Stack(alignment: Alignment.center, children: [
             SizedBox(
-                width: 44,
-                height: 44,
+                width: 44, height: 44,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.warning.withOpacity(.3))),
+                    strokeWidth: 2, color: AppColors.warning.withOpacity(.3))),
             SizedBox(
-                width: 34,
-                height: 34,
+                width: 34, height: 34,
                 child: CircularProgressIndicator(
                     strokeWidth: 2.5, color: AppColors.warning)),
             const Icon(Icons.edit_rounded, color: AppColors.warning, size: 14),
@@ -1003,7 +1395,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     );
   }
 
-  // ── EPC usine → Nouvel EPC (affichage horizontal compact) ──
   Widget _buildEpcTransformCard() {
     return FadeTransition(
       opacity: _encodingEntranceCtrl,
@@ -1026,11 +1417,9 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           ),
           child: Column(
             children: [
-              // Label
               Row(
                 children: const [
-                  Icon(Icons.memory_rounded,
-                      color: AppColors.primary, size: 14),
+                  Icon(Icons.memory_rounded, color: AppColors.primary, size: 14),
                   SizedBox(width: 6),
                   Text('Transformation EPC',
                       style: TextStyle(
@@ -1041,35 +1430,27 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 ],
               ),
               const SizedBox(height: 10),
-
-              // Ancien EPC
               _EpcLine(
                 label: 'EPC usine',
                 value: _factoryEpc!,
                 color: AppColors.textSecondary,
                 icon: Icons.history_rounded,
               ),
-
-              // Flèche
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 24, height: 24,
                       decoration: BoxDecoration(
-                          color: AppColors.primarySoft,
-                          shape: BoxShape.circle),
+                          color: AppColors.primarySoft, shape: BoxShape.circle),
                       child: const Icon(Icons.arrow_downward_rounded,
                           color: AppColors.primary, size: 13),
                     ),
                   ],
                 ),
               ),
-
-              // Nouvel EPC
               _EpcLine(
                 label: 'Nouvel EPC',
                 value: _newEpc!,
@@ -1084,8 +1465,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     );
   }
 
-  // ── Succès — MODIF 2 : bouton "Scanner un autre article" supprimé ──
-  // ── L'utilisateur appuie directement sur le bouton Zebra            ──
   Widget _buildSuccessCard() {
     return FadeTransition(
       opacity: _successCtrl,
@@ -1103,18 +1482,15 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           ),
           child: Column(
             children: [
-              // Icône + texte succès
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 40, height: 40,
                     decoration: BoxDecoration(
                       color: AppColors.success.withOpacity(.12),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.success.withOpacity(.3),
-                          width: 1.5),
+                          color: AppColors.success.withOpacity(.3), width: 1.5),
                     ),
                     child: const Icon(Icons.check_rounded,
                         color: AppColors.success, size: 22),
@@ -1133,8 +1509,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                           'Appuyez sur le bouton Zebra pour scanner\nun nouvel article.',
                           style: TextStyle(
                               fontSize: 11,
-                              color:
-                              AppColors.textSecondary.withOpacity(.8),
+                              color: AppColors.textSecondary.withOpacity(.8),
                               height: 1.3),
                         ),
                       ],
@@ -1143,19 +1518,15 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Lien liste
               GestureDetector(
                 onTap: _openSseList,
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppColors.success.withOpacity(.07),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppColors.success.withOpacity(.2)),
+                    border: Border.all(color: AppColors.success.withOpacity(.2)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1187,23 +1558,20 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     );
   }
 
-  // ── Erreur + bouton réessayer ──
   Widget _buildErrorCard(String error) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.error.withOpacity(.05),
         borderRadius: BorderRadius.circular(14),
-        border:
-        Border.all(color: AppColors.error.withOpacity(.25), width: 1.5),
+        border: Border.all(color: AppColors.error.withOpacity(.25), width: 1.5),
       ),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 34, height: 34,
                 decoration: BoxDecoration(
                     color: AppColors.error.withOpacity(.1),
                     shape: BoxShape.circle),
@@ -1214,9 +1582,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               Expanded(
                 child: Text(error,
                     style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.error,
-                        height: 1.4)),
+                        fontSize: 12, color: AppColors.error, height: 1.4)),
               ),
             ],
           ),
@@ -1233,40 +1599,13 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               ),
               icon: const Icon(Icons.refresh_rounded, size: 15),
               label: const Text('Réessayer',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 13)),
-              onPressed: _resetForNextTag,
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              onPressed: () {
+                _resetForNextTag();
+                _startSerialScan();
+              },
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorBanner(String error) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(.05),
-        borderRadius: BorderRadius.circular(14),
-        border:
-        Border.all(color: AppColors.error.withOpacity(.25), width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(.1),
-                  shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline_rounded,
-                  color: AppColors.error, size: 18)),
-          const SizedBox(width: 10),
-          Expanded(
-              child: Text(error,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.error, height: 1.4))),
         ],
       ),
     );
