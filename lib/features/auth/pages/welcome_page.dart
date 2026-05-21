@@ -6,25 +6,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import '../providers/auth_provider.dart';
 import '../../home/pages/home_page.dart';
+import '../../../core/services/datawedge_service.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class _AppColors {
-  static const bg         = Color(0xFFDCF4F8);   // Gris très clair (fond de l'app)
-  static const surface    = Color(0xFFFFFFFF);   // Blanc pur (cartes et inputs)
-  static const surfaceAlt = Color(0xFFE5E7EB);   // Gris doux (zones secondaires)
-  static const border     = Color(0xFFD1D5DB);   // Bordures nettes mais discrètes
-  static const cyan       = Color(0xFF0070F3);   // Bleu "Electric" (plus lisible sur blanc)
-  static const cyanDim    = Color(0xFF70A1FF);   // Bleu ciel (accent secondaire)
-  static const cyanGlow   = Color(0x150070F3);   // Halo très léger pour les scans
-  static const success    = Color(0xFF10B981);   // Vert émeraude (succès encodage)
-  static const warning    = Color(0xFFF59E0B);   // Orange ambre (attention/chargement)
-  static const error      = Color(0xFFEF4444);   // Rouge vif (erreur scan/api)
-  static const textPrimary   = Color(0xFF111827); // Noir ardoise (lisibilité max)
-  static const textSecondary = Color(0xFF4B5563); // Gris texte info
-  static const textMuted     = Color(0xFF9CA3AF); // Gris désactivé
+  static const bg       = Color(0xFFF0F2FF);
+  static const cyan     = Color(0xFF3949AB);
+  static const cyanDim  = Color(0xFF7986CB);
+  static const cyanGlow = Color(0x153949AB);
+  static const surface       = Color(0xFFFFFFFF);
+  static const surfaceAlt    = Color(0xFFE5E7EB);
+  static const border        = Color(0xFFD1D5DB);
+  static const success       = Color(0xFF10B981);
+  static const warning       = Color(0xFFF59E0B);
+  static const error         = Color(0xFFEF4444);
+  static const textPrimary   = Color(0xFF111827);
+  static const textSecondary = Color(0xFF4B5563);
+  static const textMuted     = Color(0xFF9CA3AF);
 }
+
 // ──────────────────────────────────────────────────────────────
 //  PAGE PRINCIPALE
 // ──────────────────────────────────────────────────────────────
@@ -36,25 +38,22 @@ class WelcomePage extends ConsumerStatefulWidget {
 }
 
 class _WelcomePageState extends ConsumerState<WelcomePage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
 
-  // ── Controllers texte / focus ──
-  final _scanController = TextEditingController();
-  final _scanFocusNode  = FocusNode();
-  String _scanBuffer    = '';
-  Timer? _scanTimer;
-  Timer? _focusKeepAliveTimer;
+  // ── DataWedge ──
+  StreamSubscription<String>? _scanSubscription;
+  bool _dataWedgeReady = false;
 
   // ── State ──
   bool _scanMode = false;
 
   // ── Animation controllers ──
-  late final AnimationController _entranceCtrl;   // apparition initiale
-  late final AnimationController _pulseCtrl;      // halo pulsé icône
-  late final AnimationController _scanRingCtrl;   // anneau scan actif
-  late final AnimationController _shakeCtrl;      // shake erreur
-  late final AnimationController _dotsCtrl;       // points de chargement
-  late final AnimationController _gridCtrl;       // grille de fond
+  late final AnimationController _entranceCtrl;
+  late final AnimationController _pulseCtrl;
+  late final AnimationController _scanRingCtrl;
+  late final AnimationController _shakeCtrl;
+  late final AnimationController _dotsCtrl;
+  late final AnimationController _gridCtrl;
 
   // ── Animations dérivées ──
   late final Animation<double> _logoFade;
@@ -70,23 +69,31 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initAnimations();
-    _setupFocusListener();
     _setupMethodChannel();
-    // Démarrer le scan automatiquement après l'animation d'entrée
-    _entranceCtrl.forward().then((_) => _startScan());
+    Future.wait([
+      _initDataWedge(),
+      _entranceCtrl.forward(),
+    ]).then((_) {
+      if (mounted) _startScan();
+    });
   }
 
-  void _setupFocusListener() {
-    _scanFocusNode.addListener(() {
-      if (_scanMode && !_scanFocusNode.hasFocus) {
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted && _scanMode) {
-            _scanFocusNode.requestFocus();
-          }
-        });
+  Future<void> _initDataWedge() async {
+    final service = ref.read(dataWedgeServiceProvider);
+    await service.initialize();
+
+    await const MethodChannel('com.example.cap_mobile1/rfid')
+        .invokeMethod('disableDataWedgeRfid');
+
+    _scanSubscription = service.onScan.listen((data) {
+      if (mounted && !ref.read(authProvider).isAuthenticated) {
+        _onCodeScanned(data);
       }
     });
+
+    if (mounted) setState(() => _dataWedgeReady = true);
   }
 
   void _initAnimations() {
@@ -158,12 +165,21 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     )..repeat();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (mounted && !ref.read(authProvider).isAuthenticated) {
+        _startScan();
+      }
+    }
+  }
+
   // ── Method Channel Zebra ──
   void _setupMethodChannel() {
     const MethodChannel('com.example.cap_mobile1/rfid')
         .setMethodCallHandler((call) async {
       if (call.method == 'onScanButton') {
-        if (!_scanMode && !ref.read(authProvider).isLoading) {
+        if (!_scanMode && !ref.read(authProvider).isLoading && _dataWedgeReady) {
           _startScan();
         }
       }
@@ -171,35 +187,14 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
   }
 
   void _startScan() {
-    if (!mounted) return;
-    setState(() {
-      _scanMode   = true;
-      _scanBuffer = '';
-      _scanController.clear();
-    });
+    if (!mounted || !_dataWedgeReady) return; // ← garde
+    setState(() => _scanMode = true);
     _scanRingCtrl.repeat();
-
-    // Focus initial
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scanFocusNode.requestFocus();
-    });
-
-    // Keep-alive : vérifier et reprendre le focus toutes les 2 secondes
-    _focusKeepAliveTimer?.cancel();
-    _focusKeepAliveTimer = Timer.periodic(
-      const Duration(seconds: 2),
-          (_) {
-        if (mounted && _scanMode && !_scanFocusNode.hasFocus) {
-          _scanFocusNode.requestFocus();
-        }
-      },
-    );
   }
 
   void _onCodeScanned(String code) {
     final trimmed = code.trim();
     if (trimmed.isEmpty) return;
-    _focusKeepAliveTimer?.cancel();
     _scanRingCtrl.stop();
     setState(() => _scanMode = false);
     ref.read(authProvider.notifier).authenticate(trimmed);
@@ -210,21 +205,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     _shakeCtrl.forward();
   }
 
-  Timer? _scanTimer2;
-  void _checkScanComplete() {
-    _scanTimer?.cancel();
-    _scanTimer = Timer(const Duration(milliseconds: 200), () {
-      if (_scanBuffer.isNotEmpty) _onCodeScanned(_scanBuffer);
-    });
-  }
-
   @override
   void dispose() {
-    _focusKeepAliveTimer?.cancel();
-    _scanTimer?.cancel();
-    _scanTimer2?.cancel();
-    _scanController.dispose();
-    _scanFocusNode.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _scanSubscription?.cancel();
     _entranceCtrl.dispose();
     _pulseCtrl.dispose();
     _scanRingCtrl.dispose();
@@ -249,7 +233,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
       }
       if (next.error != null && previous?.error == null) {
         _triggerShake();
-        // Relancer le scan après une erreur
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted && !ref.read(authProvider).isAuthenticated) _startScan();
         });
@@ -259,43 +242,11 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: _AppColors.bg,
         body: Stack(
           children: [
-            // ── Grille de fond animée ──
             _buildAnimatedGrid(),
-
-            // ── Champ invisible DataWedge ──
-            if (_scanMode)
-              Positioned(
-                top: -100,
-                child: SizedBox(
-                  width: 1, height: 1,
-                  child: TextField(
-                    controller: _scanController,
-                    focusNode: _scanFocusNode,
-                    autofocus: true,
-                    keyboardType: TextInputType.text,
-                    showCursor: false,
-                    enableInteractiveSelection: false,
-                    onChanged: (value) {
-                      if (value.contains('\n') || value.contains('\r')) {
-                        _onCodeScanned(value);
-                      } else {
-                        _scanBuffer = value;
-                        _checkScanComplete();
-                      }
-                    },
-                    onSubmitted: _onCodeScanned,
-                    style: const TextStyle(color: Colors.transparent),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ),
-
-            // ── Contenu principal ──
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -358,28 +309,22 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           builder: (_, child) => Stack(
             alignment: Alignment.center,
             children: [
-              // Halo externe
               Container(
-                width: 130,
-                height: 130,
+                width: 130, height: 130,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _AppColors.cyan.withOpacity(.04 * _pulse.value),
                 ),
               ),
-              // Halo interne
               Container(
-                width: 110,
-                height: 110,
+                width: 110, height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _AppColors.cyan.withOpacity(.08 * _pulse.value),
                 ),
               ),
-              // Icône principale
               Container(
-                width: 88,
-                height: 88,
+                width: 88, height: 88,
                 decoration: BoxDecoration(
                   color: _AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
@@ -413,7 +358,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           children: [
             ShaderMask(
               shaderCallback: (bounds) => const LinearGradient(
-                colors: [_AppColors.textPrimary, _AppColors.cyan],
+                colors: [Color(0xFF1A237E), Color(0xFF3949AB)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ).createShader(bounds),
@@ -432,11 +377,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 24,
-                  height: 1,
-                  color: _AppColors.cyanDim.withOpacity(.5),
-                ),
+                Container(width: 24, height: 1,
+                    color: _AppColors.cyanDim.withOpacity(.5)),
                 const SizedBox(width: 8),
                 Text(
                   'GESTION RFID & ÉTIQUETAGE',
@@ -448,11 +390,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  width: 24,
-                  height: 1,
-                  color: _AppColors.cyanDim.withOpacity(.5),
-                ),
+                Container(width: 24, height: 1,
+                    color: _AppColors.cyanDim.withOpacity(.5)),
               ],
             ),
           ],
@@ -488,23 +427,19 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     );
   }
 
-  // ── Carte Scan ──
   Widget _buildScanCard() {
     return _GlassCard(
       key: const ValueKey('scan'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Anneau animé
           AnimatedBuilder(
             animation: _scanRing,
             builder: (_, __) => SizedBox(
-              width: 72,
-              height: 72,
+              width: 72, height: 72,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Anneau pulsé
                   if (_scanMode)
                     ...List.generate(2, (i) {
                       final delay = i * .5;
@@ -524,10 +459,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                         ),
                       );
                     }),
-                  // Icône centrale
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 48, height: 48,
                     decoration: BoxDecoration(
                       color: _AppColors.cyanGlow,
                       shape: BoxShape.circle,
@@ -564,14 +497,12 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             ),
           ),
           const SizedBox(height: 16),
-          // Barre de scan animée
           _AnimatedScanBar(),
         ],
       ),
     );
   }
 
-  // ── Carte Chargement ──
   Widget _buildLoadingCard() {
     return _GlassCard(
       key: const ValueKey('loading'),
@@ -628,7 +559,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     );
   }
 
-  // ── Carte Erreur ──
   Widget _buildErrorCard(String error) {
     return AnimatedBuilder(
       animation: _shake,
@@ -674,10 +604,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             const SizedBox(height: 14),
             Text(
               'Relance du scan dans 2 secondes...',
-              style: TextStyle(
-                color: _AppColors.textMuted,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: _AppColors.textMuted, fontSize: 12),
             ),
           ],
         ),
@@ -689,20 +616,17 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(width: 6, height: 6,
-          decoration: const BoxDecoration(
-            color: _AppColors.success,
+        Container(
+          width: 6, height: 6,
+          decoration: BoxDecoration(
+            color: _dataWedgeReady ? _AppColors.success : _AppColors.warning,
             shape: BoxShape.circle,
           ),
         ),
         const SizedBox(width: 8),
         Text(
-          'Système Zebra connecté',
-          style: TextStyle(
-            color: _AppColors.textMuted,
-            fontSize: 12,
-            letterSpacing: .5,
-          ),
+          _dataWedgeReady ? 'Système Zebra connecté' : 'Connexion Zebra...',
+          style: TextStyle(color: _AppColors.textMuted, fontSize: 12),
         ),
       ],
     );
@@ -712,8 +636,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
 // ──────────────────────────────────────────────────────────────
 //  COMPOSANTS RÉUTILISABLES
 // ──────────────────────────────────────────────────────────────
-
-/// Carte en verre avec bordure colorée
 class _GlassCard extends StatelessWidget {
   final Widget child;
   final Color accentColor;
@@ -745,7 +667,6 @@ class _GlassCard extends StatelessWidget {
   }
 }
 
-/// Barre de scan qui défile de haut en bas
 class _AnimatedScanBar extends StatefulWidget {
   @override
   State<_AnimatedScanBar> createState() => _AnimatedScanBarState();
@@ -787,7 +708,6 @@ class _AnimatedScanBarState extends State<_AnimatedScanBar>
           animation: _anim,
           builder: (_, __) => Stack(
             children: [
-              // Lignes horizontales décoratives
               ...List.generate(3, (i) => Positioned(
                 top: 8.0 + i * 10,
                 left: 8, right: 8,
@@ -796,14 +716,13 @@ class _AnimatedScanBarState extends State<_AnimatedScanBar>
                   color: _AppColors.textMuted.withOpacity(.3),
                 ),
               )),
-              // Ligne de scan qui défile
               Positioned(
                 top: 2 + 32 * _anim.value,
                 left: 0, right: 0,
                 child: Container(
                   height: 2,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
                         Colors.transparent,
                         _AppColors.cyan,
@@ -828,7 +747,7 @@ class _AnimatedScanBarState extends State<_AnimatedScanBar>
 }
 
 // ──────────────────────────────────────────────────────────────
-//  PAINTER – Grille de fond techno
+//  PAINTER
 // ──────────────────────────────────────────────────────────────
 class _GridPainter extends CustomPainter {
   final double progress;
@@ -844,16 +763,13 @@ class _GridPainter extends CustomPainter {
     const spacing = 40.0;
     final offset = (progress * spacing) % spacing;
 
-    // Lignes horizontales
     for (double y = -spacing + offset; y < size.height + spacing; y += spacing) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
-    // Lignes verticales
     for (double x = 0; x < size.width + spacing; x += spacing) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
 
-    // Points d'intersection lumineux aléatoires
     final dotPaint = Paint()
       ..color = const Color(0xFF00D4FF).withOpacity(.12)
       ..style = PaintingStyle.fill;

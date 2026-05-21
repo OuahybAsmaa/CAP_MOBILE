@@ -5,16 +5,17 @@ import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
 import '../../inventory/pages/inventory_page.dart';
+//import '../../QC/pages/qc_page.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class _C {
-  static const bg          = Color(0xFFDCF4F8);
+  static const bg          = Color(0xFFF0F2FF);
+  static const primary     = Color(0xFF3949AB);
+  static const primaryDark = Color(0xFF1A237E);
+  static const primarySoft = Color(0xFFE8EAF6);
   static const surface     = Color(0xFFFFFFFF);
-  static const primary     = Color(0xFF0070F3);
-  static const primaryDark = Color(0xFF1E40AF);
-  static const primarySoft = Color(0xFFEBF5FF);
   static const success     = Color(0xFF10B981);
   static const warning     = Color(0xFFF59E0B);
   static const error       = Color(0xFFEF4444);
@@ -99,16 +100,16 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
       ),
       _Module(
-        title: 'Inventaire',
-        subtitle: 'Stock & localisation RSSI',
-        icon: Icons.inventory_2_rounded,
+        title: 'QC RFID',
+        subtitle: 'Contrôle qualité des colis',
+        icon: Icons.fact_check_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
         available: true,
         onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const InventoryPage(),
+            pageBuilder: (_, __, ___) => const RfidPage(),
             transitionsBuilder: (_, anim, __, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 300),
@@ -147,7 +148,7 @@ class _HomePageState extends ConsumerState<HomePage>
         color: _C.surface,
         boxShadow: [
           BoxShadow(
-            color: _C.primary.withOpacity(.08),
+            color: _C.primaryDark.withOpacity(.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -169,7 +170,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       height: 42,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: _C.primary.withOpacity(.3), width: 2),
+                        border: Border.all(color: _C.primaryDark.withOpacity(.25), width: 2),
                         boxShadow: [
                           BoxShadow(
                             color: _C.primary.withOpacity(.15),
@@ -282,6 +283,7 @@ class _HomePageState extends ConsumerState<HomePage>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [_C.primaryDark, _C.primary],
+
                 ),
               ),
               child: Column(

@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 /// Thème: Bleu professionnel + Gris bleu
 class AppColors {
   // Couleurs principales
-  static const Color primary = Color(0xFF1E40AF); // Bleu professionnel
-  static const Color primaryDark = Color(0xFF1E3A8A); // Bleu foncé
+  static const Color primary     = Color(0xFF3949AB);
+  static const Color primaryDark = Color(0xFF1A237E);
   static const Color secondary = Color(0xFF475569); // Gris bleu foncé
   static const Color tertiary = Color(0xFF0EA5E9); // Bleu ciel (accent)
+  static const Color bg          = Color(0xFFF0F2FF);
+  static const Color primarySoft = Color(0xFFE8EAF6);
+  static const Color textMuted   = Color(0xFF9CA3AF);
 
   // Couleurs neutres
   static const Color white = Colors.white;
@@ -31,20 +34,13 @@ class AppColors {
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFF1E40AF),
-      Color(0xFF1E40AF),
-    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1A237E), Color(0xFF3949AB)],
   );
-
   static const LinearGradient blueGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1E40AF),
-      Color(0xFF1E40AF),
-    ],
+    colors: [Color(0xFF1A237E), Color(0xFF3949AB)],
   );
 }

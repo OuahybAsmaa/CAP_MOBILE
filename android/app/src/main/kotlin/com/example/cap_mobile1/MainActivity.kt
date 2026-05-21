@@ -36,6 +36,8 @@ class MainActivity : FlutterActivity(),
     companion object {
         const val METHOD_CHANNEL = "com.example.cap_mobile1/rfid"
         const val EVENT_CHANNEL  = "com.example.cap_mobile1/rfid_events"
+        const val DW_ACTION      = "com.symbol.datawedge.api.ACTION"
+        const val DW_SET_CONFIG  = "com.symbol.datawedge.api.SET_CONFIG"
     }
 
     private var readersBluetooth: Readers? = null
@@ -53,6 +55,9 @@ class MainActivity : FlutterActivity(),
 
     @Volatile private var rewriteScanResult: MethodChannel.Result? = null
     @Volatile private var rewriteScanDone = false
+
+    @Volatile private var tagFindingRunning = false
+    private var tagFindingEpc: String? = null
     @Volatile private var rewriteScanRunning = false
     private val rewriteCandidates = mutableMapOf<String, Int>()
 
@@ -136,6 +141,15 @@ class MainActivity : FlutterActivity(),
                     result
                 )
                 "readTagForRewrite" -> readTagForRewrite(result)
+                "disableDataWedgeRfid" -> {
+                    disableDataWedgeRfidInput()
+                    result.success(null)
+                }
+                "startTagFinding" -> startTagFinding(
+                    call.argument("epc")!!,
+                    result
+                )
+                "stopTagFinding" -> stopTagFinding(result)
                 else -> result.notImplemented()
             }
         }
@@ -227,6 +241,32 @@ class MainActivity : FlutterActivity(),
     }
 
 
+    private fun disableDataWedgeRfidInput() {
+        try {
+            val paramList = Bundle().apply {
+                putString("rfid_input_enabled", "false")
+            }
+            val pluginConfig = Bundle().apply {
+                putString("PLUGIN_NAME", "RFID")
+                putString("RESET_CONFIG", "true")
+                putBundle("PARAM_LIST", paramList)
+            }
+            val profileConfig = Bundle().apply {
+                putString("PROFILE_NAME", "CAP_MOBILE_PROFILE")
+                putString("PROFILE_ENABLED", "true")
+                putString("CONFIG_MODE", "UPDATE")
+                putBundle("PLUGIN_CONFIG", pluginConfig)
+            }
+            val intent = android.content.Intent().apply {
+                action = DW_ACTION
+                putExtra(DW_SET_CONFIG, profileConfig)
+            }
+            sendBroadcast(intent)
+            android.util.Log.d("RFID_DEBUG", "DataWedge RFID input désactivé")
+        } catch (e: Throwable) {
+            android.util.Log.e("RFID_DEBUG", "disableDataWedgeRfidInput erreur: ${e.message}")
+        }
+    }
     private fun readTagForRewrite(result: MethodChannel.Result) {
         Thread {
             try {
@@ -288,6 +328,43 @@ class MainActivity : FlutterActivity(),
                 rewriteScanRunning = false
                 android.util.Log.e("RFID_DEBUG", "readTagForRewrite erreur: ${e.message}", e)
                 mainHandler.post { result.error("REWRITE_SCAN_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
+
+    private fun startTagFinding(epc: String, result: MethodChannel.Result) {
+        Thread {
+            try {
+                if (rfidReader == null) {
+                    mainHandler.post { result.error("NOT_CONNECTED", "Non connecte", null) }
+                    return@Thread
+                }
+                // Arrêter inventaire en cours si besoin
+                try { rfidReader!!.Actions.Inventory.stop() } catch (_: Throwable) {}
+                Thread.sleep(300)
+
+                tagFindingEpc     = epc
+                tagFindingRunning = true
+                inventoryRunning  = false // on désactive le mode inventaire normal
+
+                rfidReader!!.Actions.Inventory.perform()
+                mainHandler.post { result.success("TagFinding démarré") }
+            } catch (e: Throwable) {
+                tagFindingRunning = false
+                mainHandler.post { result.error("TAG_FINDING_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
+
+    private fun stopTagFinding(result: MethodChannel.Result) {
+        Thread {
+            try {
+                tagFindingRunning = false
+                tagFindingEpc     = null
+                try { rfidReader!!.Actions.Inventory.stop() } catch (_: Throwable) {}
+                mainHandler.post { result.success("TagFinding arrêté") }
+            } catch (e: Throwable) {
+                mainHandler.post { result.error("TAG_FINDING_ERROR", e.message ?: "Erreur", null) }
             }
         }.start()
     }
@@ -663,6 +740,19 @@ class MainActivity : FlutterActivity(),
         tags?.forEach { tag ->
             val tagId = tag.tagID ?: return@forEach
 
+            if (tagFindingRunning && tagFindingEpc != null) {
+                if (tagId.equals(tagFindingEpc, ignoreCase = true)) {
+                    val rssi = tag.peakRSSI.toDouble()
+                    mainHandler.post {
+                        eventSink?.success(mapOf(
+                            "event" to "tagFinding",
+                            "tagId" to tagId,
+                            "rssi"  to rssi,
+                        ))
+                    }
+                }
+                return@forEach
+            }
             // ── Priorité 1 : Mode rewrite scan (Cas 2) ──
             if (rewriteScanRunning) {
                 val rssi = tag.peakRSSI.toInt()

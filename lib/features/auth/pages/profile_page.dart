@@ -7,11 +7,11 @@ import '../providers/auth_provider.dart';
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class _C {
-  static const bg          = Color(0xFFDCF4F8);
+  static const bg          = Color(0xFFF0F2FF);
+  static const primary     = Color(0xFF3949AB);
+  static const primaryDark = Color(0xFF1A237E);
+  static const primarySoft = Color(0xFFE8EAF6);
   static const surface     = Color(0xFFFFFFFF);
-  static const primary     = Color(0xFF0070F3);
-  static const primaryDark = Color(0xFF1E40AF);
-  static const primarySoft = Color(0xFFEBF5FF);
   static const success     = Color(0xFF10B981);
   static const error       = Color(0xFFEF4444);
   static const textPrimary   = Color(0xFF111827);
@@ -237,7 +237,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [_C.primaryDark, _C.primary],
+          colors: [Color(0xFF1A237E), Color(0xFF3949AB)],
         ),
       ),
       child: SafeArea(

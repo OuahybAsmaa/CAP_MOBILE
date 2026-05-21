@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-feature android:name="com.symbol.emdk.feature.EMDK" android:required="true" />
     <application
-        android:label="cap_mobile1"
+        android:label="Cap Mobile"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         tools:replace="android:label">

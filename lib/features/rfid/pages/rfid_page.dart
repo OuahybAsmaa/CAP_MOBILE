@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../core/services/rfid_service.dart';
 import '../../article/providers/article_provider.dart';
 import '../providers/rfid_provider.dart';
 import 'rfid_encoding_page.dart';
 import 'rfid_constants.dart';
+import 'rfid_control_tab.dart';
+import '../../../core/services/datawedge_service.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  RFID PAGE
@@ -22,16 +22,14 @@ class RfidPage extends ConsumerStatefulWidget {
 class _RfidPageState extends ConsumerState<RfidPage>
     with TickerProviderStateMixin {
 
-  // ── Scan article (DataWedge) ──
-  final _articleScanController = TextEditingController();
-  final _articleFocusNode      = FocusNode();
-  bool   _articleScanMode      = false;
-  String _scanBuffer           = '';
-  Timer? _scanTimer;
-  Timer? _focusKeepAliveTimer;
+  // ── Tab Controller ──
+  late TabController _tabController;
 
-  // ── State ──
-  // Mode encodage fixe — plus de sélection
+  // ── Scan article (DataWedge) ──
+  StreamSubscription<String>? _scanSubscription;
+  bool _articleScanMode = false;
+
+  // ── State encodage ──
   late final RfidMode _selectedMode;
   bool _readyToScan = false;
   int _totalEncodedCount = 0;
@@ -50,7 +48,11 @@ class _RfidPageState extends ConsumerState<RfidPage>
   void initState() {
     super.initState();
 
-    // Encodage est le seul mode — on le fixe d'emblée
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(() {
+        if (mounted) setState(() {});
+      });
+
     _selectedMode = rfidModes.firstWhere((m) => m.id == 'encoding');
 
     _entranceCtrl = AnimationController(
@@ -70,10 +72,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
       final rfidState    = ref.read(rfidProvider);
 
       if (rfidState.connectedReader == null) {
-        // 1. Charger les lecteurs disponibles
         await rfidNotifier.loadAvailableReaders();
-
-        // 2. Connecter automatiquement au premier lecteur trouvé
         final updatedState = ref.read(rfidProvider);
         if (updatedState.availableReaders.isNotEmpty &&
             updatedState.connectedReader == null) {
@@ -92,24 +91,22 @@ class _RfidPageState extends ConsumerState<RfidPage>
       }
     };
 
-    _setupFocusListener();
+    _initDataWedge();
   }
 
-  void _setupFocusListener() {
-    _articleFocusNode.addListener(() {
-      if (_articleScanMode && !_articleFocusNode.hasFocus) {
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted && _articleScanMode) _articleFocusNode.requestFocus();
+  void _initDataWedge() {
+    _scanSubscription =
+        ref.read(dataWedgeServiceProvider).onScan.listen((data) {
+          if (mounted && _articleScanMode) {
+            _onArticleCodeScanned(data);
+          }
         });
-      }
-    });
   }
 
   void _checkReadyToScan() {
     final rfidState = ref.read(rfidProvider);
-    final wasReady = _readyToScan;
-    // Plus besoin de vérifier _selectedMode (toujours défini)
-    _readyToScan = rfidState.connectedReader != null && _headerValidated;
+    final wasReady  = _readyToScan;
+    _readyToScan    = rfidState.connectedReader != null && _headerValidated;
     if (_readyToScan && !wasReady) {
       _instructionCtrl.forward(from: 0);
       Future.delayed(const Duration(milliseconds: 600), () {
@@ -120,35 +117,15 @@ class _RfidPageState extends ConsumerState<RfidPage>
 
   void _startArticleScan() {
     if (!mounted) return;
-
     _headerFocusNode.unfocus();
     FocusScope.of(context).unfocus();
-
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (!mounted || !_readyToScan) return;
-      setState(() {
-        _articleScanMode = true;
-        _scanBuffer      = '';
-        _articleScanController.clear();
-      });
-      ref.read(articleProvider.notifier).clearArticle();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _articleFocusNode.requestFocus();
-      });
-      _focusKeepAliveTimer?.cancel();
-      _focusKeepAliveTimer = Timer.periodic(
-          const Duration(seconds: 2), (_) {
-        if (mounted && _articleScanMode && !_articleFocusNode.hasFocus) {
-          _articleFocusNode.requestFocus();
-        }
-      });
-    });
+    setState(() => _articleScanMode = true);
+    ref.read(articleProvider.notifier).clearArticle();
   }
 
   void _onArticleCodeScanned(String code) {
     final trimmed = code.trim();
     if (trimmed.isEmpty) return;
-    _focusKeepAliveTimer?.cancel();
     setState(() => _articleScanMode = false);
 
     Navigator.push(
@@ -171,34 +148,20 @@ class _RfidPageState extends ConsumerState<RfidPage>
       ),
     ).then((result) {
       if (mounted) {
-        if (result is int) {
-          setState(() => _totalEncodedCount = result);
-        }
+        if (result is int) setState(() => _totalEncodedCount = result);
         _startArticleScan();
-      }
-    });
-  }
-
-  void _checkScanComplete() {
-    _scanTimer?.cancel();
-    _scanTimer = Timer(const Duration(milliseconds: 200), () {
-      if (_scanBuffer.isNotEmpty) {
-        _onArticleCodeScanned(_scanBuffer);
-        _scanBuffer = '';
       }
     });
   }
 
   @override
   void dispose() {
-    _scanTimer?.cancel();
-    _focusKeepAliveTimer?.cancel();
-    _articleScanController.dispose();
-    _articleFocusNode.dispose();
+    _scanSubscription?.cancel();
     _entranceCtrl.dispose();
     _pulseCtrl.dispose();
     _instructionCtrl.dispose();
     _headerFocusNode.dispose();
+    _tabController.dispose();
     final rfidService = ref.read(rfidServiceProvider);
     rfidService.onScanButtonPressed = null;
     super.dispose();
@@ -219,74 +182,34 @@ class _RfidPageState extends ConsumerState<RfidPage>
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: AppColors.bg,
-        body: Stack(
+        body: Column(
           children: [
-            // ── Champ DataWedge invisible ──
-            if (_articleScanMode)
-              Positioned(
-                top: -100,
-                child: SizedBox(
-                  width: 1, height: 1,
-                  child: TextField(
-                    controller: _articleScanController,
-                    focusNode: _articleFocusNode,
-                    autofocus: true,
-                    keyboardType: TextInputType.none,
-                    showCursor: false,
-                    enableInteractiveSelection: false,
-                    onSubmitted: _onArticleCodeScanned,
-                    onChanged: (val) {
-                      if (val.contains('\n') || val.contains('\r')) {
-                        _onArticleCodeScanned(val.trim());
-                      } else {
-                        _scanBuffer = val;
-                        _checkScanComplete();
-                      }
-                    },
-                    style: const TextStyle(color: Colors.transparent),
-                    decoration: const InputDecoration(border: InputBorder.none),
-                  ),
+            _buildHeader(),
+            Container(
+              color: AppColors.surface,
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.primary,
+                indicatorWeight: 3,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textMuted,
+                labelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
                 ),
+                tabs: const [
+                  Tab(text: 'Encodage'),
+                  Tab(text: 'Contrôle'),
+                ],
               ),
-
-            // ── Contenu sans scroll ──
-            SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildHeader(),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 8),
-                            // Étape 1 — Lecteur RFID (inchangée)
-                            _buildStepCard(
-                              step: 1,
-                              title: 'Lecteur RFID',
-                              child: _buildReaderSelector(rfidState, uniqueReaders, connected),
-                            ),
-                            const SizedBox(height: 8),
-                            // Étape 2
-                            _buildStepCard(
-                              step: 2,
-                              title: 'Header étiquette vierge',
-                              child: _buildHeaderInput(),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildInstructionCard(connected, rfidState.isLoading),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildEncodingTab(rfidState, uniqueReaders, connected),
+                  const RfidControlTab(),
+                ],
               ),
             ),
           ],
@@ -295,10 +218,41 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Header
+  // ══════════════════════════════════════════════════════════════
+  //  ONGLET ENCODAGE
+  // ══════════════════════════════════════════════════════════════
+  Widget _buildEncodingTab(
+      RfidState rfidState, List uniqueReaders, connected) {
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          _buildStepCard(
+            step: 1,
+            title: 'Header étiquette vierge',
+            child: _buildHeaderInput(),
+          ),
+          const SizedBox(height: 12),
+          _buildInstructionCard(connected, rfidState.isLoading),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  WIDGETS COMMUNS
+  // ══════════════════════════════════════════════════════════════
   Widget _buildHeader() {
+    final rfidState     = ref.watch(rfidProvider);
+    final uniqueReaders = rfidState.availableReaders.toSet().toList();
+    final connected     = rfidState.connectedReader;
+
     return Container(
-      height: 100,
+      //height: 185,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -308,68 +262,257 @@ class _RfidPageState extends ConsumerState<RfidPage>
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 28, height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white, size: 14,
-                  ),
-                ),
-              ),
-              const Spacer(),
               Row(
                 children: [
-                  AnimatedBuilder(
-                    animation: _pulseCtrl,
-                    builder: (_, __) => Container(
-                      width: 36, height: 36,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 28, height: 28,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.15 + .05 * _pulseCtrl.value),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(.3),
-                        ),
+                        color: Colors.white.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.nfc_rounded,
-                          color: Colors.white, size: 20),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 14),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                  const Spacer(),
+                  Row(
                     children: [
-                      const Text(
-                        'Service RFID',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: .5,
+                      AnimatedBuilder(
+                        animation: _pulseCtrl,
+                        builder: (_, __) => Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white
+                                .withOpacity(.15 + .05 * _pulseCtrl.value),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(.3)),
+                          ),
+                          child: const Icon(Icons.nfc_rounded,
+                              color: Colors.white, size: 20),
                         ),
                       ),
-                      Text(
-                        'Encodage des puces',
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Service RFID',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: .5,
+                            ),
+                          ),
+                          Text(
+                            _tabController.index == 0
+                                ? 'Encodage des puces'
+                                : 'Contrôle qualité',
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: Colors.white.withOpacity(.75),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 28),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Lecteur RFID',
                         style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.white.withOpacity(.75),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: .2,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: connected != null
+                              ? Colors.green.withOpacity(.25)
+                              : Colors.white.withOpacity(.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: connected != null
+                                ? Colors.greenAccent.withOpacity(.6)
+                                : Colors.white.withOpacity(.25),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5, height: 5,
+                              decoration: BoxDecoration(
+                                color: connected != null
+                                    ? Colors.greenAccent
+                                    : Colors.white38,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              connected != null ? 'Connecté' : 'Déconnecté',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: connected != null
+                                    ? Colors.greenAccent
+                                    : Colors.white54,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: connected != null
+                          ? AppColors.success.withOpacity(.06)
+                          : Colors.white.withOpacity(.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: connected != null
+                            ? AppColors.success
+                            : Colors.white.withOpacity(.3),
+                        width: connected != null ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          connected != null
+                              ? Icons.nfc_rounded
+                              : Icons.nfc_outlined,
+                          color: connected != null
+                              ? AppColors.success
+                              : Colors.white70,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: rfidState.isLoading && connected == null
+                              ? const Row(children: [
+                            SizedBox(
+                              width: 10, height: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5, color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Text('Recherche...',
+                                style: TextStyle(
+                                    color: Colors.white70, fontSize: 10)),
+                          ])
+                              : DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: connected?.name,
+                              isExpanded: true,
+                              dropdownColor: AppColors.primaryDark,
+                              style: const TextStyle(
+                                  fontSize: 10, color: Colors.white),
+                              iconEnabledColor: Colors.white70,
+                              hint: Text(
+                                uniqueReaders.isEmpty
+                                    ? 'Aucun lecteur'
+                                    : 'Choisir un lecteur',
+                                style: const TextStyle(
+                                    color: Colors.white54, fontSize: 10),
+                              ),
+                              items: uniqueReaders
+                                  .map((r) => DropdownMenuItem<String>(
+                                value: r.name,
+                                child: Text(r.name,
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white)),
+                              ))
+                                  .toList(),
+                              onChanged: rfidState.isLoading
+                                  ? null
+                                  : (name) {
+                                if (name == null) return;
+                                final reader = uniqueReaders
+                                    .firstWhere((r) => r.name == name);
+                                if (connected != null) {
+                                  ref
+                                      .read(rfidProvider.notifier)
+                                      .disconnectReader();
+                                }
+                                ref
+                                    .read(rfidProvider.notifier)
+                                    .connectToReader(reader);
+                              },
+                            ),
+                          ),
+                        ),
+                        if (connected != null)
+                          GestureDetector(
+                            onTap: rfidState.isLoading
+                                ? null
+                                : () => ref
+                                .read(rfidProvider.notifier)
+                                .disconnectReader(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withOpacity(.08),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text('Déco',
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: rfidState.isLoading
+                              ? null
+                              : () => ref
+                              .read(rfidProvider.notifier)
+                              .loadAvailableReaders(),
+                          child: Container(
+                            width: 24, height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(Icons.refresh_rounded,
+                                color: Colors.white, size: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const Spacer(),
-              const SizedBox(width: 28),
             ],
           ),
         ),
@@ -377,7 +520,6 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Carte étape
   Widget _buildStepCard({
     required int step,
     required String title,
@@ -437,144 +579,6 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Sélecteur lecteur
-  Widget _buildReaderSelector(RfidState rfidState, List uniqueReaders, connected) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: connected != null
-                ? AppColors.success.withOpacity(.06)
-                : AppColors.bg,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: connected != null ? AppColors.success : AppColors.border,
-              width: connected != null ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                connected != null ? Icons.nfc_rounded : Icons.nfc_outlined,
-                color: connected != null ? AppColors.success : AppColors.textMuted,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: rfidState.isLoading && connected == null
-                    ? Row(children: [
-                  const SizedBox(
-                    width: 10, height: 10,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5, color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Text('Recherche...',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                ])
-                    : DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: connected?.name,
-                    isExpanded: true,
-                    hint: Text(
-                      uniqueReaders.isEmpty
-                          ? 'Aucun lecteur'
-                          : 'Choisir un lecteur',
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 10),
-                    ),
-                    items: uniqueReaders
-                        .map((r) => DropdownMenuItem<String>(
-                      value: r.name,
-                      child: Text(r.name,
-                          style: const TextStyle(fontSize: 10)),
-                    ))
-                        .toList(),
-                    onChanged: rfidState.isLoading
-                        ? null
-                        : (name) {
-                      if (name == null) return;
-                      final reader = uniqueReaders
-                          .firstWhere((r) => r.name == name);
-                      if (connected != null) {
-                        ref
-                            .read(rfidProvider.notifier)
-                            .disconnectReader();
-                      }
-                      ref
-                          .read(rfidProvider.notifier)
-                          .connectToReader(reader);
-                    },
-                  ),
-                ),
-              ),
-              if (connected != null)
-                GestureDetector(
-                  onTap: rfidState.isLoading
-                      ? null
-                      : () => ref.read(rfidProvider.notifier).disconnectReader(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(.08),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text('Déco',
-                        style: TextStyle(
-                            fontSize: 9,
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: rfidState.isLoading
-                    ? null
-                    : () {
-                  ref.read(rfidProvider.notifier).loadAvailableReaders();
-                },
-                child: Container(
-                  width: 24, height: 24,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Icon(Icons.refresh_rounded,
-                      color: AppColors.primary, size: 12),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (connected != null) ...[
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Container(
-                width: 4, height: 4,
-                decoration: const BoxDecoration(
-                  color: AppColors.success, shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Connecté à ${connected.name}',
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: AppColors.success,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildHeaderInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -593,24 +597,25 @@ class _RfidPageState extends ConsumerState<RfidPage>
           ),
           child: Row(
             children: [
-              const Icon(Icons.tag_rounded, color: AppColors.primary, size: 14),
+              const Icon(Icons.tag_rounded,
+                  color: AppColors.primary, size: 14),
               const SizedBox(width: 6),
               Expanded(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: _headerOptions.contains(_header) ? _header : null,
+                    value:
+                    _headerOptions.contains(_header) ? _header : null,
                     isExpanded: true,
                     hint: const Text(
                       'Choisir un header',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 10),
+                      style: TextStyle(
+                          color: AppColors.textMuted, fontSize: 10),
                     ),
                     items: _headerOptions
                         .map((h) => DropdownMenuItem<String>(
                       value: h,
-                      child: Text(
-                        h,
-                        style: const TextStyle(fontSize: 11),
-                      ),
+                      child: Text(h,
+                          style: const TextStyle(fontSize: 11)),
                     ))
                         .toList(),
                     onChanged: (val) {
@@ -656,7 +661,6 @@ class _RfidPageState extends ConsumerState<RfidPage>
     );
   }
 
-  // ── Carte instruction
   Widget _buildInstructionCard(connected, bool isLoading) {
     if (!_readyToScan) {
       return _InstructionCard(

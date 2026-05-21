@@ -79,4 +79,22 @@ class InventoryService {
       throw Exception('configureMemoryBank error: ${e.message}');
     }
   }
+
+  Future<String> startTagFinding(String epc) async {
+    try {
+      return await _methodChannel
+          .invokeMethod('startTagFinding', {'epc': epc});
+    } on PlatformException catch (e) {
+      throw Exception('startTagFinding error: ${e.message}');
+    }
+  }
+
+  Future<String> stopTagFinding() async {
+    try {
+      return await _methodChannel.invokeMethod('stopTagFinding');
+    } on PlatformException catch (e) {
+      throw Exception('stopTagFinding error: ${e.message}');
+    }
+  }
+
 }

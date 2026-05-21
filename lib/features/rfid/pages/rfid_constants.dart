@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class AppColors {
-  static const bg          = Color(0xFFDCF4F8);
+  static const bg          = Color(0xFFF0F2FF);
+  static const primary     = Color(0xFF3949AB);
+  static const primaryDark = Color(0xFF1A237E);
+  static const primarySoft = Color(0xFFE8EAF6);
   static const surface     = Color(0xFFFFFFFF);
-  static const primary     = Color(0xFF0070F3);
-  static const primaryDark = Color(0xFF1E40AF);
-  static const primarySoft = Color(0xFFEBF5FF);
   static const success     = Color(0xFF10B981);
   static const warning     = Color(0xFFF59E0B);
   static const error       = Color(0xFFEF4444);

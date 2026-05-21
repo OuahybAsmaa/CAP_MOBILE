@@ -3,8 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../core/services/rfid_service.dart';
 import '../../../core/services/rfid_sse_service.dart';
 import '../../article/models/article_model.dart';
 import '../../article/providers/article_provider.dart';
@@ -13,6 +11,7 @@ import '../providers/rfid_provider.dart';
 import '../utils/epc_calculator.dart';
 import 'rfid_constants.dart';
 import '../../SSE/pages/rfid_sse_list_page.dart';
+import '../../../core/services/datawedge_service.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  MODÈLE LOCAL — entrée SSE de la session courante
@@ -81,12 +80,8 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
   bool _waitingInventory = false;
 
   // ── DataWedge — rescan article depuis cette page ──
-  final _articleScanController = TextEditingController();
-  final _articleFocusNode      = FocusNode();
-  bool   _articleScanMode      = false;
-  String _scanBuffer           = '';
-  Timer? _scanTimer;
-  Timer? _focusKeepAliveTimer;
+  StreamSubscription<String>? _scanSubscription;
+  bool _articleScanMode = false;
 
   // ── Liste des encodages de la session ──
   late final List<SseSessionEntry> _sseEntries;
@@ -112,17 +107,10 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     _counterCtrl          = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _shakeCtrl            = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _scanRingCtrl         = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))..repeat();
+    _initDataWedge();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(articleProvider.notifier).fetchArticle(widget.initialCode);
-    });
-
-    _articleFocusNode.addListener(() {
-      if (_articleScanMode && !_articleFocusNode.hasFocus) {
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted && _articleScanMode) _articleFocusNode.requestFocus();
-        });
-      }
     });
 
     final rfidService = ref.read(rfidServiceProvider);
@@ -142,12 +130,16 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     };
   }
 
+  void _initDataWedge() {
+    _scanSubscription = ref.read(dataWedgeServiceProvider).onScan.listen((data) {
+      if (!mounted || !_articleScanMode) return;
+      _onArticleCodeScanned(data);
+    });
+  }
+
   @override
   void dispose() {
-    _scanTimer?.cancel();
-    _focusKeepAliveTimer?.cancel();
-    _articleScanController.dispose();
-    _articleFocusNode.dispose();
+    _scanSubscription?.cancel();
     _articleEntranceCtrl.dispose();
     _encodingEntranceCtrl.dispose();
     _successCtrl.dispose();
@@ -280,18 +272,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     setState(() {
       _articleScanMode = true;
       _scanTarget      = 'article';
-      _scanBuffer      = '';
-      _articleScanController.clear();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _articleFocusNode.requestFocus();
-    });
-    _focusKeepAliveTimer?.cancel();
-    _focusKeepAliveTimer = Timer.periodic(
-        const Duration(seconds: 2), (_) {
-      if (mounted && _articleScanMode && !_articleFocusNode.hasFocus) {
-        _articleFocusNode.requestFocus();
-      }
     });
   }
 
@@ -300,26 +280,13 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     setState(() {
       _articleScanMode = true;
       _scanTarget      = 'serial';
-      _scanBuffer      = '';
-      _articleScanController.clear();
       _scannedSerial   = null;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _articleFocusNode.requestFocus();
-    });
-    _focusKeepAliveTimer?.cancel();
-    _focusKeepAliveTimer = Timer.periodic(
-        const Duration(seconds: 2), (_) {
-      if (mounted && _articleScanMode && !_articleFocusNode.hasFocus) {
-        _articleFocusNode.requestFocus();
-      }
     });
   }
 
   void _onArticleCodeScanned(String code) {
     final trimmed = code.trim();
     if (trimmed.isEmpty) return;
-    _focusKeepAliveTimer?.cancel();
     setState(() { _articleScanMode = false; });
 
     if (_scanTarget == 'serial') {
@@ -494,6 +461,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
         barrierDismissible: false,
         builder: (ctx) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -617,6 +585,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               ],
             ),
           ),
+          ),
         ),
       );
 
@@ -680,16 +649,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     }
   }
 
-  void _checkScanComplete() {
-    _scanTimer?.cancel();
-    _scanTimer = Timer(const Duration(milliseconds: 200), () {
-      if (_scanBuffer.isNotEmpty) {
-        _onArticleCodeScanned(_scanBuffer);
-        _scanBuffer = '';
-      }
-    });
-  }
-
   // ──────────────────────────────────────────────────────────────
   //  BUILD
   // ──────────────────────────────────────────────────────────────
@@ -724,34 +683,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           backgroundColor: AppColors.bg,
           body: Stack(
             children: [
-              // ── Champ DataWedge invisible — désactivé pendant inventaire ──
-              if (_articleScanMode && !_waitingInventory && !_isProcessing)
-                Positioned(
-                  top: -100,
-                  child: SizedBox(
-                    width: 1, height: 1,
-                    child: TextField(
-                      controller: _articleScanController,
-                      focusNode:  _articleFocusNode,
-                      autofocus:  true,
-                      keyboardType: TextInputType.none,
-                      showCursor: false,
-                      enableInteractiveSelection: false,
-                      onSubmitted: _onArticleCodeScanned,
-                      onChanged: (val) {
-                        if (val.contains('\n') || val.contains('\r')) {
-                          _onArticleCodeScanned(val.trim());
-                        } else {
-                          _scanBuffer = val;
-                          _checkScanComplete();
-                        }
-                      },
-                      style: const TextStyle(color: Colors.transparent),
-                      decoration: const InputDecoration(border: InputBorder.none),
-                    ),
-                  ),
-                ),
-
               // ── Contenu principal ──
               SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
@@ -952,7 +883,6 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           ),
           GestureDetector(
             onTap: () {
-              _focusKeepAliveTimer?.cancel();
               setState(() { _articleScanMode = false; });
             },
             child: Container(
