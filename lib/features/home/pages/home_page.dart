@@ -1,3 +1,4 @@
+import 'package:cap_mobile/features/QC/pages/qc_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +6,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
 import '../../inventory/pages/inventory_page.dart';
-//import '../../QC/pages/qc_page.dart';
+import '../../QC/pages/qc_page.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -101,7 +102,7 @@ class _HomePageState extends ConsumerState<HomePage>
       ),
       _Module(
         title: 'QC RFID',
-        subtitle: 'Contrôle qualité des colis',
+        subtitle: 'Parcel quality control',
         icon: Icons.fact_check_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
@@ -109,7 +110,7 @@ class _HomePageState extends ConsumerState<HomePage>
         onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const RfidPage(),
+            pageBuilder: (_, __, ___) => const QcRfidPage(),
             transitionsBuilder: (_, anim, __, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 300),

@@ -280,241 +280,201 @@ class _RfidPageState extends ConsumerState<RfidPage>
                           color: Colors.white, size: 14),
                     ),
                   ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      AnimatedBuilder(
-                        animation: _pulseCtrl,
-                        builder: (_, __) => Container(
-                          width: 36, height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white
-                                .withOpacity(.15 + .05 * _pulseCtrl.value),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(.3)),
-                          ),
-                          child: const Icon(Icons.nfc_rounded,
-                              color: Colors.white, size: 20),
-                        ),
+                  const SizedBox(width: 10),
+                  AnimatedBuilder(
+                    animation: _pulseCtrl,
+                    builder: (_, __) => Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.15 + .05 * _pulseCtrl.value),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white.withOpacity(.3)),
                       ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Service RFID',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: .5,
-                            ),
-                          ),
-                          Text(
-                            _tabController.index == 0
-                                ? 'Encodage des puces'
-                                : 'Contrôle qualité',
-                            style: TextStyle(
-                              fontSize: 9,
-                              color: Colors.white.withOpacity(.75),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      child: const Icon(Icons.nfc_rounded, color: Colors.white, size: 20),
+                    ),
                   ),
-                  const Spacer(),
-                  const SizedBox(width: 28),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'Lecteur RFID',
+                        'Service RFID',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
                           color: Colors.white,
-                          letterSpacing: .2,
+                          letterSpacing: .5,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: connected != null
-                              ? Colors.green.withOpacity(.25)
-                              : Colors.white.withOpacity(.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: connected != null
-                                ? Colors.greenAccent.withOpacity(.6)
-                                : Colors.white.withOpacity(.25),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 5, height: 5,
-                              decoration: BoxDecoration(
-                                color: connected != null
-                                    ? Colors.greenAccent
-                                    : Colors.white38,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              connected != null ? 'Connecté' : 'Déconnecté',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: connected != null
-                                    ? Colors.greenAccent
-                                    : Colors.white54,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        _tabController.index == 0
+                            ? 'Encodage des puces'
+                            : 'Contrôle qualité',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.white.withOpacity(.75),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: connected != null
-                          ? AppColors.success.withOpacity(.06)
-                          : Colors.white.withOpacity(.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: connected != null
-                            ? AppColors.success
-                            : Colors.white.withOpacity(.3),
-                        width: connected != null ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          connected != null
-                              ? Icons.nfc_rounded
-                              : Icons.nfc_outlined,
-                          color: connected != null
-                              ? AppColors.success
-                              : Colors.white70,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: rfidState.isLoading && connected == null
-                              ? const Row(children: [
-                            SizedBox(
-                              width: 10, height: 10,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5, color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(width: 6),
-                            Text('Recherche...',
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 10)),
-                          ])
-                              : DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: connected?.name,
-                              isExpanded: true,
-                              dropdownColor: AppColors.primaryDark,
-                              style: const TextStyle(
-                                  fontSize: 10, color: Colors.white),
-                              iconEnabledColor: Colors.white70,
-                              hint: Text(
-                                uniqueReaders.isEmpty
-                                    ? 'Aucun lecteur'
-                                    : 'Choisir un lecteur',
-                                style: const TextStyle(
-                                    color: Colors.white54, fontSize: 10),
-                              ),
-                              items: uniqueReaders
-                                  .map((r) => DropdownMenuItem<String>(
-                                value: r.name,
-                                child: Text(r.name,
-                                    style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white)),
-                              ))
-                                  .toList(),
-                              onChanged: rfidState.isLoading
-                                  ? null
-                                  : (name) {
-                                if (name == null) return;
-                                final reader = uniqueReaders
-                                    .firstWhere((r) => r.name == name);
-                                if (connected != null) {
-                                  ref
-                                      .read(rfidProvider.notifier)
-                                      .disconnectReader();
-                                }
-                                ref
-                                    .read(rfidProvider.notifier)
-                                    .connectToReader(reader);
-                              },
-                            ),
-                          ),
-                        ),
-                        if (connected != null)
-                          GestureDetector(
-                            onTap: rfidState.isLoading
-                                ? null
-                                : () => ref
-                                .read(rfidProvider.notifier)
-                                .disconnectReader(),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(.08),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text('Déco',
-                                  style: TextStyle(
-                                      fontSize: 9,
-                                      color: AppColors.error,
-                                      fontWeight: FontWeight.w700)),
-                            ),
-                          ),
-                        const SizedBox(width: 4),
-                        GestureDetector(
-                          onTap: rfidState.isLoading
-                              ? null
-                              : () => ref
-                              .read(rfidProvider.notifier)
-                              .loadAvailableReaders(),
-                          child: Container(
-                            width: 24, height: 24,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(Icons.refresh_rounded,
-                                color: Colors.white, size: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const Spacer(),
+                  _buildReaderButton(connected, rfidState, uniqueReaders),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+  Widget _buildReaderButton(connected, RfidState rfidState, List uniqueReaders) {
+    return GestureDetector(
+      onTap: rfidState.isLoading
+          ? null
+          : () => _showReaderPicker(context, connected, rfidState, uniqueReaders),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: connected != null
+              ? Colors.green.withOpacity(.2)
+              : Colors.white.withOpacity(.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: connected != null
+                ? Colors.greenAccent.withOpacity(.6)
+                : Colors.white.withOpacity(.3),
+          ),
+        ),
+        child: rfidState.isLoading && connected == null
+            ? const SizedBox(
+          width: 12, height: 12,
+          child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
+        )
+            : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6, height: 6,
+              decoration: BoxDecoration(
+                color: connected != null ? Colors.greenAccent : Colors.white38,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              connected != null ? 'Connecté' : 'Déconnecté',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: connected != null ? Colors.greenAccent : Colors.white60,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReaderPicker(BuildContext context, connected, RfidState rfidState, List uniqueReaders) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.all(16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Lecteur RFID',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    ref.read(rfidProvider.notifier).loadAvailableReaders();
+                  },
+                  child: Container(
+                    width: 28, height: 28,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(Icons.refresh_rounded,
+                        color: AppColors.primary, size: 14),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (uniqueReaders.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('Aucun lecteur disponible',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+              )
+            else
+              ...uniqueReaders.map((r) {
+                final isSelected = connected?.name == r.name;
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isSelected) {
+                      ref.read(rfidProvider.notifier).disconnectReader();
+                    } else {
+                      if (connected != null) {
+                        ref.read(rfidProvider.notifier).disconnectReader();
+                      }
+                      ref.read(rfidProvider.notifier).connectToReader(r);
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.success.withOpacity(.06)
+                          : AppColors.bg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected ? AppColors.success : AppColors.border,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.nfc_rounded,
+                            color: isSelected ? AppColors.success : AppColors.textMuted,
+                            size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(r.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? AppColors.success
+                                    : AppColors.textPrimary,
+                              )),
+                        ),
+                        if (isSelected)
+                          const Icon(Icons.check_circle_rounded,
+                              color: AppColors.success, size: 16),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+          ],
         ),
       ),
     );
