@@ -25,11 +25,16 @@ class DataWedgeService {
     if (_initialized) return;
     try {
       await _dataWedge.initialize();
+
+
+      await _dataWedge.createDefaultProfile(profileName: 'CAP_MOBILE_PROFILE');
+
       _internalSubscription = _dataWedge.onScanResult.listen((result) {
         _scanController.add(result.data);
       });
+
       _initialized = true;
-      debugPrint('DataWedgeService initialisé');
+      debugPrint('DataWedgeService initialisé + profil créé');
     } catch (e) {
       debugPrint('DataWedgeService erreur: $e');
     }
