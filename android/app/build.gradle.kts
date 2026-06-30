@@ -44,6 +44,12 @@ flutter {
     source = "../.."
 }
 
+repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("https://zebratech.jfrog.io/artifactory/EMDK-Android/") }
+}
+
 dependencies {
     implementation(files("libs/API3_READER-release-2.0.5.238.aar"))
     implementation(files("libs/API3_ASCII-release-2.0.5.238.aar"))
@@ -58,4 +64,6 @@ dependencies {
     implementation(files("libs/API3_ZIOTCTRANSPORT-release-2.0.5.238.aar"))
     implementation(files("libs/rfidhostlib.aar"))
     implementation(files("libs/rfidseriallib.aar"))
+
+    compileOnly("com.symbol:emdk:11.0.134")
 }

@@ -28,10 +28,12 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
   StreamSubscription<String>? _scanSubscription;
   late final AnimationController _pulseCtrl;
   QcControlMode _selectedMode = QcControlMode.partiel;
+  static const _nativeChannel = MethodChannel('com.example.cap_mobile1/rfid');
 
   @override
   void initState() {
     super.initState();
+    debugPrint('>>> QcRfidPage initState');
 
     _pulseCtrl = AnimationController(
       vsync: this,
@@ -62,20 +64,31 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
     _initDataWedge();
   }
 
-  void _initDataWedge() {
-    _scanSubscription =
-        ref
-            .read(dataWedgeServiceProvider)
-            .onScan
-            .listen((data) {
-          if (!mounted) return;
-          final qcState = ref.read(qcProvider);
-          // On accepte un scan uniquement si on est en attente (pas de production chargée)
-          if (!qcState.isLoading) {
-            ref.read(qcProvider.notifier).reset();
-            ref.read(qcProvider.notifier).onGencodeScanned(data);
-          }
-        });
+  void _initDataWedge() async {
+    await ref.read(dataWedgeServiceProvider).initialize();
+
+    if (!mounted) return;
+
+    // Ecoute des scans venant d'EMDK (scanner interne, decodeur ITF)
+    _nativeChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onEmdkScan') {
+        final data = call.arguments as String;
+        if (!mounted) return;
+        final qcState = ref.read(qcProvider);
+        if (!qcState.isLoading) {
+          ref.read(qcProvider.notifier).reset();
+          ref.read(qcProvider.notifier).onGencodeScanned(data);
+        }
+      }
+    });
+
+    // Demarre le scanner EMDK (bascule depuis DataWedge)
+    try {
+      await _nativeChannel.invokeMethod('startEmdkScan');
+      debugPrint('EMDK scan demarre');
+    } catch (e) {
+      debugPrint('Erreur demarrage EMDK: $e');
+    }
   }
 
   Uint8List _hexToBytes(String hex) {
@@ -88,7 +101,11 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
   }
   @override
   void dispose() {
+    debugPrint('>>> QcRfidPage dispose');
     _scanSubscription?.cancel();
+    _nativeChannel.invokeMethod('stopEmdkScan').catchError((e) {
+      debugPrint('Erreur arret EMDK: $e');
+    });
     _pulseCtrl.dispose();
     super.dispose();
   }
@@ -984,63 +1001,63 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                 ),
               ),
               child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Image carton
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Builder(
-                      builder: (_) {
-                        try {
-                          final bytes = _hexToBytes(colis.img.trim());
-                          return Image.memory(
-                            bytes,
-                            height: 80,
-                            fit: BoxFit.contain,
-                          );
-                        } catch (e) {
-                          return const SizedBox.shrink();
-                        }
-                      },
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Image carton
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Builder(
+                        builder: (_) {
+                          try {
+                            final bytes = _hexToBytes(colis.img.trim());
+                            return Image.memory(
+                              bytes,
+                              height: 80,
+                              fit: BoxFit.contain,
+                            );
+                          } catch (e) {
+                            return const SizedBox.shrink();
+                          }
+                        },
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 12),
 
-                  // Badge nb articles
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32).withOpacity(.08),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF2E7D32).withOpacity(.25)),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                        '${colis.nbCol}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF2E7D32),
+                    // Badge nb articles
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32).withOpacity(.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFF2E7D32).withOpacity(.25)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${colis.nbCol}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF2E7D32),
+                            ),
                           ),
-                        ),
-                        const Text(
-                          'parcels',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2E7D32),
+                          const Text(
+                            'parcels',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2E7D32),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               ),
             ),
         ],

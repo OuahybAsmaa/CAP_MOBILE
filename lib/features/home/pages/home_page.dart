@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
+import '../../exp_control/pages/exp_control_page.dart';
 import '../../inventory/pages/inventory_page.dart';
 import '../../QC/pages/qc_page.dart';
 
@@ -111,6 +112,23 @@ class _HomePageState extends ConsumerState<HomePage>
           context,
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const QcRfidPage(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        ),
+      ),
+      _Module(
+        title: 'Contrôle EXP',
+        subtitle: 'Vérification des réceptions',
+        icon: Icons.local_shipping_rounded,
+        color: const Color(0xFF01667E),
+        bgColor: const Color(0xFFE0F2FE),
+        available: true,
+        onTap: () => Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const ExpControlPage(),
             transitionsBuilder: (_, anim, __, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 300),

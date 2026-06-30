@@ -28,6 +28,13 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.content.Context
+import com.symbol.emdk.EMDKManager
+import com.symbol.emdk.EMDKResults
+import com.symbol.emdk.barcode.BarcodeManager
+import com.symbol.emdk.barcode.Scanner
+import com.symbol.emdk.barcode.ScannerConfig
+import com.symbol.emdk.barcode.ScannerResults
+import com.symbol.emdk.barcode.StatusData
 
 class MainActivity : FlutterActivity(),
     Readers.RFIDReaderEventHandler,
@@ -61,6 +68,130 @@ class MainActivity : FlutterActivity(),
     @Volatile private var rewriteScanRunning = false
     private val rewriteCandidates = mutableMapOf<String, Int>()
 
+    private var emdkManager: EMDKManager? = null
+    private var barcodeManager: BarcodeManager? = null
+    private var barcodeScanner: Scanner? = null
+
+    private val emdkListener = object : EMDKManager.EMDKListener {
+        override fun onOpened(manager: EMDKManager?) {
+            emdkManager = manager
+            android.util.Log.d("RFID_DEBUG", "EMDK ouvert")
+            initBarcodeScanner()
+        }
+
+        override fun onClosed() {
+            android.util.Log.d("RFID_DEBUG", "EMDK ferme")
+            emdkManager = null
+        }
+    }
+
+    private fun initEmdk() {
+        val results = EMDKManager.getEMDKManager(applicationContext, emdkListener)
+        if (results.statusCode != EMDKResults.STATUS_CODE.SUCCESS) {
+            android.util.Log.e("RFID_DEBUG", "Erreur ouverture EMDK: ${results.statusCode}")
+        }
+    }
+
+    private fun initBarcodeScanner() {
+        try {
+            barcodeManager = emdkManager?.getInstance(EMDKManager.FEATURE_TYPE.BARCODE) as? BarcodeManager
+            android.util.Log.d("RFID_DEBUG", "BarcodeManager obtenu: $barcodeManager")
+        } catch (e: Throwable) {
+            android.util.Log.e("RFID_DEBUG", "initBarcodeScanner erreur: ${e.message}")
+        }
+    }
+
+    private fun startEmdkScan(result: MethodChannel.Result) {
+        Thread {
+            try {
+                if (emdkManager == null) {
+                    initEmdk()
+                    // Attendre que onOpened soit appele (asynchrone)
+                    var waited = 0
+                    while (barcodeManager == null && waited < 50) {
+                        Thread.sleep(100)
+                        waited++
+                    }
+                }
+
+                if (barcodeManager == null) {
+                    mainHandler.post { result.error("EMDK_NOT_READY", "BarcodeManager non disponible", null) }
+                    return@Thread
+                }
+
+                disableDataWedgeRfidInput()
+                Thread.sleep(300)
+
+                barcodeScanner = barcodeManager?.getDevice(BarcodeManager.DeviceIdentifier.DEFAULT)
+                if (barcodeScanner == null) {
+                    mainHandler.post { result.error("NO_SCANNER", "Aucun scanner EMDK trouve", null) }
+                    return@Thread
+                }
+
+                barcodeScanner!!.addDataListener { scanDataCollection ->
+                    if (scanDataCollection != null && scanDataCollection.result == ScannerResults.SUCCESS) {
+                        val scanData = scanDataCollection.scanData
+                        if (scanData != null && scanData.isNotEmpty()) {
+                            val data = scanData[0].data
+                            android.util.Log.d("RFID_DEBUG", "EMDK scan recu: $data")
+                            mainHandler.post {
+                                flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+                                    MethodChannel(messenger, METHOD_CHANNEL).invokeMethod("onEmdkScan", data)
+                                }
+                            }
+                        }
+                    }
+                    // Relancer la lecture pour le prochain scan
+                    try {
+                        barcodeScanner?.triggerType = Scanner.TriggerType.HARD
+                        barcodeScanner?.read()
+                    } catch (e: Throwable) {
+                        android.util.Log.e("RFID_DEBUG", "Erreur relance read: ${e.message}")
+                    }
+                }
+
+                barcodeScanner!!.addStatusListener { statusData ->
+                    android.util.Log.d("RFID_DEBUG", "EMDK status: ${statusData?.state}")
+                }
+
+                barcodeScanner!!.enable()
+                barcodeScanner!!.triggerType = Scanner.TriggerType.HARD
+
+                // Activer explicitement Interleaved 2 of 5 dans la config EMDK
+                val config: ScannerConfig = barcodeScanner!!.config
+                config.decoderParams.i2of5.enabled = true
+                config.decoderParams.code128.enabled = true
+                config.decoderParams.ean13.enabled = true
+                config.decoderParams.ean8.enabled = true
+                config.decoderParams.upca.enabled = true
+                barcodeScanner!!.config = config
+
+                barcodeScanner!!.read()
+
+                android.util.Log.d("RFID_DEBUG", "EMDK scanner active, ITF=true")
+                mainHandler.post { result.success("EMDK scanner demarre") }
+            } catch (e: Throwable) {
+                android.util.Log.e("RFID_DEBUG", "startEmdkScan erreur: ${e.message}", e)
+                mainHandler.post { result.error("EMDK_ERROR", e.message ?: "Erreur", null) }
+            }
+        }.start()
+    }
+
+    private fun stopEmdkScan(result: MethodChannel.Result) {
+        try {
+            barcodeScanner?.cancelRead()
+            barcodeScanner?.disable()
+            barcodeScanner?.release()
+            barcodeScanner = null
+            emdkManager?.release()
+            emdkManager = null
+            barcodeManager = null
+            result.success("EMDK scanner arrete")
+        } catch (e: Throwable) {
+            result.error("EMDK_STOP_ERROR", e.message ?: "Erreur", null)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
@@ -80,6 +211,16 @@ class MainActivity : FlutterActivity(),
         if (keyCode == 103 && event?.repeatCount == 0) {
             android.util.Log.d("RFID_DEBUG", "Bouton TC52 presse!")
 
+            if (barcodeScanner != null) {
+                try {
+                    if (barcodeScanner?.isReadPending == false) {
+                        barcodeScanner?.read()
+                    }
+                } catch (e: Throwable) {
+                    android.util.Log.e("RFID_DEBUG", "Erreur trigger EMDK: ${e.message}")
+                }
+                return true
+            }
             Thread {
                 try {
                     singleReadDone = false
@@ -145,6 +286,8 @@ class MainActivity : FlutterActivity(),
                     disableDataWedgeRfidInput()
                     result.success(null)
                 }
+                "startEmdkScan" -> startEmdkScan(result)
+                "stopEmdkScan" -> stopEmdkScan(result)
                 "startTagFinding" -> startTagFinding(
                     call.argument("epc")!!,
                     result
@@ -822,35 +965,48 @@ class MainActivity : FlutterActivity(),
                     com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_PRESSED -> {
                         android.util.Log.d("RFID_DEBUG", "RFD40 Trigger PRESSED")
 
-                        Thread {
+                        if (barcodeScanner != null) {
                             try {
-                                singleReadDone = false
-
-                                mainHandler.post {
-                                    flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
-                                        MethodChannel(messenger, METHOD_CHANNEL)
-                                            .invokeMethod("onScanButton", null)
-                                    }
+                                if (barcodeScanner?.isReadPending == true) {
+                                    barcodeScanner?.cancelRead()
                                 }
+                                barcodeScanner?.triggerType = Scanner.TriggerType.SOFT_ONCE
+                                barcodeScanner?.read()
+                                android.util.Log.d("RFID_DEBUG", "RFD40->EMDK: soft trigger declenche")
+                            } catch (e: Throwable) {
+                                android.util.Log.e("RFID_DEBUG", "Erreur trigger EMDK sled: ${e.message}")
+                            }
+                        } else {
+                            Thread {
+                                try {
+                                    singleReadDone = false
 
-                                var waited = 0
-                                while (singleReadResult == null && waited < 4) {
-                                    Thread.sleep(100)
-                                    waited++
-                                }
-
-                                if (singleReadResult != null && !singleReadDone && rfidReader != null) {
-                                    rfidReader!!.Actions.Inventory.perform()
-                                    android.util.Log.d("RFID_DEBUG", "Inventory demarre via trigger RFD40")
-                                } else {
-                                    android.util.Log.d("RFID_DEBUG", "Mode DataWedge simulation bouton TC52")
                                     mainHandler.post {
-                                        triggerDataWedgeScan(true)
+                                        flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+                                            MethodChannel(messenger, METHOD_CHANNEL)
+                                                .invokeMethod("onScanButton", null)
+                                        }
                                     }
-                                }
 
-                            } catch (_: Throwable) {}
-                        }.start()
+                                    var waited = 0
+                                    while (singleReadResult == null && waited < 4) {
+                                        Thread.sleep(100)
+                                        waited++
+                                    }
+
+                                    if (singleReadResult != null && !singleReadDone && rfidReader != null) {
+                                        rfidReader!!.Actions.Inventory.perform()
+                                        android.util.Log.d("RFID_DEBUG", "Inventory demarre via trigger RFD40")
+                                    } else {
+                                        android.util.Log.d("RFID_DEBUG", "Mode DataWedge simulation bouton TC52")
+                                        mainHandler.post {
+                                            triggerDataWedgeScan(true)
+                                        }
+                                    }
+
+                                } catch (_: Throwable) {}
+                            }.start()
+                        }
                     }
 
                     com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_RELEASED -> {
@@ -881,6 +1037,9 @@ class MainActivity : FlutterActivity(),
 
     // MODIFIE : onDestroy dispose aussi readersInternal
     override fun onDestroy() {
+        try { barcodeScanner?.disable() } catch (_: Throwable) {}
+        try { barcodeScanner?.release() } catch (_: Throwable) {}
+        try { emdkManager?.release() } catch (_: Throwable) {}
         try { rfidReader?.Events?.removeEventsListener(this) } catch (_: Throwable) {}
         try { rfidReader?.disconnect() }            catch (_: Throwable) {}
         try { Readers.deattach(this@MainActivity) } catch (_: Throwable) {}
