@@ -1,4 +1,5 @@
 import 'package:cap_mobile/features/QC/pages/qc_page.dart';
+import 'package:cap_mobile/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,8 @@ import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
 import '../../exp_control/pages/exp_control_page.dart';
+import '../../../swapp/pages/detail_produit_page.dart';
+import '../../../swapp/pages/detail_produit_page2.dart';
 import '../../inventory/pages/inventory_page.dart';
 import '../../QC/pages/qc_page.dart';
 
@@ -13,18 +16,18 @@ import '../../QC/pages/qc_page.dart';
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
 class _C {
-  static const bg          = Color(0xFFF0F2FF);
-  static const primary     = Color(0xFF3949AB);
+  static const bg = Color(0xFFF0F2FF);
+  static const primary = Color(0xFF3949AB);
   static const primaryDark = Color(0xFF1A237E);
   static const primarySoft = Color(0xFFE8EAF6);
-  static const surface     = Color(0xFFFFFFFF);
-  static const success     = Color(0xFF10B981);
-  static const warning     = Color(0xFFF59E0B);
-  static const error       = Color(0xFFEF4444);
-  static const textPrimary   = Color(0xFF111827);
+  static const surface = Color(0xFFFFFFFF);
+  static const success = Color(0xFF10B981);
+  static const warning = Color(0xFFF59E0B);
+  static const error = Color(0xFFEF4444);
+  static const textPrimary = Color(0xFF111827);
   static const textSecondary = Color(0xFF4B5563);
-  static const textMuted     = Color(0xFF9CA3AF);
-  static const border        = Color(0xFFD1D5DB);
+  static const textMuted = Color(0xFF9CA3AF);
+  static const border = Color(0xFFD1D5DB);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -62,7 +65,6 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage>
     with SingleTickerProviderStateMixin {
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final AnimationController _entranceCtrl;
 
@@ -83,11 +85,11 @@ class _HomePageState extends ConsumerState<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    final authState    = ref.watch(authProvider);
+    final authState = ref.watch(authProvider);
     if (authState.collaborateur == null) return const SizedBox.shrink();
-    final collab       = authState.collaborateur!;
+    final collab = authState.collaborateur!;
     final authNotifier = ref.read(authProvider.notifier);
-    final photoUrl     = authNotifier.getPhotoUrl(collab.codeCollab);
+    final photoUrl = authNotifier.getPhotoUrl(collab.codeCollab);
 
     final modules = <_Module>[
       _Module(
@@ -96,10 +98,7 @@ class _HomePageState extends ConsumerState<HomePage>
         icon: Icons.nfc_rounded,
         color: _C.primary,
         bgColor: _C.primarySoft,
-        onTap: () => Navigator.push(
-          context,
-          _fadeRoute(const RfidPage()),
-        ),
+        onTap: () => Navigator.push(context, _fadeRoute(const RfidPage())),
       ),
       _Module(
         title: 'QC RFID',
@@ -135,6 +134,40 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         ),
       ),
+      _Module(
+        title: 'Swapp',
+        subtitle: 'Détail produit',
+        icon: Icons.swap_horiz_rounded,
+        color: AppColors.primary,
+        bgColor: AppColors.primarySoft,
+        available: true,
+        onTap: () => Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const DetailProduitPage(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        ),
+      ),
+      _Module(
+        title: 'Swapp v2',
+        subtitle: 'Design moderne',
+        icon: Icons.view_compact_alt_rounded,
+        color: AppColors.primaryDark,
+        bgColor: AppColors.primarySoft,
+        available: true,
+        onTap: () => Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const DetailProduitPage2(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        ),
+      ),
     ];
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -149,9 +182,7 @@ class _HomePageState extends ConsumerState<HomePage>
             // ── Top Bar fixe ──
             _buildTopBar(context, collab, photoUrl),
             // ── Contenu scrollable ──
-            Expanded(
-              child: _buildBody(context, collab, modules),
-            ),
+            Expanded(child: _buildBody(context, collab, modules)),
           ],
         ),
       ),
@@ -189,7 +220,10 @@ class _HomePageState extends ConsumerState<HomePage>
                       height: 42,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: _C.primaryDark.withOpacity(.25), width: 2),
+                        border: Border.all(
+                          color: _C.primaryDark.withOpacity(.25),
+                          width: 2,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: _C.primary.withOpacity(.15),
@@ -203,17 +237,18 @@ class _HomePageState extends ConsumerState<HomePage>
                         backgroundImage: photoUrl.isNotEmpty
                             ? NetworkImage(photoUrl)
                             : null,
-                        onBackgroundImageError:
-                        photoUrl.isNotEmpty ? (_, __) {} : null,
+                        onBackgroundImageError: photoUrl.isNotEmpty
+                            ? (_, __) {}
+                            : null,
                         child: photoUrl.isEmpty
                             ? Text(
-                          _initiales(collab.prenom, collab.nom),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: _C.primary,
-                          ),
-                        )
+                                _initiales(collab.prenom, collab.nom),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: _C.primary,
+                                ),
+                              )
                             : null,
                       ),
                     ),
@@ -287,7 +322,12 @@ class _HomePageState extends ConsumerState<HomePage>
   // ────────────────────────────────────────────────────────────
   //  DRAWER
   // ────────────────────────────────────────────────────────────
-  Widget _buildDrawer(BuildContext context, WidgetRef ref, collab, String photoUrl) {
+  Widget _buildDrawer(
+    BuildContext context,
+    WidgetRef ref,
+    collab,
+    String photoUrl,
+  ) {
     return Drawer(
       backgroundColor: _C.surface,
       child: SafeArea(
@@ -302,7 +342,6 @@ class _HomePageState extends ConsumerState<HomePage>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [_C.primaryDark, _C.primary],
-
                 ),
               ),
               child: Column(
@@ -312,7 +351,10 @@ class _HomePageState extends ConsumerState<HomePage>
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(.4), width: 2.5),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(.4),
+                        width: 2.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(.2),
@@ -326,17 +368,18 @@ class _HomePageState extends ConsumerState<HomePage>
                       backgroundImage: photoUrl.isNotEmpty
                           ? NetworkImage(photoUrl)
                           : null,
-                      onBackgroundImageError:
-                      photoUrl.isNotEmpty ? (_, __) {} : null,
+                      onBackgroundImageError: photoUrl.isNotEmpty
+                          ? (_, __) {}
+                          : null,
                       child: photoUrl.isEmpty
                           ? Text(
-                        _initiales(collab.prenom, collab.nom),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      )
+                              _initiales(collab.prenom, collab.nom),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            )
                           : null,
                     ),
                   ),
@@ -351,7 +394,10 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(.2),
                       borderRadius: BorderRadius.circular(20),
@@ -477,21 +523,25 @@ class _HomePageState extends ConsumerState<HomePage>
       ),
       trailing: badge != null
           ? Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: _C.primarySoft,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          badge,
-          style: const TextStyle(
-            fontSize: 10,
-            color: _C.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      )
-          : const Icon(Icons.chevron_right_rounded, color: _C.textMuted, size: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: _C.primarySoft,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                badge,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: _C.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            )
+          : const Icon(
+              Icons.chevron_right_rounded,
+              color: _C.textMuted,
+              size: 18,
+            ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -509,12 +559,14 @@ class _HomePageState extends ConsumerState<HomePage>
         children: [
           // ── Salutation ──
           _buildGreetingBanner(collab),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // ── Section titre ──
           Row(
             children: [
-              Container(width: 4, height: 20,
+              Container(
+                width: 4,
+                height: 20,
                 decoration: BoxDecoration(
                   color: _C.primary,
                   borderRadius: BorderRadius.circular(2),
@@ -581,7 +633,11 @@ class _HomePageState extends ConsumerState<HomePage>
   // ── Bannière salutation ──
   Widget _buildGreetingBanner(collab) {
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
+    final greeting = hour < 12
+        ? 'Bonjour'
+        : hour < 18
+        ? 'Bon après-midi'
+        : 'Bonsoir';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -626,7 +682,10 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(.18),
                     borderRadius: BorderRadius.circular(20),
@@ -634,8 +693,11 @@ class _HomePageState extends ConsumerState<HomePage>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.store_rounded,
-                          size: 12, color: Colors.white),
+                      const Icon(
+                        Icons.store_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 5),
                       Text(
                         collab.magasinNom,
@@ -716,7 +778,10 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
                 if (!m.available)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(8),

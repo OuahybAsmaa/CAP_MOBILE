@@ -30,6 +30,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   flutter_riverpod: ^2.4.0
   flutter_datawedge: ^3.2.0
@@ -43,6 +46,8 @@ dependencies:
 
 
   cupertino_icons: ^1.0.8
+  image_picker: ^1.2.3
+  mobile_scanner: ^7.4.0
 
 dev_dependencies:
   flutter_test:
