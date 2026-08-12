@@ -67,6 +67,7 @@ class QcState {
   final String?            scannedGencode;
   final String?            codeMod;
   final QcProductionModel? production;
+  final Map<String, int> scannedColisCount;
 
 
   final QcControlMode?     selectedMode;
@@ -76,11 +77,12 @@ class QcState {
   final List<QcColisResult> colisResults;
   final int                 currentColisIndex;
   final bool                isInventoryRunning;
+  bool get isFull => selectedMode == QcControlMode.full;
 
   // UI
   final bool    isLoadingArticle;
   final bool    isLoadingColis;
-  final bool    isLoadingGtin;   // pendant résolution GTIN→codeMod
+  final bool    isLoadingGtin;
   final String? error;
 
   final bool inventoryStarted;
@@ -98,6 +100,7 @@ class QcState {
     this.isLoadingColis       = false,
     this.isLoadingGtin        = false,
     this.inventoryStarted = false,
+    this.scannedColisCount = const {},
     this.error,
   });
 
@@ -120,6 +123,7 @@ class QcState {
     bool?              isLoadingColis,
     bool?              isLoadingGtin,
     bool?              inventoryStarted,
+    Map<String, int>? scannedColisCount,
     String?            error,
     bool clearError      = false,
     bool clearProduction = false,
@@ -137,6 +141,7 @@ class QcState {
     isLoadingColis:     isLoadingColis     ?? this.isLoadingColis,
     isLoadingGtin:      isLoadingGtin      ?? this.isLoadingGtin,
     inventoryStarted: inventoryStarted ?? this.inventoryStarted,
+    scannedColisCount: scannedColisCount ?? this.scannedColisCount,
     error:              clearError         ? null : error ?? this.error,
   );
 
@@ -235,6 +240,111 @@ class QcNotifier extends StateNotifier<QcState> {
       inventoryStarted: false,
       currentColisIndex: 0,
       colisResults: resetResults,
+      scannedColisCount: {},
+    );
+  }
+  void scanColis(String codeColis) {
+    final production = state.production;
+    if (production == null) return;
+
+    // Chercher le colis correspondant dans l'API
+    final colis = production.colis.firstWhere(
+          (c) => c.codeColis == codeColis,
+      orElse: () => throw Exception('Colis $codeColis introuvable'),
+    );
+
+    // Incrémenter le compteur de scans pour ce CodeColis
+    final newCount = Map<String, int>.from(state.scannedColisCount);
+    newCount[codeColis] = (newCount[codeColis] ?? 0) + 1;
+
+    // Recalculer le tableau : pour chaque pointure,
+    // sum sur tous les colis scannés de (qte × nb fois scanné)
+    final Map<String, int> tailleMap = {};
+
+    for (final entry in newCount.entries) {
+      final c = production.colis.firstWhere(
+            (x) => x.codeColis == entry.key,
+        orElse: () => throw Exception(),
+      );
+      for (final t in c.tailles) {
+        tailleMap[t.taille] = (tailleMap[t.taille] ?? 0) + (t.qte * entry.value);
+      }
+    }
+
+    // Trier les tailles numériquement
+    final tailles = tailleMap.entries
+        .map((e) => QcTaille(taille: e.key, qte: e.value))
+        .toList()
+      ..sort((a, b) => (int.tryParse(a.taille) ?? 0)
+          .compareTo(int.tryParse(b.taille) ?? 0));
+
+    // Colis virtuel avec le cumul
+    final colisVirtuel = QcColis(
+      codeColis: newCount.length == 1
+          ? codeColis
+          : '${newCount.length} colis sélectionnés',
+      nbCol: newCount.values.fold(0, (s, v) => s + v),
+      nbArt: 0,
+      supCommande: '',
+      codeSaison: '',
+      pcb: 0,
+      long: 0, larg: 0, haut: 0, img: '',
+      tailles: tailles,
+    );
+
+    state = state.copyWith(
+      scannedColisCount: newCount,
+      colisResults: [_buildColisResult(colisVirtuel)],
+      currentColisIndex: 0,
+      inventoryStarted: false,
+      isInventoryRunning: false,
+    );
+  }
+
+// Pour retirer un colis scanné (optionnel, bouton ×)
+  void removeScanColis(String codeColis) {
+    final newCount = Map<String, int>.from(state.scannedColisCount);
+    if ((newCount[codeColis] ?? 0) <= 1) {
+      newCount.remove(codeColis);
+    } else {
+      newCount[codeColis] = newCount[codeColis]! - 1;
+    }
+
+    if (newCount.isEmpty) {
+      state = state.copyWith(
+        scannedColisCount: newCount,
+        colisResults: [],
+      );
+      return;
+    }
+
+    // Recalculer (même logique que scanColis)
+    final Map<String, int> tailleMap = {};
+    for (final entry in newCount.entries) {
+      final c = state.production!.colis
+          .firstWhere((x) => x.codeColis == entry.key);
+      for (final t in c.tailles) {
+        tailleMap[t.taille] =
+            (tailleMap[t.taille] ?? 0) + (t.qte * entry.value);
+      }
+    }
+    final tailles = tailleMap.entries
+        .map((e) => QcTaille(taille: e.key, qte: e.value))
+        .toList()
+      ..sort((a, b) => (int.tryParse(a.taille) ?? 0)
+          .compareTo(int.tryParse(b.taille) ?? 0));
+
+    final colisVirtuel = QcColis(
+      codeColis: '${newCount.length} colis sélectionnés',
+      nbCol: newCount.values.fold(0, (s, v) => s + v),
+      nbArt: 0, supCommande: '', codeSaison: '',
+      pcb: 0, long: 0, larg: 0, haut: 0, img: '',
+      tailles: tailles,
+    );
+
+    state = state.copyWith(
+      scannedColisCount: newCount,
+      colisResults: [_buildColisResult(colisVirtuel)],
     );
   }
   // Full : prépare tous les colis
@@ -356,6 +466,11 @@ class QcNotifier extends StateNotifier<QcState> {
           isRunning:  false,
           isComplete: true,
         );
+
+    // ── Vérifier si le contrôle est OK ──
+    final colisResult = updatedResults[state.currentColisIndex];
+    final isOk = colisResult.isAllOk && colisResult.totalLu > 0;
+
 
     state = state.copyWith(
       isInventoryRunning: false,

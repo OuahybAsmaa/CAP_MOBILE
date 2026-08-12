@@ -28,6 +28,9 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
   StreamSubscription<String>? _scanSubscription;
   late final AnimationController _pulseCtrl;
   QcControlMode _selectedMode = QcControlMode.partiel;
+  bool _scanColisMode = false;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  PersistentBottomSheetController? _sheetController;
   static const _nativeChannel = MethodChannel('com.example.cap_mobile1/rfid');
 
   @override
@@ -74,11 +77,40 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       if (call.method == 'onEmdkScan') {
         final data = call.arguments as String;
         if (!mounted) return;
+
+        // Lire l'état AVANT toute action
         final qcState = ref.read(qcProvider);
-        if (!qcState.isLoading) {
-          ref.read(qcProvider.notifier).reset();
-          ref.read(qcProvider.notifier).onGencodeScanned(data);
+        final trimmed = data.trim();
+
+        if (_scanColisMode && qcState.production != null) {
+          // Mode scan colis actif → ne jamais faire reset()
+          final exists = qcState.production!.colis
+              .any((c) => c.codeColis == trimmed);
+
+          if (!exists) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Colis $trimmed introuvable pour cet article'),
+                backgroundColor: const Color(0xFFD32F2F),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+            return; // ← IMPORTANT : on sort sans rien faire
+          }
+
+          ref.read(qcProvider.notifier).scanColis(trimmed);
+
+          // Ouvre la popup si pas encore ouverte
+          if (_sheetController == null) _showScanPopup();
+
+        } else if (!_scanColisMode) {
+          // Mode normal → scan gencode article uniquement
+          if (!qcState.isLoading) {
+            ref.read(qcProvider.notifier).reset();
+            ref.read(qcProvider.notifier).onGencodeScanned(trimmed);
+          }
         }
+        // Si _scanColisMode=true mais production=null : on ignore
       }
     });
 
@@ -119,6 +151,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF4F4F4),
         body: Column(
           children: [
@@ -378,94 +411,6 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       ),
     );
   }
-
-  Widget _buildSegmentedControl() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF3949AB).withValues(alpha: .15)),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          _buildSegmentButton(
-            label: 'Partial Control',
-            icon: Icons.inventory_2_rounded,
-            mode: QcControlMode.partiel,
-          ),
-          _buildSegmentButton(
-            label: 'Full Control',
-            icon: Icons.fact_check_rounded,
-            mode: QcControlMode.full,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSegmentButton({
-    required String label,
-    required IconData icon,
-    required QcControlMode mode,
-  }) {
-    final isSelected = _selectedMode == mode;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() => _selectedMode = mode);
-          if (mode == QcControlMode.full) {
-            ref.read(qcProvider.notifier).selectMode(QcControlMode.full);
-            ref.read(qcProvider.notifier).prepareFullControl();
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (_, _, _) =>
-                const QcInventoryPage(mode: QcControlMode.full),
-                transitionsBuilder: (_, anim, _, child) => SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(1, 0),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                      parent: anim, curve: Curves.easeOutCubic)),
-                  child: child,
-                ),
-                transitionDuration: const Duration(milliseconds: 300),
-              ),
-            );
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF3949AB) : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 15,
-                color: isSelected ? Colors.white : Colors.grey[500],
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: isSelected ? Colors.white : Colors.grey[500],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // ── Corps principal ───────────────────────────────────────
 
   Widget _buildBody(QcState qcState) {
@@ -664,19 +609,77 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 4),
-
-          // ── Segmented control mode ──
-          _buildSegmentedControl(),
-          const SizedBox(height: 14),
-
-          // ── Carte article compacte ──
+          // ── Carte article
           _buildArticleSummaryCard(production),
           const SizedBox(height: 16),
-
-          // ── Liste des colis ──
-          if (_selectedMode == QcControlMode.partiel)
-            _buildColisListPartiel(production.colis),
+          // ── Boutons Scan colis + Full Control ──
+          Row(
+            children: [
+              // Bouton Commencer le scan
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() => _scanColisMode = true);
+                    _showScanPopup();
+                  },
+                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
+                  label: const Text(
+                    'Scan Parcel',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3949AB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Bouton Full Control
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(qcProvider.notifier).selectMode(QcControlMode.full);
+                    ref.read(qcProvider.notifier).prepareFullControl();
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) =>
+                        const QcInventoryPage(mode: QcControlMode.full),
+                        transitionsBuilder: (_, anim, __, child) => SlideTransition(
+                          position: Tween<Offset>(
+                              begin: const Offset(1, 0), end: Offset.zero)
+                              .animate(CurvedAnimation(
+                              parent: anim, curve: Curves.easeOutCubic)),
+                          child: child,
+                        ),
+                        transitionDuration: const Duration(milliseconds: 300),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.fact_check_rounded, size: 16),
+                  label: const Text(
+                    'Full Control',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A237E),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // ── Liste des colis (inchangée) ──
+          _buildColisListPartiel(production.colis),
         ],
       ),
     );
@@ -783,6 +786,271 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
     );
   }
 
+  void _showScanPopup() {
+    if (_sheetController != null) return;
+
+    _sheetController = _scaffoldKey.currentState!.showBottomSheet(
+          (_) => _buildScanBottomSheet(),
+      backgroundColor: Colors.transparent,
+    );
+
+    _sheetController!.closed.then((_) {
+      _sheetController = null;
+      if (mounted) setState(() => _scanColisMode = false);
+    });
+  }
+
+  Widget _buildScanBottomSheet() {
+    return Consumer(
+      builder: (context, ref, _) {
+        final qcState = ref.watch(qcProvider);
+        final scannedCount = qcState.scannedColisCount;
+        final totalUnites = scannedCount.values.fold(0, (s, v) => s + v);
+        final isConnected = ref.watch(rfidProvider).connectedReader != null;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: const Color(0xFF3949AB).withOpacity(.15)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(.08),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle + titre
+              Center(
+                child: Container(
+                  width: 36, height: 4,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.inventory_2_rounded,
+                      color: Color(0xFF3949AB), size: 16),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Colis sélectionnés',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1A1A2E)),
+                  ),
+                  const Spacer(),
+                  // Badge total
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3949AB).withOpacity(.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$totalUnites unité${totalUnites > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF3949AB)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Bouton fermer
+                  GestureDetector(
+                    onTap: () => _sheetController?.close(),
+                    child: Container(
+                      width: 28, height: 28,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.close_rounded,
+                          color: Colors.grey, size: 16),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Liste des colis scannés
+              if (scannedCount.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: Text(
+                      'Aucun colis scanné — pointez le scanner',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                          fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                )
+              else
+                ...scannedCount.entries.map((entry) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F2FF),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: const Color(0xFF3949AB).withOpacity(.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.qr_code_rounded,
+                          color: Color(0xFF3949AB), size: 14),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A2E)),
+                        ),
+                      ),
+                      // Badge ×N si scanné plusieurs fois
+                      if (entry.value > 1)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3949AB).withOpacity(.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '×${entry.value}',
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF3949AB)),
+                          ),
+                        ),
+                      // Bouton supprimer
+                      GestureDetector(
+                        onTap: () => ref
+                            .read(qcProvider.notifier)
+                            .removeScanColis(entry.key),
+                        child: Container(
+                          width: 24, height: 24,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFEBEB),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(Icons.close_rounded,
+                              color: Color(0xFFD32F2F), size: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+
+              const SizedBox(height: 12),
+
+              // Avertissement si pas de lecteur
+              if (!isConnected)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEBEB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: const Color(0xFFD32F2F).withOpacity(.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded,
+                          color: Color(0xFFD32F2F), size: 14),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Connectez un lecteur RFID avant de lancer.',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFFD32F2F),
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Bouton lancer inventaire
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: (isConnected && scannedCount.isNotEmpty)
+                      ? () {
+                    _sheetController?.close();
+                    ref
+                        .read(qcProvider.notifier)
+                        .selectMode(QcControlMode.partiel);
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const QcInventoryPage(
+                            mode: QcControlMode.partiel),
+                        transitionsBuilder: (_, anim, __, child) =>
+                            SlideTransition(
+                              position: Tween<Offset>(
+                                  begin: const Offset(1, 0),
+                                  end: Offset.zero)
+                                  .animate(CurvedAnimation(
+                                  parent: anim,
+                                  curve: Curves.easeOutCubic)),
+                              child: child,
+                            ),
+                        transitionDuration:
+                        const Duration(milliseconds: 300),
+                      ),
+                    );
+                  }
+                      : null,
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  label: Text(
+                    scannedCount.isEmpty
+                        ? 'Scannez au moins un colis'
+                        : 'Lancer le contrôle RFID ($totalUnites colis)',
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3949AB),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    disabledForegroundColor: Colors.grey.shade500,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildStatChip({
     required String label,
     required String value,
@@ -817,19 +1085,12 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       ),
     );
   }
-
   Widget _buildColisListPartiel(List<QcColis> colisList) {
+    final qcState = ref.watch(qcProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${colisList.length} assortment${colisList.length > 1 ? 's' : ''}',
-          style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A2E)),
-        ),
-        const SizedBox(height: 10),
         ...colisList.asMap().entries.map((entry) {
           final index = entry.key;
           final colis = entry.value;
@@ -939,9 +1200,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
-                const Icon(Icons.chevron_right_rounded,
-                    color: Color(0xFF3949AB), size: 16),
+
               ],
             ),
           ),
@@ -1064,6 +1323,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       ),
     );
   }
+
 
   // ── Info card
   Widget _buildInfoCard({required IconData icon, required String text}) {

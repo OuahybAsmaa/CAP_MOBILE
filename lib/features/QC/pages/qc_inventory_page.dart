@@ -53,7 +53,8 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
     final isRunning = qcState.isInventoryRunning;
     final isStarted = qcState.inventoryStarted;
     final isFull = widget.mode == QcControlMode.full;
-    final totalColis = qcState.colisResults.length;
+    final scannedCount = qcState.scannedColisCount;
+    final totalColis = scannedCount.values.fold(0, (s, v) => s + v);
     final currentIndex = qcState.currentColisIndex;
     final isConnected = rfidState.connectedReader != null;
 
@@ -74,7 +75,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
           body: Column(
             children: [
               _buildHeader(isRunning, isFull, currentIndex,
-                  totalColis, colisResult, isConnected),
+                  totalColis, colisResult, isConnected, qcState),
               Expanded(
                 child: colisResult == null
                     ? const Center(child: CircularProgressIndicator())
@@ -98,7 +99,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
   // ── Header ────────────────────────────────────────────────
 
   Widget _buildHeader(bool isRunning, bool isFull, int currentIndex,
-      int totalColis, QcColisResult? colisResult, bool isConnected) {
+      int totalColis, QcColisResult? colisResult, bool isConnected, QcState qcState) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -215,19 +216,23 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                       const Icon(Icons.inventory_2_rounded,
                           color: Colors.white70, size: 14),
                       const SizedBox(width: 8),
-                      Text(
-                        colisResult.colis.codeColis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: .5,
+                      Expanded(
+                        child: Text(
+                          isFull
+                              ? 'Full Control'
+                              : '${qcState.scannedColisCount.values.fold(0, (s, v) => s + v)} colis sélectionnés',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: .5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Text(
-                        '${colisResult.totalLu} / ${colisResult
-                            .totalAttendu} items',
+                        '${colisResult.totalLu} / ${colisResult.totalAttendu} items',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: .8),
@@ -744,6 +749,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
             // Bouton Terminer
             Expanded(
               child: ElevatedButton.icon(
+                // APRÈS
                 onPressed: () {
                   ref.read(qcProvider.notifier).resetInventory();
                   Navigator.of(context).pop();
