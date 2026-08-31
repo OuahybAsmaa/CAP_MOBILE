@@ -101,6 +101,59 @@ class MainActivity : FlutterActivity(),
         }
     }
 
+    private fun disableDataWedgeBarcodePlugin() {
+        try {
+            val paramList = Bundle().apply {
+                putString("scanner_input_enabled", "false")
+            }
+            val pluginConfig = Bundle().apply {
+                putString("PLUGIN_NAME", "BARCODE")
+                putString("RESET_CONFIG", "false")
+                putBundle("PARAM_LIST", paramList)
+            }
+            val profileConfig = Bundle().apply {
+                putString("PROFILE_NAME", "CAP_MOBILE_PROFILE")
+                putString("PROFILE_ENABLED", "true")
+                putString("CONFIG_MODE", "UPDATE")
+                putBundle("PLUGIN_CONFIG", pluginConfig)
+            }
+            val intent = android.content.Intent().apply {
+                action = DW_ACTION
+                putExtra(DW_SET_CONFIG, profileConfig)
+            }
+            sendBroadcast(intent)
+            android.util.Log.d("RFID_DEBUG", "DataWedge plugin Barcode désactivé")
+        } catch (e: Throwable) {
+            android.util.Log.e("RFID_DEBUG", "disableDataWedgeBarcodePlugin erreur: ${e.message}")
+        }
+    }
+
+    private fun enableDataWedgeBarcodePlugin() {
+        try {
+            val paramList = Bundle().apply {
+                putString("scanner_input_enabled", "true")
+            }
+            val pluginConfig = Bundle().apply {
+                putString("PLUGIN_NAME", "BARCODE")
+                putString("RESET_CONFIG", "false")
+                putBundle("PARAM_LIST", paramList)
+            }
+            val profileConfig = Bundle().apply {
+                putString("PROFILE_NAME", "CAP_MOBILE_PROFILE")
+                putString("PROFILE_ENABLED", "true")
+                putString("CONFIG_MODE", "UPDATE")
+                putBundle("PLUGIN_CONFIG", pluginConfig)
+            }
+            val intent = android.content.Intent().apply {
+                action = DW_ACTION
+                putExtra(DW_SET_CONFIG, profileConfig)
+            }
+            sendBroadcast(intent)
+            android.util.Log.d("RFID_DEBUG", "DataWedge plugin Barcode réactivé")
+        } catch (e: Throwable) {
+            android.util.Log.e("RFID_DEBUG", "enableDataWedgeBarcodePlugin erreur: ${e.message}")
+        }
+    }
     private fun startEmdkScan(result: MethodChannel.Result) {
         Thread {
             try {
@@ -119,7 +172,7 @@ class MainActivity : FlutterActivity(),
                     return@Thread
                 }
 
-                disableDataWedgeRfidInput()
+                disableDataWedgeBarcodePlugin()
                 Thread.sleep(300)
 
                 barcodeScanner = barcodeManager?.getDevice(BarcodeManager.DeviceIdentifier.DEFAULT)
@@ -186,6 +239,7 @@ class MainActivity : FlutterActivity(),
             emdkManager?.release()
             emdkManager = null
             barcodeManager = null
+            enableDataWedgeBarcodePlugin()
             result.success("EMDK scanner arrete")
         } catch (e: Throwable) {
             result.error("EMDK_STOP_ERROR", e.message ?: "Erreur", null)

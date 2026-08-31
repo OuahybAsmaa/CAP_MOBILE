@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'package:cap_mobile/l10n/app_localizations.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -129,35 +130,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // ── Infos personnelles ──
-                        _sectionTitle('Informations personnelles'),
+                        _sectionTitle(AppLocalizations.of(context)!.profileSectionPersonal),
                         const SizedBox(height: 12),
                         _buildInfoCard([
                           _InfoRow(
                             icon: Icons.badge_outlined,
-                            label: 'Code collaborateur',
+                            label: AppLocalizations.of(context)!.profileLabelCode,
                             value: collab.codeCollab.toString(),
                             color: _C.primary,
                           ),
                           _InfoRow(
                             icon: Icons.person_outline_rounded,
-                            label: 'Nom complet',
+                            label: AppLocalizations.of(context)!.profileLabelFullName,
                             value: collab.fullName,
                             color: _C.primary,
                           ),
                           _InfoRow(
                             icon: Icons.email_outlined,
-                            label: 'Email',
+                            label: AppLocalizations.of(context)!.profileLabelEmail,
                             value: collab.email.isNotEmpty
                                 ? collab.email
-                                : 'Non renseigné',
+                                : AppLocalizations.of(context)!.profileLabelEmailEmpty,
                             color: _C.primary,
                           ),
                           _InfoRow(
                             icon: Icons.phone_outlined,
-                            label: 'Téléphone',
+                            label: AppLocalizations.of(context)!.profileLabelPhone,
                             value: collab.tel != null && collab.tel!.isNotEmpty
                                 ? collab.tel!
-                                : 'Non renseigné',
+                                : AppLocalizations.of(context)!.profileLabelPhoneEmpty,
                             color: _C.primary,
                           ),
                         ]),
@@ -165,26 +166,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         const SizedBox(height: 24),
 
                         // ── Informations magasin ──
-                        _sectionTitle('Magasin & rôle'),
+                        _sectionTitle(AppLocalizations.of(context)!.profileSectionStore),
                         const SizedBox(height: 12),
                         _buildInfoCard([
                           _InfoRow(
                             icon: Icons.store_outlined,
-                            label: 'Magasin',
+                            label: AppLocalizations.of(context)!.profileLabelStore,
                             value: collab.magasinNom,
                             color: const Color(0xFF059669),
                           ),
                           _InfoRow(
                             icon: Icons.work_outline_rounded,
-                            label: 'Type collaborateur',
+                            label: AppLocalizations.of(context)!.profileLabelType,
                             value: collab.typeCollabLibelle,
                             color: const Color(0xFF059669),
                           ),
                           if (collab.estAdministrateur)
                             _InfoRow(
                               icon: Icons.admin_panel_settings_outlined,
-                              label: 'Droits',
-                              value: 'Administrateur',
+                              label: AppLocalizations.of(context)!.profileLabelRights,
+                              value: AppLocalizations.of(context)!.profileLabelAdmin,
                               color: const Color(0xFFD97706),
                               chip: true,
                             ),
@@ -205,8 +206,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                               ),
                             ),
                             icon: const Icon(Icons.logout_rounded, size: 18),
-                            label: const Text(
-                              'Se déconnecter',
+                            label: Text(
+                              AppLocalizations.of(context)!.profileLogout,
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 15,

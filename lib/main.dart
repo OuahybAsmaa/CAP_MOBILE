@@ -12,30 +12,28 @@ void main() {
 }
 
 class CapMobileApp extends ConsumerWidget {
-  const CapMobileApp({super.key});
+  const CapMobileApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(localeProvider);
-    final l10n = AppLocalizations(language);
 
-    return MaterialApp(
-      title: 'CapMobile',
-      debugShowCheckedModeBanner: false,
-      locale: language.locale,
-      supportedLocales: AppLanguage.supportedLocales,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
-      builder: (context, child) => AppLocalizationsScope(
-        l10n: l10n,
-        child: child ?? const SizedBox.shrink(),
+    return AppLocalizationsScope(
+      l10n: AppLocalizations(language),
+      child: MaterialApp(
+        title: 'CapMobile',
+        debugShowCheckedModeBanner: false,
+        locale: language.locale,
+        supportedLocales: AppLanguage.supportedLocales,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
+        initialRoute: '/',
+        routes: {'/': (_) => const WelcomePage()},
       ),
-      initialRoute: '/',
-      routes: {'/': (_) => const WelcomePage()},
     );
   }
 }

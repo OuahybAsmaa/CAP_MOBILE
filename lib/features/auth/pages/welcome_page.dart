@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../providers/auth_provider.dart';
 import '../../home/pages/home_page.dart';
 import '../../../core/services/datawedge_service.dart';
+import 'package:cap_mobile/l10n/app_localizations.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -362,8 +363,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ).createShader(bounds),
-              child: const Text(
-                'CAP MOBILE',
+              child: Text(
+                AppLocalizations.of(context)!.appTitle,
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
@@ -381,7 +382,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                     color: _AppColors.cyanDim.withValues(alpha: .5)),
                 const SizedBox(width: 8),
                 Text(
-                  'GESTION RFID & ÉTIQUETAGE',
+                  AppLocalizations.of(context)!.welcomeSubtitle,
                   style: TextStyle(
                     fontSize: 11,
                     color: _AppColors.textSecondary,
@@ -477,8 +478,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
-            'Scannez votre badge',
+          Text(
+            AppLocalizations.of(context)!.welcomeScanTitle,
             style: TextStyle(
               color: _AppColors.textPrimary,
               fontSize: 17,
@@ -488,7 +489,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           ),
           const SizedBox(height: 6),
           Text(
-            'Pointez le scanner Zebra vers votre code-barres',
+            AppLocalizations.of(context)!.welcomeScanSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: _AppColors.textSecondary,
@@ -532,8 +533,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Authentification en cours',
+          Text(
+            AppLocalizations.of(context)!.welcomeLoadingTitle,
             style: TextStyle(
               color: _AppColors.textPrimary,
               fontSize: 16,
@@ -546,7 +547,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             builder: (_, _) {
               final dots = '.' * ((_dotsCtrl.value * 3).floor() + 1);
               return Text(
-                'Vérification des accréditations$dots',
+                '${AppLocalizations.of(context)!.welcomeLoadingSubtitle}$dots',
                 style: const TextStyle(
                   color: _AppColors.textSecondary,
                   fontSize: 13,
@@ -583,8 +584,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                   color: _AppColors.error, size: 26),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Badge non reconnu',
+            Text(
+              AppLocalizations.of(context)!.welcomeErrorTitle,
               style: TextStyle(
                 color: _AppColors.error,
                 fontSize: 16,
@@ -603,7 +604,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             ),
             const SizedBox(height: 14),
             Text(
-              'Relance du scan dans 2 secondes...',
+              AppLocalizations.of(context)!.welcomeErrorRetry,
               style: TextStyle(color: _AppColors.textMuted, fontSize: 12),
             ),
           ],
@@ -625,7 +626,9 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
         ),
         const SizedBox(width: 8),
         Text(
-          _dataWedgeReady ? 'Système Zebra connecté' : 'Connexion Zebra...',
+          _dataWedgeReady
+              ? AppLocalizations.of(context)!.welcomeZebraConnected
+              : AppLocalizations.of(context)!.welcomeZebraConnecting,
           style: TextStyle(color: _AppColors.textMuted, fontSize: 12),
         ),
       ],

@@ -2,12 +2,14 @@ import 'package:cap_mobile/features/QC/pages/qc_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/app_version_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
 import '../../exp_control/pages/exp_control_page.dart';
 import '../../../swapp/pages/menu/swapp_menu_page.dart';
-
+import '../../promo/pages/promo_operations_page.dart';
+import 'package:cap_mobile/l10n/app_localizations.dart';
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
@@ -64,6 +66,7 @@ class _HomePageState extends ConsumerState<HomePage>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final AnimationController _entranceCtrl;
 
+
   @override
   void initState() {
     super.initState();
@@ -89,16 +92,16 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final modules = <_Module>[
       _Module(
-        title: 'Encodage (RFID)',
-        subtitle: 'Encoder & lire les puces',
+        title: AppLocalizations.of(context)!.moduleRfidTitle,
+        subtitle: AppLocalizations.of(context)!.moduleRfidSubtitle,
         icon: Icons.nfc_rounded,
         color: _C.primary,
         bgColor: _C.primarySoft,
         onTap: () => Navigator.push(context, _fadeRoute(const RfidPage())),
       ),
       _Module(
-        title: 'QC RFID',
-        subtitle: 'Parcel quality control',
+        title: AppLocalizations.of(context)!.moduleQcTitle,
+        subtitle: AppLocalizations.of(context)!.moduleQcSubtitle,
         icon: Icons.fact_check_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
@@ -114,8 +117,8 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
       ),
       _Module(
-        title: 'Contrôle EXP',
-        subtitle: 'Vérification des réceptions',
+        title: AppLocalizations.of(context)!.moduleExpTitle,
+        subtitle: AppLocalizations.of(context)!.moduleExpSubtitle,
         icon: Icons.local_shipping_rounded,
         color: const Color(0xFF01667E),
         bgColor: const Color(0xFFE0F2FE),
@@ -131,6 +134,7 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
       ),
       _Module(
+
         title: 'Swapp',
         subtitle: 'Stock & ventes magasin',
         icon: Icons.swap_horiz_rounded,
@@ -138,6 +142,23 @@ class _HomePageState extends ConsumerState<HomePage>
         bgColor: const Color(0xFFECEAFB),
         available: true,
         onTap: () => Navigator.push(context, SwappMenuPage.fadeRoute()),
+      ),
+    _Module(
+        title: AppLocalizations.of(context)!.modulePromoTitle,
+        subtitle: AppLocalizations.of(context)!.modulePromoSubtitle,
+        icon: Icons.local_offer_rounded,
+        color: const Color(0xFF7B1FA2),
+        bgColor: const Color(0xFFF3E5F5),
+        available: true,
+        onTap: () => Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const PromoOperationsPage(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        ),
       ),
     ];
 
@@ -248,8 +269,8 @@ class _HomePageState extends ConsumerState<HomePage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'CAP MOBILE',
+                     Text(
+                      AppLocalizations.of(context)!.appTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -393,7 +414,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 children: [
                   _drawerItem(
                     icon: Icons.person_outline_rounded,
-                    label: 'Mon Profil',
+                    label: AppLocalizations.of(context)!.drawerMyProfile,
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(context, _fadeRoute(const ProfilePage()));
@@ -401,12 +422,12 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   _drawerItem(
                     icon: Icons.store_outlined,
-                    label: 'Mon Magasin',
+                    label: AppLocalizations.of(context)!.drawerMyStore,
                     badge: collab.magasinNom,
                   ),
                   _drawerItem(
                     icon: Icons.admin_panel_settings_outlined,
-                    label: 'Administration',
+                    label: AppLocalizations.of(context)!.drawerAdministration,
                     visible: collab.estAdministrateur,
                   ),
                   const Padding(
@@ -415,11 +436,11 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   _drawerItem(
                     icon: Icons.settings_outlined,
-                    label: 'Paramètres',
+                    label: AppLocalizations.of(context)!.drawerSettings,
                   ),
                   _drawerItem(
                     icon: Icons.help_outline_rounded,
-                    label: 'Aide & Support',
+                    label: AppLocalizations.of(context)!.drawerHelp,
                   ),
                 ],
               ),
@@ -440,8 +461,8 @@ class _HomePageState extends ConsumerState<HomePage>
                     ),
                   ),
                   icon: const Icon(Icons.logout_rounded, size: 18),
-                  label: const Text(
-                    'Déconnexion',
+                  label: Text(
+                    AppLocalizations.of(context)!.drawerLogout,
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   onPressed: () {
@@ -455,9 +476,16 @@ class _HomePageState extends ConsumerState<HomePage>
             // Version
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                'CapMobile v1.0 · Zebra TC52',
-                style: const TextStyle(fontSize: 11, color: _C.textMuted),
+              child: ref.watch(appVersionProvider).when(
+                data: (version) => Text(
+                  'CAP Mobile $version',
+                  style: const TextStyle(fontSize: 13, color: _C.textMuted, fontWeight: FontWeight.bold,),
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const Text(
+                  'CAP Mobile',
+                  style: TextStyle(fontSize: 13, color: _C.textMuted , fontWeight: FontWeight.bold,),
+                ),
               ),
             ),
           ],
@@ -529,8 +557,8 @@ class _HomePageState extends ConsumerState<HomePage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Salutation ──
-          _buildGreetingBanner(collab),
-          const SizedBox(height: 24),
+          _buildGreetingBanner(context , collab),
+          const SizedBox(height: 28),
 
           // ── Section titre ──
           Row(
@@ -544,8 +572,8 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'Modules disponibles',
+              Text(
+                AppLocalizations.of(context)!.modulesAvailableSection,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -565,7 +593,7 @@ class _HomePageState extends ConsumerState<HomePage>
               crossAxisCount: 2,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
-              childAspectRatio: 1.05,
+              childAspectRatio: 0.95,
             ),
             itemCount: modules.length,
             itemBuilder: (context, i) {
@@ -592,7 +620,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     ),
                   );
                 },
-                child: _buildModuleCard(modules[i]),
+                child: _buildModuleCard(context , modules[i]),
               );
             },
           ),
@@ -602,13 +630,14 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   // ── Bannière salutation ──
-  Widget _buildGreetingBanner(collab) {
+  Widget _buildGreetingBanner(BuildContext context, collab) {
     final hour = DateTime.now().hour;
+    final l10n = AppLocalizations.of(context)!;
     final greeting = hour < 12
-        ? 'Bonjour'
+        ? l10n.greetingMorning
         : hour < 18
-        ? 'Bon après-midi'
-        : 'Bonsoir';
+        ? l10n.greetingAfternoon
+        : l10n.greetingEvening;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -704,7 +733,7 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   // ── Carte module ──
-  Widget _buildModuleCard(_Module m) {
+  Widget _buildModuleCard(BuildContext context, _Module m) {
     return GestureDetector(
       onTap: m.available ? m.onTap : null,
       child: AnimatedContainer(
@@ -757,8 +786,8 @@ class _HomePageState extends ConsumerState<HomePage>
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Bientôt',
+                    child: Text(
+                      AppLocalizations.of(context)!.comingSoonBadge,
                       style: TextStyle(
                         fontSize: 9,
                         color: _C.textMuted,
