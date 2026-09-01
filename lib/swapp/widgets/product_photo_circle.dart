@@ -50,7 +50,7 @@ class ProductPhotoCircle extends StatelessWidget {
     HapticFeedback.lightImpact();
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.82),
+      barrierColor: Colors.black.withValues(alpha: 0.82),
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -73,12 +73,12 @@ class ProductPhotoCircle extends StatelessWidget {
                         height: 280,
                         child: Center(
                           child: CircularProgressIndicator(
-                            color: AppColors.white.withOpacity(0.85),
+                            color: AppColors.white.withValues(alpha: 0.85),
                           ),
                         ),
                       );
                     },
-                    errorBuilder: (_, __, ___) => const SizedBox(
+                    errorBuilder: (_, _, _) => const SizedBox(
                       width: 280,
                       height: 280,
                       child: Icon(
@@ -116,12 +116,12 @@ class ProductPhotoCircle extends StatelessWidget {
               borderRadius: radius,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryDark.withOpacity(0.22),
+                  color: AppColors.primaryDark.withValues(alpha: 0.22),
                   blurRadius: size * 0.16,
                   offset: Offset(0, size * 0.07),
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: size * 0.05,
                   offset: Offset(0, size * 0.025),
                 ),
@@ -155,7 +155,7 @@ class ProductPhotoCircle extends StatelessWidget {
             child: Material(
               color: AppColors.primary,
               elevation: 3,
-              shadowColor: AppColors.primaryDark.withOpacity(0.45),
+              shadowColor: AppColors.primaryDark.withValues(alpha: 0.45),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -189,7 +189,7 @@ class ProductPhotoCircle extends StatelessWidget {
         height: size,
         fit: BoxFit.fill,
         alignment: Alignment.center,
-        errorBuilder: (_, __, ___) => _placeholder('placeholder-error'),
+        errorBuilder: (_, _, _) => _placeholder('placeholder-error'),
       );
     }
 
@@ -205,7 +205,7 @@ class ProductPhotoCircle extends StatelessWidget {
       child: Icon(
         Icons.directions_run_rounded,
         size: size * 0.38,
-        color: AppColors.primaryDark.withOpacity(0.45),
+        color: AppColors.primaryDark.withValues(alpha: 0.45),
       ),
     );
   }

@@ -7,6 +7,7 @@ import '../../../core/services/rfid_sse_service.dart';
 import '../../article/models/article_model.dart';
 import '../../article/providers/article_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/widgets/app_popup.dart';
 import '../providers/rfid_provider.dart';
 import '../utils/epc_calculator.dart';
 import 'rfid_constants.dart';
@@ -53,13 +54,13 @@ class RfidEncodingPage extends ConsumerStatefulWidget {
   final List<SseSessionEntry> initialSseEntries;
 
   const RfidEncodingPage({
-    Key? key,
+    super.key,
     required this.mode,
     required this.initialCode,
     this.initialEncodedCount = 0,
     this.header = '3034',
     this.initialSseEntries = const [],
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<RfidEncodingPage> createState() => _RfidEncodingPageState();
@@ -251,8 +252,8 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => RfidSseListPage(entries: _sseEntries),
-        transitionsBuilder: (_, anim, __, child) => SlideTransition(
+        pageBuilder: (_, _, _) => RfidSseListPage(entries: _sseEntries),
+        transitionsBuilder: (_, anim, _, child) => SlideTransition(
           position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
               .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
           child: child,
@@ -364,7 +365,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       if (msg.contains('ETIQUETTE_DEJA_ENCODEE') && newEpc != null) {
         try {
           await ref.read(rfidProvider.notifier)
-              .writeTag(tagId: newEpc!, data: newEpc!)
+              .writeTag(tagId: newEpc, data: newEpc)
               .timeout(const Duration(seconds: 5));
 
           setState(() {
@@ -376,7 +377,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           _postSse(
             serial:     serialDecimal,
             gencode:    article.gencode,
-            newEpc:     newEpc!,
+            newEpc:     newEpc,
             codeCollab: codeCollab,
             article:    article,
           );
@@ -456,135 +457,49 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       setState(() => _isProcessing = false);
 
       if (!mounted) return;
-      final confirmed = await showDialog<bool>(
-        context: context,
+      final confirmed = await AppPopup.confirm(
+        context,
+        tone: AppPopupTone.warning,
+        icon: Icons.wifi_tethering_rounded,
+        title: 'Confirmer la puce détectée',
+        message:
+            'Vérifiez que ce numéro de série\ncorrespond à l\'étiquette physique.',
+        confirmLabel: 'Encoder',
         barrierDismissible: false,
-        builder: (ctx) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icône
-                Container(
-                  width: 52, height: 52,
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.wifi_tethering_rounded,
-                    color: AppColors.warning,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                // Titre
-                const Text(
-                  'Confirmer la puce détectée',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Vérifiez que ce numéro de série\ncorrespond à l\'étiquette physique.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                // Serial mis en avant
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Numéro de série détecté',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                          letterSpacing: .4,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        serialAffiche,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.primaryDark,
-                          letterSpacing: 2,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 18),
-                // Boutons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textSecondary,
-                          side: BorderSide(color: AppColors.border),
-                          padding: const EdgeInsets.symmetric(vertical: 11),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text(
-                          'Annuler',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 11),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                        icon: const Icon(Icons.nfc_rounded, size: 16),
-                        label: const Text(
-                          'Encoder',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        onPressed: () => Navigator.pop(ctx, true),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+        body: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: .3),
+              width: 1.5,
             ),
           ),
+          child: Column(
+            children: [
+              const Text(
+                'Numéro de série détecté',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                  letterSpacing: .4,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                serialAffiche,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryDark,
+                  letterSpacing: 2,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -749,7 +664,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 child: Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.15),
+                    color: Colors.white.withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -772,7 +687,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                           ? 'Touchez le compteur pour voir la liste'
                           : 'Écriture EPC · Puce vierge',
                       style: TextStyle(
-                          fontSize: 11, color: Colors.white.withOpacity(.75)),
+                          fontSize: 11, color: Colors.white.withValues(alpha: .75)),
                     ),
                   ],
                 ),
@@ -782,7 +697,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 onTap: _encodedCount > 0 ? _openSseList : null,
                 child: AnimatedBuilder(
                   animation: _counterCtrl,
-                  builder: (_, __) {
+                  builder: (_, _) {
                     final scale = 1.0 + .18 * math.sin(_counterCtrl.value * math.pi);
                     return Transform.scale(
                       scale: scale,
@@ -790,11 +705,11 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
                           color: _encodedCount > 0
-                              ? Colors.white.withOpacity(.25)
-                              : Colors.white.withOpacity(.12),
+                              ? Colors.white.withValues(alpha: .25)
+                              : Colors.white.withValues(alpha: .12),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withOpacity(_encodedCount > 0 ? .5 : .2),
+                            color: Colors.white.withValues(alpha: _encodedCount > 0 ? .5 : .2),
                           ),
                         ),
                         child: Row(
@@ -840,20 +755,20 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.warning.withOpacity(.4), width: 1.5),
+        border: Border.all(color: AppColors.warning.withValues(alpha: .4), width: 1.5),
       ),
       child: Row(
         children: [
           AnimatedBuilder(
             animation: _scanRingCtrl,
-            builder: (_, __) {
+            builder: (_, _) {
               final scale = 1.0 + .12 * math.sin(_scanRingCtrl.value * math.pi * 2);
               return Transform.scale(
                 scale: scale,
                 child: Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(.15),
+                    color: AppColors.warning.withValues(alpha: .15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.qr_code_scanner_rounded,
@@ -876,7 +791,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 Text('Pointez le pistolet vers le code-barres du produit',
                     style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.warning.withOpacity(.85),
+                        color: AppColors.warning.withValues(alpha: .85),
                         height: 1.3)),
               ],
             ),
@@ -888,7 +803,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(.12),
+                color: AppColors.warning.withValues(alpha: .12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text('Annuler',
@@ -910,9 +825,9 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(.05),
+        color: AppColors.error.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.error.withOpacity(.25), width: 1.5),
+        border: Border.all(color: AppColors.error.withValues(alpha: .25), width: 1.5),
       ),
       child: Column(
         children: [
@@ -921,7 +836,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               Container(
                 width: 34, height: 34,
                 decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(.1),
+                    color: AppColors.error.withValues(alpha: .1),
                     shape: BoxShape.circle),
                 child: const Icon(Icons.error_outline_rounded,
                     color: AppColors.error, size: 18),
@@ -974,10 +889,10 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: AppColors.success.withOpacity(.25), width: 1.5),
+                color: AppColors.success.withValues(alpha: .25), width: 1.5),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.success.withOpacity(.08),
+                  color: AppColors.success.withValues(alpha: .08),
                   blurRadius: 16,
                   offset: const Offset(0, 4))
             ],
@@ -990,7 +905,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   photoUrl,
                   width: 80, height: 88,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: 80, height: 88,
                     color: AppColors.bg,
                     child: const Icon(Icons.image_outlined,
@@ -1053,7 +968,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(.1),
+                        color: AppColors.success.withValues(alpha: .1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -1146,7 +1061,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       decoration: BoxDecoration(
         color: const Color(0xFFFFF3E0),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warning.withOpacity(.4), width: 1.5),
+        border: Border.all(color: AppColors.warning.withValues(alpha: .4), width: 1.5),
       ),
       child: Column(
         children: [
@@ -1155,7 +1070,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(.15),
+                  color: AppColors.warning.withValues(alpha: .15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.wifi_tethering_rounded,
@@ -1213,7 +1128,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
       decoration: BoxDecoration(
         color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(.2), width: 1.5),
+        border: Border.all(color: AppColors.primary.withValues(alpha: .2), width: 1.5),
       ),
       child: Row(
         children: [
@@ -1226,7 +1141,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   final delay = i * .5;
                   return AnimatedBuilder(
                     animation: _scanRingCtrl,
-                    builder: (_, __) {
+                    builder: (_, _) {
                       final v = (_scanRingCtrl.value - delay) % 1.0;
                       return Opacity(
                         opacity: (1 - v).clamp(0.0, 1.0),
@@ -1236,7 +1151,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.primary.withOpacity((1 - v) * .45),
+                              color: AppColors.primary.withValues(alpha: (1 - v) * .45),
                               width: 1.5,
                             ),
                           ),
@@ -1248,7 +1163,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                 Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(.15),
+                      color: AppColors.primary.withValues(alpha: .15),
                       shape: BoxShape.circle),
                   child: const Icon(Icons.nfc_rounded,
                       color: AppColors.primary, size: 18),
@@ -1271,7 +1186,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   'Placez une puce vierge sur le lecteur\npuis appuyez sur le bouton latéral',
                   style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.primary.withOpacity(.8),
+                      color: AppColors.primary.withValues(alpha: .8),
                       height: 1.4),
                 ),
               ],
@@ -1286,9 +1201,9 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(.06),
+        color: AppColors.warning.withValues(alpha: .06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warning.withOpacity(.25), width: 1.5),
+        border: Border.all(color: AppColors.warning.withValues(alpha: .25), width: 1.5),
       ),
       child: Row(
         children: [
@@ -1296,7 +1211,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
             SizedBox(
                 width: 44, height: 44,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.warning.withOpacity(.3))),
+                    strokeWidth: 2, color: AppColors.warning.withValues(alpha: .3))),
             SizedBox(
                 width: 34, height: 34,
                 child: CircularProgressIndicator(
@@ -1337,10 +1252,10 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.primary.withOpacity(.15)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: .15)),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.primary.withOpacity(.05),
+                  color: AppColors.primary.withValues(alpha: .05),
                   blurRadius: 12,
                   offset: const Offset(0, 3))
             ],
@@ -1408,7 +1323,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: AppColors.success.withOpacity(.3), width: 1.5),
+                color: AppColors.success.withValues(alpha: .3), width: 1.5),
           ),
           child: Column(
             children: [
@@ -1417,10 +1332,10 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(.12),
+                      color: AppColors.success.withValues(alpha: .12),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.success.withOpacity(.3), width: 1.5),
+                          color: AppColors.success.withValues(alpha: .3), width: 1.5),
                     ),
                     child: const Icon(Icons.check_rounded,
                         color: AppColors.success, size: 22),
@@ -1439,7 +1354,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                           'Appuyez sur le bouton Zebra pour scanner\nun nouvel article.',
                           style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary.withOpacity(.8),
+                              color: AppColors.textSecondary.withValues(alpha: .8),
                               height: 1.3),
                         ),
                       ],
@@ -1454,9 +1369,9 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(.07),
+                    color: AppColors.success.withValues(alpha: .07),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.success.withOpacity(.2)),
+                    border: Border.all(color: AppColors.success.withValues(alpha: .2)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1492,9 +1407,9 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(.05),
+        color: AppColors.error.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.error.withOpacity(.25), width: 1.5),
+        border: Border.all(color: AppColors.error.withValues(alpha: .25), width: 1.5),
       ),
       child: Column(
         children: [
@@ -1503,7 +1418,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
               Container(
                 width: 34, height: 34,
                 decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(.1),
+                    color: AppColors.error.withValues(alpha: .1),
                     shape: BoxShape.circle),
                 child: const Icon(Icons.error_outline_rounded,
                     color: AppColors.error, size: 18),
@@ -1522,7 +1437,7 @@ class _RfidEncodingPageState extends ConsumerState<RfidEncodingPage>
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
-                side: BorderSide(color: AppColors.error.withOpacity(.4)),
+                side: BorderSide(color: AppColors.error.withValues(alpha: .4)),
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -1555,9 +1470,9 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(.08),
+        color: color.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(.2)),
+        border: Border.all(color: color.withValues(alpha: .2)),
       ),
       child: Text(label,
           style: TextStyle(
@@ -1586,10 +1501,10 @@ class _EpcLine extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(.05),
+        color: color.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: color.withOpacity(highlight ? .3 : .1),
+            color: color.withValues(alpha: highlight ? .3 : .1),
             width: highlight ? 1.5 : 1),
       ),
       child: Row(
@@ -1603,7 +1518,7 @@ class _EpcLine extends StatelessWidget {
                 Text(label,
                     style: TextStyle(
                         fontSize: 9,
-                        color: color.withOpacity(.7),
+                        color: color.withValues(alpha: .7),
                         fontWeight: FontWeight.w600,
                         letterSpacing: .3)),
                 const SizedBox(height: 2),

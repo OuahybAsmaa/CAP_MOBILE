@@ -9,7 +9,7 @@
 // =============================================================================
 
 import 'package:cap_mobile/core/theme/app_colors.dart';
-import 'package:cap_mobile/swapp/models/ranger_mock_data.dart';
+import 'package:cap_mobile/core/apiswap/ranger/data/ranger_test_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,11 +22,7 @@ class RangerPanel extends StatefulWidget {
   final RangerLayoutScale dp;
   final RangerLayoutFont sp;
 
-  const RangerPanel({
-    super.key,
-    required this.dp,
-    required this.sp,
-  });
+  const RangerPanel({super.key, required this.dp, required this.sp});
 
   @override
   State<RangerPanel> createState() => _RangerPanelState();
@@ -309,8 +305,9 @@ class _TokenSystemCard extends StatelessWidget {
                 backgroundColor: tokenCount > 0
                     ? AppColors.primarySoft
                     : AppColors.error.withValues(alpha: 0.1),
-                foregroundColor:
-                    tokenCount > 0 ? AppColors.primaryDark : AppColors.error,
+                foregroundColor: tokenCount > 0
+                    ? AppColors.primaryDark
+                    : AppColors.error,
                 borderColor: tokenCount > 0
                     ? AppColors.primary.withValues(alpha: 0.25)
                     : AppColors.error.withValues(alpha: 0.35),
@@ -359,8 +356,16 @@ class _JetonChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final goldLight = Color.lerp(AppColors.warning, Colors.amber.shade100, 0.35)!;
-    final goldDark = Color.lerp(AppColors.warning, Colors.orange, index * 0.12)!;
+    final goldLight = Color.lerp(
+      AppColors.warning,
+      Colors.amber.shade100,
+      0.35,
+    )!;
+    final goldDark = Color.lerp(
+      AppColors.warning,
+      Colors.orange,
+      index * 0.12,
+    )!;
 
     return Material(
       elevation: 2,
@@ -383,18 +388,11 @@ class _JetonChip extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: dp(10),
-              vertical: dp(6),
-            ),
+            padding: EdgeInsets.symmetric(horizontal: dp(10), vertical: dp(6)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.toll_rounded,
-                  size: dp(16),
-                  color: AppColors.white,
-                ),
+                Icon(Icons.toll_rounded, size: dp(16), color: AppColors.white),
                 SizedBox(width: dp(5)),
                 Text(
                   label,
@@ -478,11 +476,7 @@ class _MicBadge extends StatelessWidget {
         child: SizedBox(
           width: dp(34),
           height: dp(34),
-          child: Icon(
-            Icons.mic_rounded,
-            color: AppColors.white,
-            size: dp(18),
-          ),
+          child: Icon(Icons.mic_rounded, color: AppColors.white, size: dp(18)),
         ),
       ),
     );
@@ -522,10 +516,7 @@ class _RangerGlyphPainter extends CustomPainter {
   final Color arrowColor;
   final Color baseColor;
 
-  _RangerGlyphPainter({
-    required this.arrowColor,
-    required this.baseColor,
-  });
+  _RangerGlyphPainter({required this.arrowColor, required this.baseColor});
 
   @override
   void paint(Canvas canvas, Size size) {

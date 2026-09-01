@@ -12,9 +12,10 @@
 
 import 'dart:async';
 
-import 'package:cap_mobile/core/apiswap/swapp_product_provider.dart';
+import 'package:cap_mobile/core/apiswap/produit/providers/swapp_product_provider.dart';
 import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 import 'package:cap_mobile/core/services/datawedge_service.dart';
+import 'package:cap_mobile/core/widgets/app_popup.dart';
 import 'package:cap_mobile/features/article/providers/article_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,7 +71,7 @@ class SwappDataWedgeListener {
 }
 
 /// Traite un code scanné (DataWedge ou caméra) avec appel API Swapp + UI.
-Future<void> processSwappProductScanUi({
+Future<bool> processSwappProductScanUi({
   required BuildContext context,
   required WidgetRef ref,
   required String code,
@@ -78,50 +79,30 @@ Future<void> processSwappProductScanUi({
   int? codeMag,
   VoidCallback? onProductLoaded,
 }) async {
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
 
   if (showLoadingDialog) {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => PopScope(
-        canPop: false,
-        child: Center(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(context.l10n.scanLoading),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    AppPopup.loading(context, message: context.l10n.scanLoading);
   }
 
   try {
     HapticFeedback.mediumImpact();
     await handleSwappProductScan(ref, code, codeMag: codeMag);
 
-    if (!context.mounted) return;
+    if (!context.mounted) return false;
     onProductLoaded?.call();
     final articleError = ref.read(articleProvider).error;
     final productError = ref.read(swappProductProvider).error;
     final error = productError ?? articleError;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
+    return productError == null && ref.read(swappProductProvider).product != null;
   } finally {
     if (showLoadingDialog && context.mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
+      AppPopup.hide(context);
     }
   }
 }

@@ -11,11 +11,13 @@ class ProductReviewCollab {
   final int codeCollab;
   final String nom;
   final String prenom;
+  final String pictureLink;
 
   const ProductReviewCollab({
     required this.codeCollab,
     required this.nom,
     required this.prenom,
+    this.pictureLink = '',
   });
 
   factory ProductReviewCollab.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,9 @@ class ProductReviewCollab {
           : int.tryParse(_string(json['codeCollab'])) ?? 0,
       nom: _string(json['nom']),
       prenom: _string(json['prenom']),
+      pictureLink: _string(
+        json['pictureLink'] ?? json['photoUrl'] ?? json['picture'],
+      ),
     );
   }
 
@@ -79,9 +84,9 @@ class ProductReviewItem {
     final mediasJson = json['medias'];
     final medias = mediasJson is List
         ? mediasJson
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList()
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList()
         : <Map<String, dynamic>>[];
 
     return ProductReviewItem(

@@ -9,7 +9,7 @@ import 'rfid_control_results_page.dart';
 //  RFID CONTROL TAB
 // ──────────────────────────────────────────────────────────────
 class RfidControlTab extends ConsumerStatefulWidget {
-  const RfidControlTab({Key? key}) : super(key: key);
+  const RfidControlTab({super.key});
 
   @override
   ConsumerState<RfidControlTab> createState() => _RfidControlTabState();
@@ -231,7 +231,7 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
               boxShadow: [
                 BoxShadow(
                   color: (isRunning ? AppColors.error : AppColors.primary)
-                      .withOpacity(isConnected ? .3 : .1),
+                      .withValues(alpha: isConnected ? .3 : .1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -243,7 +243,7 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
                 if (isRunning)
                   AnimatedBuilder(
                     animation: _pulseCtrl,
-                    builder: (_, __) => Container(
+                    builder: (_, _) => Container(
                       width: 8, height: 8,
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
@@ -252,7 +252,7 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
                         boxShadow: [
                           BoxShadow(
                             color: Colors.white
-                                .withOpacity(0.4 + _pulseCtrl.value * 0.4),
+                                .withValues(alpha: 0.4 + _pulseCtrl.value * 0.4),
                             blurRadius: 6,
                             spreadRadius: 1,
                           ),
@@ -332,7 +332,7 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
               decoration: BoxDecoration(
                 color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withOpacity(.3)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: .3)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -355,9 +355,9 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(.08),
+              color: AppColors.error.withValues(alpha: .08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.error.withOpacity(.25)),
+              border: Border.all(color: AppColors.error.withValues(alpha: .25)),
             ),
             child: Row(
               children: [
@@ -398,9 +398,9 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
             margin: EdgeInsets.only(right: i < items.length - 1 ? 6 : 0),
             padding: const EdgeInsets.symmetric(vertical: 7),
             decoration: BoxDecoration(
-              color: s.color.withOpacity(.08),
+              color: s.color.withValues(alpha: .08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: s.color.withOpacity(.2)),
+              border: Border.all(color: s.color.withValues(alpha: .2)),
             ),
             child: Column(
               children: [
@@ -435,7 +435,7 @@ class _RfidControlTabState extends ConsumerState<RfidControlTab>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              color: AppColors.primary.withOpacity(.04),
+              color: AppColors.primary.withValues(alpha: .04),
               blurRadius: 8,
               offset: const Offset(0, 1)),
         ],

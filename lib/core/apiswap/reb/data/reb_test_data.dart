@@ -1,0 +1,86 @@
+// Donnees brutes simulant les reponses de l'API Remise En Banque.
+abstract final class RebTestData {
+  static List<Map<String, dynamic>> rebs() => [
+    {
+      'numReb': 'REB-20260821-01',
+      'date': '2026-08-21',
+      'codeCollab': 201,
+      'prenom': 'Audrey',
+      'nom': 'Legrand',
+      'encaissement': 1655.66,
+      'declareReb': 1655.66,
+      'bordereauUrl': 'assets/reb/bordereau_01.svg',
+      'statut': 'enAttente',
+    },
+    {
+      'numReb': 'REB-20260820-01',
+      'date': '2026-08-20',
+      'codeCollab': 202,
+      'prenom': 'Clément',
+      'nom': 'Roy',
+      'encaissement': 1661.77,
+      'declareReb': 1661.77,
+      'bordereauUrl': 'assets/reb/bordereau_02.svg',
+      'statut': 'enAttente',
+    },
+    {
+      'numReb': 'REB-20260819-01',
+      'date': '2026-08-19',
+      'codeCollab': 203,
+      'prenom': 'Sofiane',
+      'nom': 'Fabre',
+      'encaissement': 1420.30,
+      'declareReb': 1408,
+      'statut': 'enAttente',
+    },
+    {
+      'numReb': 'REB-20260818-01',
+      'date': '2026-08-18',
+      'codeCollab': 201,
+      'prenom': 'Audrey',
+      'nom': 'Legrand',
+      'encaissement': 1312.45,
+      'declareReb': 1312.45,
+      'bordereauUrl': 'assets/reb/bordereau_03.svg',
+      'statut': 'traitee',
+    },
+    {
+      'numReb': 'REB-20260817-01',
+      'date': '2026-08-17',
+      'codeCollab': 203,
+      'prenom': 'Sofiane',
+      'nom': 'Fabre',
+      'encaissement': 987.10,
+      'declareReb': 987.10,
+      'bordereauUrl': 'assets/reb/bordereau_04.svg',
+      'statut': 'traitee',
+    },
+  ];
+
+  static List<Map<String, dynamic>> encaissements() => [
+    {
+      'id': 'ENC-20260822-01',
+      'date': '2026-08-22',
+      'montant': 1680.80,
+      'collaborateur': 'Clément',
+      'photoUrl': 'https://i.pravatar.cc/100?img=13',
+      'dejaRemis': false,
+    },
+    {
+      'id': 'ENC-20260821-01',
+      'date': '2026-08-21',
+      'montant': 1655.66,
+      'collaborateur': 'Audrey',
+      'photoUrl': 'https://i.pravatar.cc/100?img=47',
+      'dejaRemis': false,
+    },
+    {
+      'id': 'ENC-20260820-01',
+      'date': '2026-08-20',
+      'montant': 1661.77,
+      'collaborateur': 'Clément',
+      'photoUrl': 'https://i.pravatar.cc/100?img=13',
+      'dejaRemis': false,
+    },
+  ];
+}

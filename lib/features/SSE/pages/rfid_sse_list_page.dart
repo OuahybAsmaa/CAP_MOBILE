@@ -9,7 +9,7 @@ import '../../rfid/pages/rfid_encoding_page.dart' show SseSessionEntry;
 class RfidSseListPage extends StatefulWidget {
   final List<SseSessionEntry> entries;
 
-  const RfidSseListPage({Key? key, required this.entries}) : super(key: key);
+  const RfidSseListPage({super.key, required this.entries});
 
   @override
   State<RfidSseListPage> createState() => _RfidSseListPageState();
@@ -96,7 +96,7 @@ class _RfidSseListPageState extends State<RfidSseListPage>
                 child: Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.15),
+                    color: Colors.white.withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -109,9 +109,9 @@ class _RfidSseListPageState extends State<RfidSseListPage>
                   Container(
                     width: 48, height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.15),
+                      color: Colors.white.withValues(alpha: .15),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white.withOpacity(.3)),
+                      border: Border.all(color: Colors.white.withValues(alpha: .3)),
                     ),
                     child: const Icon(Icons.list_alt_rounded,
                         color: Colors.white, size: 26),
@@ -131,7 +131,7 @@ class _RfidSseListPageState extends State<RfidSseListPage>
                           '$total puce${total > 1 ? 's' : ''} encodée${total > 1 ? 's' : ''} au total',
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(.75)),
+                              color: Colors.white.withValues(alpha: .75)),
                         ),
                       ],
                     ),
@@ -141,10 +141,10 @@ class _RfidSseListPageState extends State<RfidSseListPage>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(.25),
+                      color: AppColors.success.withValues(alpha: .25),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: AppColors.success.withOpacity(.5)),
+                          color: AppColors.success.withValues(alpha: .5)),
                     ),
                     child: Text(
                       '$total',
@@ -244,10 +244,10 @@ class _RfidSseListPageState extends State<RfidSseListPage>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.success.withOpacity(.15)),
+        border: Border.all(color: AppColors.success.withValues(alpha: .15)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(.05),
+            color: AppColors.primary.withValues(alpha: .05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -323,7 +323,7 @@ class _RfidSseListPageState extends State<RfidSseListPage>
                       child: Image.network(
                         photoUrl,
                         width: 56, height: 62, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+                        errorBuilder: (_, _, _) => Container(
                           width: 56, height: 62,
                           decoration: BoxDecoration(
                               color: AppColors.bg,
@@ -408,10 +408,10 @@ class _RfidSseListPageState extends State<RfidSseListPage>
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(.05),
+                      color: AppColors.success.withValues(alpha: .05),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: AppColors.success.withOpacity(.2)),
+                          color: AppColors.success.withValues(alpha: .2)),
                     ),
                     child: Row(
                       children: [
@@ -532,9 +532,9 @@ class _SmallChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(.08),
+        color: color.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(.2)),
+        border: Border.all(color: color.withValues(alpha: .2)),
       ),
       child: Text(label,
           style: TextStyle(

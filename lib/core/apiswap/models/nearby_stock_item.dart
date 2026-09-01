@@ -42,13 +42,16 @@ class NearbyStoreStock {
     required this.rank,
   });
 
-  factory NearbyStoreStock.fromJson(Map<String, dynamic> json, {required int rank}) {
+  factory NearbyStoreStock.fromJson(
+    Map<String, dynamic> json, {
+    required int rank,
+  }) {
     final rawStocks = json['stocks'];
     final lines = rawStocks is List
         ? rawStocks
-            .whereType<Map<String, dynamic>>()
-            .map(NearbyStockLine.fromJson)
-            .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(NearbyStockLine.fromJson)
+              .toList()
         : <NearbyStockLine>[];
 
     return NearbyStoreStock(
@@ -63,8 +66,7 @@ class NearbyStoreStock {
   bool get hasStock => stocks.any((line) => line.stockMag > 0);
 
   /// UI : somme stockMag toutes tailles — badge vert dans le dialogue magasin.
-  int get totalStock =>
-      stocks.fold<int>(0, (sum, line) => sum + line.stockMag);
+  int get totalStock => stocks.fold<int>(0, (sum, line) => sum + line.stockMag);
 }
 
 int _asInt(dynamic value) {

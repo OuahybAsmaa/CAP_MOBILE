@@ -51,9 +51,7 @@ class RfidNotifier extends StateNotifier<RfidState> {
   bool _isConnecting = false;
   StreamSubscription? _eventSubscription;
 
-  RfidNotifier(this._rfidService) : super(RfidState()) {
-
-  }
+  RfidNotifier(this._rfidService) : super(RfidState());
 
   Future<void> loadAvailableReaders() async {
     try {

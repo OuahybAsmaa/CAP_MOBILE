@@ -16,7 +16,7 @@ import 'dart:typed_data';
 // ─────────────────────────────────────────────────────────────
 
 class QcRfidPage extends ConsumerStatefulWidget {
-  const QcRfidPage({Key? key}) : super(key: key);
+  const QcRfidPage({super.key});
 
   @override
   ConsumerState<QcRfidPage> createState() => _QcRfidPageState();
@@ -154,7 +154,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.15),
+                    color: Colors.white.withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -165,15 +165,15 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
               // Icône QC animée
               AnimatedBuilder(
                 animation: _pulseCtrl,
-                builder: (_, __) =>
+                builder: (_, _) =>
                     Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(
                         color: Colors.white
-                            .withOpacity(.12 + .06 * _pulseCtrl.value),
+                            .withValues(alpha: .12 + .06 * _pulseCtrl.value),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: Colors.white.withOpacity(.3)),
+                            color: Colors.white.withValues(alpha: .3)),
                       ),
                       child: const Icon(Icons.fact_check_rounded,
                           color: Colors.white, size: 20),
@@ -197,7 +197,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                     'Quality Control',
                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.white.withOpacity(.7),
+                      color: Colors.white.withValues(alpha: .7),
                     ),
                   ),
                 ],
@@ -225,13 +225,13 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
           color: connected != null
-              ? Colors.green.withOpacity(.2)
-              : Colors.white.withOpacity(.12),
+              ? Colors.green.withValues(alpha: .2)
+              : Colors.white.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: connected != null
-                ? Colors.greenAccent.withOpacity(.6)
-                : Colors.white.withOpacity(.3),
+                ? Colors.greenAccent.withValues(alpha: .6)
+                : Colors.white.withValues(alpha: .3),
           ),
         ),
         child: rfidState.isLoading && connected == null
@@ -337,7 +337,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                         horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF2E7D32).withOpacity(.06)
+                          ? const Color(0xFF2E7D32).withValues(alpha: .06)
                           : const Color(0xFFF4F4F4),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -384,7 +384,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF3949AB).withOpacity(.15)),
+        border: Border.all(color: const Color(0xFF3949AB).withValues(alpha: .15)),
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
@@ -420,9 +420,9 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) =>
+                pageBuilder: (_, _, _) =>
                 const QcInventoryPage(mode: QcControlMode.full),
-                transitionsBuilder: (_, anim, __, child) => SlideTransition(
+                transitionsBuilder: (_, anim, _, child) => SlideTransition(
                   position: Tween<Offset>(
                     begin: const Offset(1, 0),
                     end: Offset.zero,
@@ -500,16 +500,16 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
             // Icône animée
             AnimatedBuilder(
               animation: _pulseCtrl,
-              builder: (_, __) =>
+              builder: (_, _) =>
                   Container(
                     width: 90, height: 90,
                     decoration: BoxDecoration(
                       color: const Color(0xFF3949AB)
-                          .withOpacity(.08 + .04 * _pulseCtrl.value),
+                          .withValues(alpha: .08 + .04 * _pulseCtrl.value),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: const Color(0xFF3949AB)
-                            .withOpacity(.2 + .1 * _pulseCtrl.value),
+                            .withValues(alpha: .2 + .1 * _pulseCtrl.value),
                         width: 2,
                       ),
                     ),
@@ -710,7 +710,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
               width: 64,
               height: 64,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, _, _) =>
                   Container(
                     width: 64, height: 64,
                     decoration: BoxDecoration(
@@ -791,9 +791,9 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(.08),
+        color: color.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(.2)),
+        border: Border.all(color: color.withValues(alpha: .2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -811,7 +811,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
             style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: color.withOpacity(.7)),
+                color: color.withValues(alpha: .7)),
           ),
         ],
       ),
@@ -841,9 +841,9 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
               Navigator.push(
                 context,
                 PageRouteBuilder(
-                  pageBuilder: (_, __, ___) =>
+                  pageBuilder: (_, _, _) =>
                   const QcInventoryPage(mode: QcControlMode.partiel),
-                  transitionsBuilder: (_, anim, __, child) => SlideTransition(
+                  transitionsBuilder: (_, anim, _, child) => SlideTransition(
                     position: Tween<Offset>(
                       begin: const Offset(1, 0),
                       end: Offset.zero,
@@ -868,7 +868,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF3949AB).withOpacity(.12)),
+        border: Border.all(color: const Color(0xFF3949AB).withValues(alpha: .12)),
       ),
       child: Column(
         children: [
@@ -882,7 +882,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                 topRight: Radius.circular(11),
               ),
               border: Border(
-                bottom: BorderSide(color: const Color(0xFF3949AB).withOpacity(.12)),
+                bottom: BorderSide(color: const Color(0xFF3949AB).withValues(alpha: .12)),
               ),
             ),
             child: Row(
@@ -891,7 +891,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                 Container(
                   width: 26, height: 26,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3949AB).withOpacity(.15),
+                    color: const Color(0xFF3949AB).withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
@@ -920,7 +920,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3949AB).withOpacity(.1),
+                    color: const Color(0xFF3949AB).withValues(alpha: .1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -954,7 +954,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
               child: Table(
                 defaultColumnWidth: const IntrinsicColumnWidth(),
                 border: TableBorder.all(
-                  color: const Color(0xFF93A3F6).withOpacity(.25),
+                  color: const Color(0xFF93A3F6).withValues(alpha: .25),
                   width: 1,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -997,7 +997,7 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: const Color(0xFF3949AB).withOpacity(.08)),
+                  top: BorderSide(color: const Color(0xFF3949AB).withValues(alpha: .08)),
                 ),
               ),
               child: Padding(
@@ -1030,9 +1030,9 @@ class _QcRfidPageState extends ConsumerState<QcRfidPage>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32).withOpacity(.08),
+                        color: const Color(0xFF2E7D32).withValues(alpha: .08),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF2E7D32).withOpacity(.25)),
+                        border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: .25)),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,

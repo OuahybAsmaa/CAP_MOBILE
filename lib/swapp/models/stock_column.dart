@@ -118,13 +118,7 @@ abstract class StockColumns {
 
   static const coreMetrics = [dispo, transit, picking, depot];
 
-  static const optionalMetrics = [
-    vols,
-    nonVendable,
-    ecartWeb,
-    resas,
-    resaPlus,
-  ];
+  static const optionalMetrics = [vols, nonVendable, ecartWeb, resas, resaPlus];
 
   static const metrics = [
     dispo,

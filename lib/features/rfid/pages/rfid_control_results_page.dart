@@ -8,7 +8,7 @@ import 'rfid_constants.dart';
 class RfidControlResultsPage extends ConsumerWidget {
   final VoidCallback onStop;
 
-  const RfidControlResultsPage({Key? key, required this.onStop}) : super(key: key);
+  const RfidControlResultsPage({super.key, required this.onStop});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -146,7 +146,7 @@ class RfidControlResultsPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 16, vertical: 12),
               itemCount: tags.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
               const SizedBox(height: 8),
               itemBuilder: (_, i) =>
                   _TagCard(tag: tags[i], accentColor: accentColor),
@@ -172,9 +172,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(.15),
+        color: color.withValues(alpha: .15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(.3)),
+        border: Border.all(color: color.withValues(alpha: .3)),
       ),
       child: Column(
         children: [
@@ -223,10 +223,10 @@ class _TagCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: tagColor.withOpacity(.22)),
+        border: Border.all(color: tagColor.withValues(alpha: .22)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(.04),
+            color: AppColors.primary.withValues(alpha: .04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -238,7 +238,7 @@ class _TagCard extends StatelessWidget {
           Container(
             width: 36, height: 36,
             decoration: BoxDecoration(
-              color: tagColor.withOpacity(.12),
+              color: tagColor.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -271,9 +271,9 @@ class _TagCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: tagColor.withOpacity(.12),
+                    color: tagColor.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: tagColor.withOpacity(.3)),
+                    border: Border.all(color: tagColor.withValues(alpha: .3)),
                   ),
                   child: Text(
                     isVirgin ? '🔍 Localiser' : 'Encodée',

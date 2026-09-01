@@ -31,7 +31,7 @@ class _AppColors {
 //  PAGE PRINCIPALE
 // ──────────────────────────────────────────────────────────────
 class WelcomePage extends ConsumerStatefulWidget {
-  const WelcomePage({Key? key}) : super(key: key);
+  const WelcomePage({super.key});
 
   @override
   ConsumerState<WelcomePage> createState() => _WelcomePageState();
@@ -292,7 +292,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
   Widget _buildAnimatedGrid() {
     return AnimatedBuilder(
       animation: _gridCtrl,
-      builder: (_, __) => CustomPaint(
+      builder: (_, _) => CustomPaint(
         size: Size.infinite,
         painter: _GridPainter(progress: _gridCtrl.value),
       ),
@@ -313,14 +313,14 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                 width: 130, height: 130,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _AppColors.cyan.withOpacity(.04 * _pulse.value),
+                  color: _AppColors.cyan.withValues(alpha: .04 * _pulse.value),
                 ),
               ),
               Container(
                 width: 110, height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _AppColors.cyan.withOpacity(.08 * _pulse.value),
+                  color: _AppColors.cyan.withValues(alpha: .08 * _pulse.value),
                 ),
               ),
               Container(
@@ -329,12 +329,12 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                   color: _AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: _AppColors.cyan.withOpacity(.4 + .3 * _pulse.value),
+                    color: _AppColors.cyan.withValues(alpha: .4 + .3 * _pulse.value),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: _AppColors.cyan.withOpacity(.2 * _pulse.value),
+                      color: _AppColors.cyan.withValues(alpha: .2 * _pulse.value),
                       blurRadius: 24,
                       spreadRadius: 2,
                     ),
@@ -378,7 +378,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(width: 24, height: 1,
-                    color: _AppColors.cyanDim.withOpacity(.5)),
+                    color: _AppColors.cyanDim.withValues(alpha: .5)),
                 const SizedBox(width: 8),
                 Text(
                   'GESTION RFID & ÉTIQUETAGE',
@@ -391,7 +391,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                 ),
                 const SizedBox(width: 8),
                 Container(width: 24, height: 1,
-                    color: _AppColors.cyanDim.withOpacity(.5)),
+                    color: _AppColors.cyanDim.withValues(alpha: .5)),
               ],
             ),
           ],
@@ -420,8 +420,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           child: authState.isLoading
               ? _buildLoadingCard()
               : authState.error != null
-              ? _buildErrorCard(authState.error!)
-              : _buildScanCard(),
+                  ? _buildErrorCard(authState.error!)
+                  : _buildScanCard(),
         ),
       ),
     );
@@ -435,7 +435,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
         children: [
           AnimatedBuilder(
             animation: _scanRing,
-            builder: (_, __) => SizedBox(
+            builder: (_, _) => SizedBox(
               width: 72, height: 72,
               child: Stack(
                 alignment: Alignment.center,
@@ -452,7 +452,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _AppColors.cyan.withOpacity((1 - v) * .6),
+                              color: _AppColors.cyan.withValues(alpha: (1 - v) * .6),
                               width: 1.5,
                             ),
                           ),
@@ -464,7 +464,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                     decoration: BoxDecoration(
                       color: _AppColors.cyanGlow,
                       shape: BoxShape.circle,
-                      border: Border.all(color: _AppColors.cyan.withOpacity(.5)),
+                      border: Border.all(color: _AppColors.cyan.withValues(alpha: .5)),
                     ),
                     child: const Icon(
                       Icons.qr_code_scanner_rounded,
@@ -517,7 +517,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                 width: 52, height: 52,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: _AppColors.warning.withOpacity(.3),
+                  color: _AppColors.warning.withValues(alpha: .3),
                 ),
               ),
               SizedBox(
@@ -543,7 +543,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           const SizedBox(height: 6),
           AnimatedBuilder(
             animation: _dotsCtrl,
-            builder: (_, __) {
+            builder: (_, _) {
               final dots = '.' * ((_dotsCtrl.value * 3).floor() + 1);
               return Text(
                 'Vérification des accréditations$dots',
@@ -575,9 +575,9 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             Container(
               width: 52, height: 52,
               decoration: BoxDecoration(
-                color: _AppColors.error.withOpacity(.12),
+                color: _AppColors.error.withValues(alpha: .12),
                 shape: BoxShape.circle,
-                border: Border.all(color: _AppColors.error.withOpacity(.4)),
+                border: Border.all(color: _AppColors.error.withValues(alpha: .4)),
               ),
               child: const Icon(Icons.badge_outlined,
                   color: _AppColors.error, size: 26),
@@ -596,7 +596,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
               error,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: _AppColors.error.withOpacity(.75),
+                color: _AppColors.error.withValues(alpha: .75),
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -640,10 +640,10 @@ class _GlassCard extends StatelessWidget {
   final Widget child;
   final Color accentColor;
   const _GlassCard({
-    Key? key,
+    super.key,
     required this.child,
     this.accentColor = _AppColors.cyan,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -653,10 +653,10 @@ class _GlassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withOpacity(.2)),
+        border: Border.all(color: accentColor.withValues(alpha: .2)),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(.06),
+            color: accentColor.withValues(alpha: .06),
             blurRadius: 32,
             spreadRadius: 4,
           ),
@@ -706,14 +706,14 @@ class _AnimatedScanBarState extends State<_AnimatedScanBar>
         ),
         child: AnimatedBuilder(
           animation: _anim,
-          builder: (_, __) => Stack(
+          builder: (_, _) => Stack(
             children: [
               ...List.generate(3, (i) => Positioned(
                 top: 8.0 + i * 10,
                 left: 8, right: 8,
                 child: Container(
                   height: 1,
-                  color: _AppColors.textMuted.withOpacity(.3),
+                  color: _AppColors.textMuted.withValues(alpha: .3),
                 ),
               )),
               Positioned(
@@ -731,7 +731,7 @@ class _AnimatedScanBarState extends State<_AnimatedScanBar>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: _AppColors.cyan.withOpacity(.6),
+                        color: _AppColors.cyan.withValues(alpha: .6),
                         blurRadius: 6,
                       ),
                     ],
@@ -756,7 +756,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF00D4FF).withOpacity(.04)
+      ..color = const Color(0xFF00D4FF).withValues(alpha: .04)
       ..strokeWidth = .6
       ..style = PaintingStyle.stroke;
 
@@ -771,7 +771,7 @@ class _GridPainter extends CustomPainter {
     }
 
     final dotPaint = Paint()
-      ..color = const Color(0xFF00D4FF).withOpacity(.12)
+      ..color = const Color(0xFF00D4FF).withValues(alpha: .12)
       ..style = PaintingStyle.fill;
 
     final rng = math.Random(42);

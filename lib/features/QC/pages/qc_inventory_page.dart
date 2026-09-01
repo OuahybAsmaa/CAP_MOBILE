@@ -6,7 +6,7 @@ import '../../rfid/providers/rfid_provider.dart';
 
 class QcInventoryPage extends ConsumerStatefulWidget {
   final QcControlMode mode;
-  const QcInventoryPage({Key? key, required this.mode}) : super(key: key);
+  const QcInventoryPage({super.key, required this.mode});
 
   @override
   ConsumerState<QcInventoryPage> createState() => _QcInventoryPageState();
@@ -126,7 +126,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.15),
+                        color: Colors.white.withValues(alpha: .15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -152,20 +152,20 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                   // Badge statut inventaire
                   AnimatedBuilder(
                     animation: _pulseCtrl,
-                    builder: (_, __) =>
+                    builder: (_, _) =>
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: isRunning
-                                ? Colors.green.withOpacity(.2 +
+                                ? Colors.green.withValues(alpha: .2 +
                                 .1 * _pulseCtrl.value)
-                                : Colors.white.withOpacity(.15),
+                                : Colors.white.withValues(alpha: .15),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isRunning
-                                  ? Colors.greenAccent.withOpacity(.6)
-                                  : Colors.white.withOpacity(.3),
+                                  ? Colors.greenAccent.withValues(alpha: .6)
+                                  : Colors.white.withValues(alpha: .3),
                             ),
                           ),
                           child: Row(
@@ -207,7 +207,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.12),
+                    color: Colors.white.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -230,7 +230,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                             .totalAttendu} items',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withOpacity(.8),
+                          color: Colors.white.withValues(alpha: .8),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -255,13 +255,13 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isConnected
-            ? Colors.green.withOpacity(.15)
-            : Colors.red.withOpacity(.15),
+            ? Colors.green.withValues(alpha: .15)
+            : Colors.red.withValues(alpha: .15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isConnected
-              ? Colors.greenAccent.withOpacity(.4)
-              : Colors.redAccent.withOpacity(.4),
+              ? Colors.greenAccent.withValues(alpha: .4)
+              : Colors.redAccent.withValues(alpha: .4),
         ),
       ),
       child: Row(
@@ -343,7 +343,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
         border: Border.all(color: const Color(0xFFE0E0E0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.04),
+            color: Colors.black.withValues(alpha: .04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -410,7 +410,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
       statusWidget = Container(
         width: 22, height: 22,
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(.1),
+          color: Colors.grey.withValues(alpha: .1),
           shape: BoxShape.circle,
         ),
         child: const Icon(Icons.remove, color: Colors.grey, size: 12),
@@ -418,11 +418,11 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
     } else if (isRunning && t.qteLue == 0) {
       statusWidget = AnimatedBuilder(
         animation: _pulseCtrl,
-        builder: (_, __) =>
+        builder: (_, _) =>
             Container(
               width: 22, height: 22,
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(.1 + .05 * _pulseCtrl.value),
+                color: Colors.orange.withValues(alpha: .1 + .05 * _pulseCtrl.value),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.hourglass_empty_rounded,
@@ -432,13 +432,13 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
     } else if (isRunning && t.qteLue > 0 && !t.isOk) {
       statusWidget = AnimatedBuilder(
         animation: _pulseCtrl,
-        builder: (_, __) =>
+        builder: (_, _) =>
             Container(
               width: 22, height: 22,
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(.1 + .05 * _pulseCtrl.value),
+                color: Colors.orange.withValues(alpha: .1 + .05 * _pulseCtrl.value),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.orange.withOpacity(.5)),
+                border: Border.all(color: Colors.orange.withValues(alpha: .5)),
               ),
               child: const Icon(Icons.hourglass_bottom_rounded,
                   color: Colors.orange, size: 12),
@@ -450,7 +450,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
         decoration: BoxDecoration(
           color: _greenLight,
           shape: BoxShape.circle,
-          border: Border.all(color: _green.withOpacity(.4)),
+          border: Border.all(color: _green.withValues(alpha: .4)),
         ),
         child: const Icon(Icons.check_rounded, color: _green, size: 12),
       );
@@ -460,7 +460,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
         decoration: BoxDecoration(
           color: _redLight,
           shape: BoxShape.circle,
-          border: Border.all(color: _red.withOpacity(.4)),
+          border: Border.all(color: _red.withValues(alpha: .4)),
         ),
         child: const Icon(Icons.close_rounded, color: _red, size: 12),
       );
@@ -473,7 +473,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
         border: Border(
           bottom: isLast
               ? BorderSide.none
-              : BorderSide(color: Colors.grey.withOpacity(.1)),
+              : BorderSide(color: Colors.grey.withValues(alpha: .1)),
         ),
       ),
       child: Row(
@@ -484,7 +484,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: _indigo.withOpacity(.08),
+                color: _indigo.withValues(alpha: .08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -617,7 +617,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
             decoration: BoxDecoration(
               color: _redLight,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _red.withOpacity(.3)),
+              border: Border.all(color: _red.withValues(alpha: .3)),
             ),
             child: const Row(
               children: [
@@ -787,7 +787,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                 fontSize: 12, fontWeight: FontWeight.w600, color: _green)),
 
         const SizedBox(width: 10),
-        Container(width: 1, height: 12, color: Colors.grey.withOpacity(.3)),
+        Container(width: 1, height: 12, color: Colors.grey.withValues(alpha: .3)),
         const SizedBox(width: 10),
 
         Icon(Icons.nfc_rounded, color: _indigo, size: 13),
@@ -797,7 +797,7 @@ class _QcInventoryPageState extends ConsumerState<QcInventoryPage>
                 fontSize: 12, fontWeight: FontWeight.w600, color: _indigo)),
 
         const SizedBox(width: 10),
-        Container(width: 1, height: 12, color: Colors.grey.withOpacity(.3)),
+        Container(width: 1, height: 12, color: Colors.grey.withValues(alpha: .3)),
         const SizedBox(width: 10),
 
         Icon(isOk ? Icons.check_rounded : Icons.warning_amber_rounded,
@@ -832,9 +832,9 @@ class _SummaryChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         decoration: BoxDecoration(
-          color: color.withOpacity(.08),
+          color: color.withValues(alpha: .08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(.2)),
+          border: Border.all(color: color.withValues(alpha: .2)),
         ),
         child: Column(
           children: [
@@ -845,7 +845,7 @@ class _SummaryChip extends StatelessWidget {
                     fontSize: 12, fontWeight: FontWeight.w900, color: color)),
             Text(label,
                 style: TextStyle(
-                    fontSize: 8, color: color.withOpacity(.7),
+                    fontSize: 8, color: color.withValues(alpha: .7),
                     fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center),
           ],

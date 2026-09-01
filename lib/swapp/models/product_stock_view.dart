@@ -12,10 +12,22 @@
 // Auteur         : H.AMIZIANI
 // =============================================================================
 
-import 'package:cap_mobile/core/apiswap/swapp_api_constants.dart';
 import 'package:cap_mobile/features/article/models/article_model.dart';
 
 import 'stock_column.dart';
+
+/// Chip colis dépôt — identifiant, libellé affiché et type (résa déblocage ou pari dépôt).
+class ColisDepotChip {
+  final String id;
+  final String label;
+  final bool isDepotResa;
+
+  const ColisDepotChip({
+    required this.id,
+    required this.label,
+    required this.isDepotResa,
+  });
+}
 
 /// Vue produit consolidée — source de données pour toute la carte hero et le tableau.
 class ProductStockView {
@@ -64,6 +76,11 @@ class ProductStockView {
   /// UI : _PlusProduitPanel — libellé « PlusP » depuis API modèle (libPlusProduit).
   final String? libPlusProduit;
 
+  /// UI : Wrap + Chips sous l'en-tête — colisDepotResa + colisDepot API global.
+  final List<ColisDepotChip>? _colisDepotChips;
+
+  List<ColisDepotChip> get colisDepotChips => _colisDepotChips ?? const [];
+
   const ProductStockView({
     required this.reference,
     this.gencode = '',
@@ -80,7 +97,8 @@ class ProductStockView {
     this.orderedQty = 0,
     this.stockBySize = const {},
     this.libPlusProduit,
-  });
+    List<ColisDepotChip>? colisDepotChips,
+  }) : _colisDepotChips = colisDepotChips;
 
   ProductStockView copyWith({
     String? reference,
@@ -98,6 +116,7 @@ class ProductStockView {
     int? orderedQty,
     Map<String, Map<String, int>>? stockBySize,
     String? libPlusProduit,
+    List<ColisDepotChip>? colisDepotChips,
   }) {
     return ProductStockView(
       reference: reference ?? this.reference,
@@ -115,14 +134,13 @@ class ProductStockView {
       orderedQty: orderedQty ?? this.orderedQty,
       stockBySize: stockBySize ?? this.stockBySize,
       libPlusProduit: libPlusProduit ?? this.libPlusProduit,
+      colisDepotChips: colisDepotChips ?? _colisDepotChips,
     );
   }
 
   /// UI : Ligne totaux en-tête _StockTable (somme par colonne visible).
   Map<String, int> get stockTotals {
-    final totals = {
-      for (final column in StockColumns.metrics) column.key: 0,
-    };
+    final totals = {for (final column in StockColumns.metrics) column.key: 0};
     for (final line in stockBySize.values) {
       for (final entry in line.entries) {
         totals[entry.key] = (totals[entry.key] ?? 0) + entry.value;
@@ -159,109 +177,7 @@ class ProductStockView {
       reassortOk: true,
       photoUrl: photoUrl,
       libPlusProduit: article.libPlusProduit,
+      colisDepotChips: const [],
     );
   }
-}
-
-/// UI : Données affichées avant chargement API (placeholder écran produit).
-ProductStockView demoProductStockView() {
-  final defaultCode = SwappApiConstants.defaultCodeModele;
-  final isGencode = defaultCode.length >= 13 && RegExp(r'^\d+$').hasMatch(defaultCode);
-
-  return ProductStockView(
-    reference: defaultCode,
-    gencode: isGencode ? defaultCode : '',
-    colorway: 'BLANC/NOIR',
-    size: '40',
-    sizeRange: 'Du 40 au 46',
-    category: 'Running',
-    model: 'DURAMO RC2',
-    segment: 'HOMME / A26',
-    price: 49.99,
-    reassortOk: true,
-    photoUrl: SwappApiConstants.productPhotoUrl(
-      isGencode && defaultCode.length >= 8
-          ? defaultCode.substring(0, 8)
-          : defaultCode,
-    ),
-    stockBySize: const {
-      '40': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-      '41': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-      '42': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-      '43': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-      '44': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-      '45': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-      '46': {
-        'dispo': 0,
-        'transit': 0,
-        'picking': 0,
-        'vols': 0,
-        'nv': 0,
-        'ew': 0,
-        'resas': 0,
-        'resaPlus': 0,
-        'depot': 0,
-      },
-    },
-  );
 }

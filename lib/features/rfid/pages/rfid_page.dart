@@ -13,7 +13,7 @@ import '../../../core/services/datawedge_service.dart';
 //  RFID PAGE
 // ──────────────────────────────────────────────────────────────
 class RfidPage extends ConsumerStatefulWidget {
-  const RfidPage({Key? key}) : super(key: key);
+  const RfidPage({super.key});
 
   @override
   ConsumerState<RfidPage> createState() => _RfidPageState();
@@ -131,13 +131,13 @@ class _RfidPageState extends ConsumerState<RfidPage>
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => RfidEncodingPage(
+        pageBuilder: (_, _, _) => RfidEncodingPage(
           mode: _selectedMode,
           initialCode: trimmed,
           initialEncodedCount: _totalEncodedCount,
           header: _header,
         ),
-        transitionsBuilder: (_, anim, __, child) => SlideTransition(
+        transitionsBuilder: (_, anim, _, child) => SlideTransition(
           position: Tween<Offset>(
             begin: const Offset(1, 0),
             end: Offset.zero,
@@ -171,7 +171,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
   Widget build(BuildContext context) {
     final rfidState = ref.watch(rfidProvider);
 
-    ref.listen<RfidState>(rfidProvider, (_, __) {
+    ref.listen<RfidState>(rfidProvider, (_, _) {
       if (mounted) _checkReadyToScan();
     });
 
@@ -273,7 +273,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
                     child: Container(
                       width: 28, height: 28,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.15),
+                        color: Colors.white.withValues(alpha: .15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -283,12 +283,12 @@ class _RfidPageState extends ConsumerState<RfidPage>
                   const SizedBox(width: 10),
                   AnimatedBuilder(
                     animation: _pulseCtrl,
-                    builder: (_, __) => Container(
+                    builder: (_, _) => Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.15 + .05 * _pulseCtrl.value),
+                        color: Colors.white.withValues(alpha: .15 + .05 * _pulseCtrl.value),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white.withOpacity(.3)),
+                        border: Border.all(color: Colors.white.withValues(alpha: .3)),
                       ),
                       child: const Icon(Icons.nfc_rounded, color: Colors.white, size: 20),
                     ),
@@ -313,7 +313,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
                             : 'Contrôle qualité',
                         style: TextStyle(
                           fontSize: 9,
-                          color: Colors.white.withOpacity(.75),
+                          color: Colors.white.withValues(alpha: .75),
                         ),
                       ),
                     ],
@@ -337,13 +337,13 @@ class _RfidPageState extends ConsumerState<RfidPage>
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
           color: connected != null
-              ? Colors.green.withOpacity(.2)
-              : Colors.white.withOpacity(.12),
+              ? Colors.green.withValues(alpha: .2)
+              : Colors.white.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: connected != null
-                ? Colors.greenAccent.withOpacity(.6)
-                : Colors.white.withOpacity(.3),
+                ? Colors.greenAccent.withValues(alpha: .6)
+                : Colors.white.withValues(alpha: .3),
           ),
         ),
         child: rfidState.isLoading && connected == null
@@ -442,7 +442,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.success.withOpacity(.06)
+                          ? AppColors.success.withValues(alpha: .06)
                           : AppColors.bg,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -491,7 +491,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(.04),
+            color: AppColors.primary.withValues(alpha: .04),
             blurRadius: 8,
             offset: const Offset(0, 1),
           ),
@@ -547,7 +547,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: _headerValidated
-                ? AppColors.success.withOpacity(.06)
+                ? AppColors.success.withValues(alpha: .06)
                 : AppColors.bg,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
@@ -644,7 +644,7 @@ class _RfidPageState extends ConsumerState<RfidPage>
         icon: Icons.qr_code_scanner_rounded,
         iconColor: AppColors.primary,
         bgColor: AppColors.primarySoft,
-        borderColor: AppColors.primary.withOpacity(.25),
+        borderColor: AppColors.primary.withValues(alpha: .25),
         title: 'Prêt — scannez le code article',
         lines: const [
           '✓ Lecteur RFID connecté',
@@ -702,11 +702,11 @@ class _InstructionCard extends StatelessWidget {
               animated && pulseCtrl != null
                   ? AnimatedBuilder(
                 animation: pulseCtrl!,
-                builder: (_, __) => Container(
+                builder: (_, _) => Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
                     color: AppColors.primary
-                        .withOpacity(.1 + .06 * pulseCtrl!.value),
+                        .withValues(alpha: .1 + .06 * pulseCtrl!.value),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: iconColor, size: 16),
@@ -715,7 +715,7 @@ class _InstructionCard extends StatelessWidget {
                   : Container(
                 width: 32, height: 32,
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(.1),
+                  color: iconColor.withValues(alpha: .1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: iconColor, size: 16),
@@ -746,7 +746,7 @@ class _InstructionCard extends StatelessWidget {
                     line,
                     style: TextStyle(
                       fontSize: 10,
-                      color: lineColor.withOpacity(.8),
+                      color: lineColor.withValues(alpha: .8),
                       height: 1.2,
                       fontWeight: line.startsWith('→')
                           ? FontWeight.w700

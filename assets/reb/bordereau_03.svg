@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="900" viewBox="0 0 640 900">
+  <rect width="640" height="900" fill="#ebe4d8"/>
+  <rect x="24" y="24" width="592" height="852" fill="#fffaf3" stroke="#2a3550" stroke-width="2.5"/>
+  <rect x="24" y="24" width="592" height="68" fill="#2a3550"/>
+  <text x="320" y="68" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="26" font-weight="700">BORDEREAU DE REMISE</text>
+  <text x="48" y="132" fill="#2a3550" font-family="Arial, sans-serif" font-size="16" font-weight="700">BNP PARIBAS  AGENCE EST</text>
+  <text x="48" y="160" fill="#556677" font-family="Arial, sans-serif" font-size="14">Date : 18/08/2026     N� : REB-20260818-01</text>
+  <line x1="48" y1="178" x2="592" y2="178" stroke="#c9d2de" stroke-width="1.5"/>
+  <text x="48" y="214" fill="#778899" font-family="Arial, sans-serif" font-size="13">MAGASIN</text>
+  <text x="48" y="240" fill="#12233a" font-family="Arial, sans-serif" font-size="20" font-weight="700">CHAUSSEA  Code 026</text>
+  <text x="48" y="284" fill="#778899" font-family="Arial, sans-serif" font-size="13">COLLABORATEUR</text>
+  <text x="48" y="310" fill="#12233a" font-family="Arial, sans-serif" font-size="20" font-weight="700">Audrey LEGRAND</text>
+  <rect x="48" y="344" width="544" height="200" fill="#f6f8fb" stroke="#9eb0c4" stroke-width="1.5"/>
+  <text x="64" y="376" fill="#2a3550" font-family="Arial, sans-serif" font-size="15" font-weight="700">D�TAIL DES ESP�CES</text>
+  <text x="64" y="414" fill="#334455" font-family="Arial, sans-serif" font-size="15">Billets 50 � � 18</text>
+  <text x="520" y="414" text-anchor="end" fill="#334455" font-family="Arial, sans-serif" font-size="15">900,00 �</text>
+  <text x="64" y="444" fill="#334455" font-family="Arial, sans-serif" font-size="15">Billets 20 � � 18</text>
+  <text x="520" y="444" text-anchor="end" fill="#334455" font-family="Arial, sans-serif" font-size="15">360,00 �</text>
+  <text x="64" y="474" fill="#334455" font-family="Arial, sans-serif" font-size="15">Monnaie</text>
+  <text x="520" y="474" text-anchor="end" fill="#334455" font-family="Arial, sans-serif" font-size="15">52,45 �</text>
+  <line x1="64" y1="492" x2="576" y2="492" stroke="#9eb0c4"/>
+  <text x="64" y="524" fill="#2a3550" font-family="Arial, sans-serif" font-size="18" font-weight="700">TOTAL REMIS</text>
+  <text x="576" y="524" text-anchor="end" fill="#c45c12" font-family="Arial, sans-serif" font-size="22" font-weight="700">1 312,45 �</text>
+  <circle cx="470" cy="690" r="74" fill="none" stroke="#2e7d32" stroke-width="5" opacity="0.75"/>
+  <text x="470" y="686" text-anchor="middle" fill="#2e7d32" font-family="Arial, sans-serif" font-size="15" font-weight="700" opacity="0.85" transform="rotate(-16 470 690)">OK BANQUE</text>
+  <text x="470" y="710" text-anchor="middle" fill="#2e7d32" font-family="Arial, sans-serif" font-size="12" font-weight="700" opacity="0.85" transform="rotate(-16 470 690)">18/08/2026</text>
+  <text x="48" y="670" fill="#778899" font-family="Arial, sans-serif" font-size="13">Signature caissier</text>
+  <path d="M48 710 C95 685, 155 735, 205 705" fill="none" stroke="#2a3550" stroke-width="2.2"/>
+  <text x="48" y="820" fill="#99aabb" font-family="Arial, sans-serif" font-size="12">Document scann�  copie magasin</text>
+</svg>

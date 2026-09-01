@@ -5,7 +5,7 @@ class EpcCalculator {
   static String buildFactoryEpc(String serialDecimal) {
     final serialInt = int.parse(serialDecimal);
     final serialHex = serialInt.toRadixString(16).toUpperCase().padLeft(10, '0');
-    return '3034' + '0000000000' + serialHex;
+    return '3034' '0000000000' + serialHex;
     // = 4 + 10 + 10 = 24 chars hex = 96 bits ✓
   }
 

@@ -13,7 +13,7 @@ import 'exp_inventory_page.dart';
 // ─────────────────────────────────────────────────────────────
 
 class ExpControlPage extends ConsumerStatefulWidget {
-  const ExpControlPage({Key? key}) : super(key: key);
+  const ExpControlPage({super.key});
 
   @override
   ConsumerState<ExpControlPage> createState() => _ExpControlPageState();
@@ -133,7 +133,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.15),
+                    color: Colors.white.withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -144,14 +144,14 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
               // Icône animée
               AnimatedBuilder(
                 animation: _pulseCtrl,
-                builder: (_, __) => Container(
+                builder: (_, _) => Container(
                   width: 38, height: 38,
                   decoration: BoxDecoration(
                     color: Colors.white
-                        .withOpacity(.12 + .06 * _pulseCtrl.value),
+                        .withValues(alpha: .12 + .06 * _pulseCtrl.value),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                        color: Colors.white.withOpacity(.3)),
+                        color: Colors.white.withValues(alpha: .3)),
                   ),
                   child: const Icon(Icons.local_shipping_rounded,
                       color: Colors.white, size: 20),
@@ -175,7 +175,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                     'Réception · Expédition',
                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.white.withOpacity(.7),
+                      color: Colors.white.withValues(alpha: .7),
                     ),
                   ),
                 ],
@@ -202,13 +202,13 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
           color: connected != null
-              ? Colors.green.withOpacity(.2)
-              : Colors.white.withOpacity(.12),
+              ? Colors.green.withValues(alpha: .2)
+              : Colors.white.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: connected != null
-                ? Colors.greenAccent.withOpacity(.6)
-                : Colors.white.withOpacity(.3),
+                ? Colors.greenAccent.withValues(alpha: .6)
+                : Colors.white.withValues(alpha: .3),
           ),
         ),
         child: rfidState.isLoading && connected == null
@@ -312,7 +312,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                         horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF2E7D32).withOpacity(.06)
+                          ? const Color(0xFF2E7D32).withValues(alpha: .06)
                           : const Color(0xFFF4F4F4),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -382,15 +382,15 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
               children: [
                 AnimatedBuilder(
                   animation: _pulseCtrl,
-                  builder: (_, __) => Container(
+                  builder: (_, _) => Container(
                     width: 90, height: 90,
                     decoration: BoxDecoration(
                       color: _indigoMid
-                          .withOpacity(.08 + .04 * _pulseCtrl.value),
+                          .withValues(alpha: .08 + .04 * _pulseCtrl.value),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: _indigoMid
-                            .withOpacity(.2 + .1 * _pulseCtrl.value),
+                            .withValues(alpha: .2 + .1 * _pulseCtrl.value),
                         width: 2,
                       ),
                     ),
@@ -677,7 +677,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _indigoMid.withOpacity(.1),
+                  color: _indigoMid.withValues(alpha: .1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
@@ -732,7 +732,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A237E).withOpacity(.07),
+                  color: const Color(0xFF1A237E).withValues(alpha: .07),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -762,7 +762,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
         Container(
           width: 36, height: 36,
           decoration: BoxDecoration(
-            color: color.withOpacity(.08),
+            color: color.withValues(alpha: .08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 18),
@@ -802,7 +802,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
             margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
             decoration: BoxDecoration(
               border: Border.all(
-                color: const Color(0xFF93A3F6).withOpacity(.25),
+                color: const Color(0xFF93A3F6).withValues(alpha: .25),
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -863,7 +863,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
               color: const Color(0xFFFFEBEB),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: const Color(0xFFD32F2F).withOpacity(.3)),
+                  color: const Color(0xFFD32F2F).withValues(alpha: .3)),
             ),
             child: const Row(
               children: [
@@ -889,10 +889,10 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 ? () => Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) =>
+                pageBuilder: (_, _, _) =>
                 const ExpInventoryPage(),
                 transitionsBuilder:
-                    (_, anim, __, child) => SlideTransition(
+                    (_, anim, _, child) => SlideTransition(
                   position: Tween<Offset>(
                     begin: const Offset(1, 0),
                     end: Offset.zero,

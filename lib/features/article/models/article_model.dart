@@ -19,6 +19,7 @@ class ArticleModel {
   final String codeMarque;
   final String codeMarche;
   final int artIdentifiant;
+  final String? libPlusProduit;
 
   ArticleModel({
     required this.libArticle,
@@ -41,6 +42,7 @@ class ArticleModel {
     required this.codeMarque,
     required this.codeMarche,
     required this.artIdentifiant,
+    this.libPlusProduit,
   });
 
   factory ArticleModel.fromJson(Map<String, dynamic> json) {
@@ -65,6 +67,7 @@ class ArticleModel {
       codeMarque:    json['codeMarque']    as String? ?? '',
       codeMarche:    json['codeMarche']    as String? ?? '',
       artIdentifiant:(json['artIdentifiant'] as num?)?.toInt() ?? 0,
+      libPlusProduit: json['libPlusProduit']?.toString(),
     );
   }
 

@@ -27,7 +27,7 @@ class _C {
 //  PAGE INVENTAIRE
 // ──────────────────────────────────────────────────────────────
 class InventoryPage extends ConsumerStatefulWidget {
-  const InventoryPage({Key? key}) : super(key: key);
+  const InventoryPage({super.key});
 
   @override
   ConsumerState<InventoryPage> createState() => _InventoryPageState();
@@ -118,7 +118,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: state.connectedReader != null
-              ? _C.success.withOpacity(.3)
+              ? _C.success.withValues(alpha: .3)
               : _C.border,
         ),
       ),
@@ -128,7 +128,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
             width: 40, height: 40,
             decoration: BoxDecoration(
               color: state.connectedReader != null
-                  ? _C.success.withOpacity(.1)
+                  ? _C.success.withValues(alpha: .1)
                   : _C.primarySoft,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -191,7 +191,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
         color: _C.surface,
         boxShadow: [
           BoxShadow(
-            color: _C.primary.withOpacity(.08),
+            color: _C.primary.withValues(alpha: .08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -292,9 +292,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(.1),
+        color: color.withValues(alpha: .1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(.25)),
+        border: Border.all(color: color.withValues(alpha: .25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -322,7 +322,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
 
     return AnimatedBuilder(
       animation: _pulseCtrl,
-      builder: (_, __) {
+      builder: (_, _) {
         final glowOpacity = isRunning
             ? 0.15 + (_pulseCtrl.value * 0.15)
             : 0.08;
@@ -342,7 +342,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
             boxShadow: [
               BoxShadow(
                 color: (isRunning ? _C.primary : Colors.black)
-                    .withOpacity(glowOpacity),
+                    .withValues(alpha: glowOpacity),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -355,7 +355,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.15),
+                  color: Colors.white.withValues(alpha: .15),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -386,7 +386,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
                           : 'Appuyez sur Démarrer pour lancer',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(.75),
+                        color: Colors.white.withValues(alpha: .75),
                       ),
                     ),
                   ],
@@ -396,7 +396,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
               if (isRunning)
                 AnimatedBuilder(
                   animation: _pulseCtrl,
-                  builder: (_, __) => Container(
+                  builder: (_, _) => Container(
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
@@ -405,7 +405,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
                       boxShadow: [
                         BoxShadow(
                           color: _C.success
-                              .withOpacity(0.4 + _pulseCtrl.value * 0.4),
+                              .withValues(alpha: 0.4 + _pulseCtrl.value * 0.4),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -475,10 +475,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
       decoration: BoxDecoration(
         color: _C.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: item.color.withOpacity(.15)),
+        border: Border.all(color: item.color.withValues(alpha: .15)),
         boxShadow: [
           BoxShadow(
-            color: item.color.withOpacity(.08),
+            color: item.color.withValues(alpha: .08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -547,7 +547,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: (isRunning ? _C.error : _C.primary).withOpacity(.35),
+              color: (isRunning ? _C.error : _C.primary).withValues(alpha: .35),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -588,8 +588,8 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
           ? () => Navigator.push(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const TagsDetailPage(),
-          transitionsBuilder: (_, anim, __, child) =>
+          pageBuilder: (_, _, _) => const TagsDetailPage(),
+          transitionsBuilder: (_, anim, _, child) =>
               FadeTransition(opacity: anim, child: child),
           transitionDuration: const Duration(milliseconds: 300),
         ),
@@ -606,13 +606,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: hasData
-                  ? _C.primary.withOpacity(.3)
+                  ? _C.primary.withValues(alpha: .3)
                   : _C.border,
             ),
             boxShadow: hasData
                 ? [
               BoxShadow(
-                color: _C.primary.withOpacity(.08),
+                color: _C.primary.withValues(alpha: .08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -669,9 +669,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
       margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: _C.error.withOpacity(.08),
+        color: _C.error.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _C.error.withOpacity(.2)),
+        border: Border.all(color: _C.error.withValues(alpha: .2)),
       ),
       child: Row(
         children: [
@@ -679,7 +679,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage>
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: _C.error.withOpacity(.12),
+              color: _C.error.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.error_outline_rounded,

@@ -24,7 +24,7 @@ class _C {
 //  PROFILE PAGE
 // ──────────────────────────────────────────────────────────────
 class ProfilePage extends ConsumerStatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
 
   @override
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
@@ -82,7 +82,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.15),
+                    color: Colors.white.withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -100,7 +100,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.15),
+                      color: Colors.white.withValues(alpha: .15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
@@ -198,7 +198,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _C.error,
-                              side: BorderSide(color: _C.error.withOpacity(.3)),
+                              side: BorderSide(color: _C.error.withValues(alpha: .3)),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -254,19 +254,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withOpacity(.3),
+                      color: Colors.white.withValues(alpha: .3),
                       width: 3,
                     ),
                   ),
                 ),
                 CircleAvatar(
                   radius: 44,
-                  backgroundColor: Colors.white.withOpacity(.2),
+                  backgroundColor: Colors.white.withValues(alpha: .2),
                   backgroundImage: photoUrl.isNotEmpty
                       ? NetworkImage(photoUrl)
                       : null,
                   onBackgroundImageError:
-                  photoUrl.isNotEmpty ? (_, __) {} : null,
+                  photoUrl.isNotEmpty ? (_, _) {} : null,
                   child: photoUrl.isEmpty
                       ? Text(
                     _initiales(collab.prenom, collab.nom),
@@ -312,7 +312,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(.18),
+                color: Colors.white.withValues(alpha: .18),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -365,7 +365,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: _C.primary.withOpacity(.06),
+            color: _C.primary.withValues(alpha: .06),
             blurRadius: 20,
             offset: const Offset(0, 6),
           ),
@@ -395,7 +395,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: row.color.withOpacity(.1),
+              color: row.color.withValues(alpha: .1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(row.icon, color: row.color, size: 18),
@@ -419,7 +419,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
-                    color: row.color.withOpacity(.12),
+                    color: row.color.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(

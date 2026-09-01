@@ -67,7 +67,7 @@ Future<int?> showStorePickerDialog({
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: stores.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final store = stores[index];
                     final selected = store.codeMag == selectedCodeMag;
@@ -176,7 +176,7 @@ Future<int?> showNearbyStorePickerDialog({
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: stores.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final store = stores[index];
                     final selected = store.codeMag == selectedCodeMag;

@@ -50,7 +50,7 @@ class StoreSelectButton extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               borderRadius: radius,
-              border: Border.all(color: AppColors.primary.withOpacity(0.35), width: 1.2),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.35), width: 1.2),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -61,7 +61,7 @@ class StoreSelectButton extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryDark.withOpacity(0.08),
+                  color: AppColors.primaryDark.withValues(alpha: 0.08),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),

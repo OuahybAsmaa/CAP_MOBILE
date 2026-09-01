@@ -10,7 +10,7 @@ import '../../rfid/providers/rfid_provider.dart';
 // ─────────────────────────────────────────────────────────────
 
 class ExpInventoryPage extends ConsumerStatefulWidget {
-  const ExpInventoryPage({Key? key}) : super(key: key);
+  const ExpInventoryPage({super.key});
 
   @override
   ConsumerState<ExpInventoryPage> createState() =>
@@ -113,7 +113,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.15),
+                        color: Colors.white.withValues(alpha: .15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -134,19 +134,19 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                   // Badge Running / Waiting
                   AnimatedBuilder(
                     animation: _pulseCtrl,
-                    builder: (_, __) => Container(
+                    builder: (_, _) => Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: isRunning
                             ? Colors.green
-                            .withOpacity(.2 + .1 * _pulseCtrl.value)
-                            : Colors.white.withOpacity(.15),
+                            .withValues(alpha: .2 + .1 * _pulseCtrl.value)
+                            : Colors.white.withValues(alpha: .15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isRunning
-                              ? Colors.greenAccent.withOpacity(.6)
-                              : Colors.white.withOpacity(.3),
+                              ? Colors.greenAccent.withValues(alpha: .6)
+                              : Colors.white.withValues(alpha: .3),
                         ),
                       ),
                       child: Row(
@@ -189,7 +189,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.12),
+                    color: Colors.white.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -212,7 +212,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                         '${s.totalLu} / ${s.totalAttendu} articles',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withOpacity(.8),
+                          color: Colors.white.withValues(alpha: .8),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -233,13 +233,13 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isConnected
-            ? Colors.green.withOpacity(.15)
-            : Colors.red.withOpacity(.15),
+            ? Colors.green.withValues(alpha: .15)
+            : Colors.red.withValues(alpha: .15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isConnected
-              ? Colors.greenAccent.withOpacity(.4)
-              : Colors.redAccent.withOpacity(.4),
+              ? Colors.greenAccent.withValues(alpha: .4)
+              : Colors.redAccent.withValues(alpha: .4),
         ),
       ),
       child: Row(
@@ -307,7 +307,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
         border: Border.all(color: const Color(0xFFE0E0E0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.04),
+            color: Colors.black.withValues(alpha: .04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -384,7 +384,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
       statusWidget = Container(
         width: 22, height: 22,
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(.1),
+          color: Colors.grey.withValues(alpha: .1),
           shape: BoxShape.circle,
         ),
         child: const Icon(Icons.remove, color: Colors.grey, size: 12),
@@ -392,11 +392,11 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
     } else if (isRunning && l.qteLue == 0) {
       statusWidget = AnimatedBuilder(
         animation: _pulseCtrl,
-        builder: (_, __) => Container(
+        builder: (_, _) => Container(
           width: 22, height: 22,
           decoration: BoxDecoration(
             color: Colors.orange
-                .withOpacity(.1 + .05 * _pulseCtrl.value),
+                .withValues(alpha: .1 + .05 * _pulseCtrl.value),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.hourglass_empty_rounded,
@@ -406,14 +406,14 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
     } else if (isRunning && l.qteLue > 0 && !l.isOk) {
       statusWidget = AnimatedBuilder(
         animation: _pulseCtrl,
-        builder: (_, __) => Container(
+        builder: (_, _) => Container(
           width: 22, height: 22,
           decoration: BoxDecoration(
             color: Colors.orange
-                .withOpacity(.1 + .05 * _pulseCtrl.value),
+                .withValues(alpha: .1 + .05 * _pulseCtrl.value),
             shape: BoxShape.circle,
             border: Border.all(
-                color: Colors.orange.withOpacity(.5)),
+                color: Colors.orange.withValues(alpha: .5)),
           ),
           child: const Icon(Icons.hourglass_bottom_rounded,
               color: Colors.orange, size: 12),
@@ -426,7 +426,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
           color: _greenLight,
           shape: BoxShape.circle,
           border:
-          Border.all(color: _green.withOpacity(.4)),
+          Border.all(color: _green.withValues(alpha: .4)),
         ),
         child: const Icon(Icons.check_rounded,
             color: _green, size: 12),
@@ -439,7 +439,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
           color: _redLight,
           shape: BoxShape.circle,
           border:
-          Border.all(color: _red.withOpacity(.4)),
+          Border.all(color: _red.withValues(alpha: .4)),
         ),
         child: const Icon(Icons.close_rounded,
             color: _red, size: 12),
@@ -454,7 +454,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
         border: Border(
           bottom: isLast
               ? BorderSide.none
-              : BorderSide(color: Colors.grey.withOpacity(.1)),
+              : BorderSide(color: Colors.grey.withValues(alpha: .1)),
         ),
       ),
       child: Row(
@@ -466,7 +466,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
               padding: const EdgeInsets.symmetric(
                   horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: _indigoMid.withOpacity(.08),
+                color: _indigoMid.withValues(alpha: .08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -627,7 +627,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
               color: _redLight,
               borderRadius: BorderRadius.circular(10),
               border:
-              Border.all(color: _red.withOpacity(.3)),
+              Border.all(color: _red.withValues(alpha: .3)),
             ),
             child: const Row(
               children: [
@@ -718,7 +718,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
             Container(
                 width: 1,
                 height: 12,
-                color: Colors.grey.withOpacity(.3)),
+                color: Colors.grey.withValues(alpha: .3)),
             const SizedBox(width: 10),
             Icon(Icons.nfc_rounded, color: _indigoMid, size: 13),
             const SizedBox(width: 4),
@@ -731,7 +731,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
             Container(
                 width: 1,
                 height: 12,
-                color: Colors.grey.withOpacity(.3)),
+                color: Colors.grey.withValues(alpha: .3)),
             const SizedBox(width: 10),
             Icon(
               isOk

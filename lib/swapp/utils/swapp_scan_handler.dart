@@ -9,10 +9,10 @@
 // Auteur         : H.AMIZIANI
 // =============================================================================
 
-import 'package:cap_mobile/core/apiswap/nearby_stock_provider.dart';
-import 'package:cap_mobile/core/apiswap/stock_web_provider.dart';
-import 'package:cap_mobile/core/apiswap/swapp_api_constants.dart';
-import 'package:cap_mobile/core/apiswap/swapp_product_provider.dart';
+import 'package:cap_mobile/core/apiswap/produit/nearby_stock/providers/nearby_stock_provider.dart';
+import 'package:cap_mobile/core/apiswap/produit/stock_web/providers/stock_web_provider.dart';
+import 'package:cap_mobile/core/apiswap/shared/config/swapp_api_constants.dart';
+import 'package:cap_mobile/core/apiswap/produit/providers/swapp_product_provider.dart';
 import 'package:cap_mobile/features/article/providers/article_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,14 +38,18 @@ Future<String?> handleSwappProductScan(
 
   final scannedGencode = swappLooksLikeGencode(data)
       ? data
-      : (article?.gencode.trim().isNotEmpty == true ? article!.gencode.trim() : '');
+      : (article?.gencode.trim().isNotEmpty == true
+            ? article!.gencode.trim()
+            : '');
 
   var codeModele = article?.codeMod.trim();
   if (codeModele == null || codeModele.isEmpty) {
     codeModele = data;
   }
 
-  await ref.read(swappProductProvider.notifier).fetchModele(
+  await ref
+      .read(swappProductProvider.notifier)
+      .fetchModele(
         codeModele: codeModele,
         codeMag: resolvedMag,
         scannedGencode: scannedGencode.isNotEmpty ? scannedGencode : data,

@@ -1,5 +1,4 @@
 import 'package:cap_mobile/features/QC/pages/qc_page.dart';
-import 'package:cap_mobile/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,10 +6,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../auth/pages/profile_page.dart';
 import '../../rfid/pages/rfid_page.dart';
 import '../../exp_control/pages/exp_control_page.dart';
-import '../../../swapp/pages/detail_produit_page.dart';
-import '../../../swapp/pages/detail_produit_page2.dart';
-import '../../inventory/pages/inventory_page.dart';
-import '../../QC/pages/qc_page.dart';
+import '../../../swapp/pages/menu/swapp_menu_page.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -57,7 +53,7 @@ class _Module {
 //  HOME PAGE
 // ──────────────────────────────────────────────────────────────
 class HomePage extends ConsumerStatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
@@ -110,8 +106,8 @@ class _HomePageState extends ConsumerState<HomePage>
         onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const QcRfidPage(),
-            transitionsBuilder: (_, anim, __, child) =>
+            pageBuilder: (_, _, _) => const QcRfidPage(),
+            transitionsBuilder: (_, anim, _, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
@@ -127,8 +123,8 @@ class _HomePageState extends ConsumerState<HomePage>
         onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const ExpControlPage(),
-            transitionsBuilder: (_, anim, __, child) =>
+            pageBuilder: (_, _, _) => const ExpControlPage(),
+            transitionsBuilder: (_, anim, _, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
@@ -136,37 +132,12 @@ class _HomePageState extends ConsumerState<HomePage>
       ),
       _Module(
         title: 'Swapp',
-        subtitle: 'Détail produit',
+        subtitle: 'Stock & ventes magasin',
         icon: Icons.swap_horiz_rounded,
-        color: AppColors.primary,
-        bgColor: AppColors.primarySoft,
+        color: const Color(0xFF4640D6),
+        bgColor: const Color(0xFFECEAFB),
         available: true,
-        onTap: () => Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const DetailProduitPage(),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 300),
-          ),
-        ),
-      ),
-      _Module(
-        title: 'Swapp v2',
-        subtitle: 'Design moderne',
-        icon: Icons.view_compact_alt_rounded,
-        color: AppColors.primaryDark,
-        bgColor: AppColors.primarySoft,
-        available: true,
-        onTap: () => Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const DetailProduitPage2(),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 300),
-          ),
-        ),
+        onTap: () => Navigator.push(context, SwappMenuPage.fadeRoute()),
       ),
     ];
 
@@ -198,7 +169,7 @@ class _HomePageState extends ConsumerState<HomePage>
         color: _C.surface,
         boxShadow: [
           BoxShadow(
-            color: _C.primaryDark.withOpacity(.08),
+            color: _C.primaryDark.withValues(alpha: .08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -221,12 +192,12 @@ class _HomePageState extends ConsumerState<HomePage>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: _C.primaryDark.withOpacity(.25),
+                          color: _C.primaryDark.withValues(alpha: .25),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: _C.primary.withOpacity(.15),
+                            color: _C.primary.withValues(alpha: .15),
                             blurRadius: 8,
                           ),
                         ],
@@ -238,7 +209,7 @@ class _HomePageState extends ConsumerState<HomePage>
                             ? NetworkImage(photoUrl)
                             : null,
                         onBackgroundImageError: photoUrl.isNotEmpty
-                            ? (_, __) {}
+                            ? (_, _) {}
                             : null,
                         child: photoUrl.isEmpty
                             ? Text(
@@ -352,24 +323,24 @@ class _HomePageState extends ConsumerState<HomePage>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withOpacity(.4),
+                        color: Colors.white.withValues(alpha: .4),
                         width: 2.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(.2),
+                          color: Colors.black.withValues(alpha: .2),
                           blurRadius: 12,
                         ),
                       ],
                     ),
                     child: CircleAvatar(
                       radius: 36,
-                      backgroundColor: Colors.white.withOpacity(.2),
+                      backgroundColor: Colors.white.withValues(alpha: .2),
                       backgroundImage: photoUrl.isNotEmpty
                           ? NetworkImage(photoUrl)
                           : null,
                       onBackgroundImageError: photoUrl.isNotEmpty
-                          ? (_, __) {}
+                          ? (_, _) {}
                           : null,
                       child: photoUrl.isEmpty
                           ? Text(
@@ -399,7 +370,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.2),
+                      color: Colors.white.withValues(alpha: .2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -462,7 +433,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _C.error,
-                    side: BorderSide(color: _C.error.withOpacity(.3)),
+                    side: BorderSide(color: _C.error.withValues(alpha: .3)),
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -650,7 +621,7 @@ class _HomePageState extends ConsumerState<HomePage>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _C.primary.withOpacity(.3),
+            color: _C.primary.withValues(alpha: .3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -666,7 +637,7 @@ class _HomePageState extends ConsumerState<HomePage>
                   '$greeting,',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(.8),
+                    color: Colors.white.withValues(alpha: .8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -687,7 +658,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.18),
+                    color: Colors.white.withValues(alpha: .18),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -718,7 +689,7 @@ class _HomePageState extends ConsumerState<HomePage>
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(.12),
+              color: Colors.white.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(18),
             ),
             child: const Icon(
@@ -743,14 +714,14 @@ class _HomePageState extends ConsumerState<HomePage>
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: m.available
-                ? m.color.withOpacity(.15)
-                : _C.border.withOpacity(.5),
+                ? m.color.withValues(alpha: .15)
+                : _C.border.withValues(alpha: .5),
           ),
           boxShadow: [
             BoxShadow(
               color: m.available
-                  ? m.color.withOpacity(.10)
-                  : Colors.black.withOpacity(.04),
+                  ? m.color.withValues(alpha: .10)
+                  : Colors.black.withValues(alpha: .04),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -845,8 +816,8 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Route _fadeRoute(Widget page) => PageRouteBuilder(
-    pageBuilder: (_, __, ___) => page,
-    transitionsBuilder: (_, anim, __, child) =>
+    pageBuilder: (_, _, _) => page,
+    transitionsBuilder: (_, anim, _, child) =>
         FadeTransition(opacity: anim, child: child),
     transitionDuration: const Duration(milliseconds: 300),
   );

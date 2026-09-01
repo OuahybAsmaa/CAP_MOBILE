@@ -8,6 +8,33 @@
 // Auteur         : H.AMIZIANI
 // =============================================================================
 
+/// Colis dépôt ou dépôt résa — alimente les chips sous l'en-tête produit.
+class ColisDepotItem {
+  final String sColisPre;
+  final int nPCBColis;
+  final String sDesc;
+
+  const ColisDepotItem({
+    required this.sColisPre,
+    required this.nPCBColis,
+    required this.sDesc,
+  });
+
+  factory ColisDepotItem.fromJson(Map<String, dynamic> json) {
+    return ColisDepotItem(
+      sColisPre: json['sColisPre']?.toString() ?? '',
+      nPCBColis: _asInt(json['nPCBColis']),
+      sDesc: json['sDesc']?.toString() ?? '',
+    );
+  }
+
+  String labelDepotResa() =>
+      '$sColisPre Je débloque 1 colis de $nPCBColis paires.$sDesc';
+
+  String labelDepot() =>
+      '$sColisPre Je pari sur 1 colis de $nPCBColis paires.$sDesc';
+}
+
 /// Ligne stock/prix pour une taille dans listePrix.
 class ModelePrixItem {
   final int artIdentifiant;
@@ -81,6 +108,8 @@ class ModeleGlobalModel {
   final String forme;
   final String marque;
   final List<ModelePrixItem> listePrix;
+  final List<ColisDepotItem> colisDepot;
+  final List<ColisDepotItem> colisDepotResa;
 
   const ModeleGlobalModel({
     required this.libProduit,
@@ -100,16 +129,26 @@ class ModeleGlobalModel {
     required this.forme,
     required this.marque,
     required this.listePrix,
+    this.colisDepot = const [],
+    this.colisDepotResa = const [],
   });
 
   factory ModeleGlobalModel.fromJson(Map<String, dynamic> json) {
     final rawList = json['listePrix'];
     final items = rawList is List
         ? rawList
-            .whereType<Map<String, dynamic>>()
-            .map(ModelePrixItem.fromJson)
-            .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(ModelePrixItem.fromJson)
+              .toList()
         : <ModelePrixItem>[];
+
+    List<ColisDepotItem> parseColis(dynamic raw) {
+      if (raw is! List) return const [];
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(ColisDepotItem.fromJson)
+          .toList();
+    }
 
     return ModeleGlobalModel(
       libProduit: json['libProduit']?.toString() ?? '',
@@ -129,6 +168,8 @@ class ModeleGlobalModel {
       forme: json['forme']?.toString() ?? '',
       marque: json['marque']?.toString() ?? '',
       listePrix: items,
+      colisDepot: parseColis(json['colisDepot']),
+      colisDepotResa: parseColis(json['colisDepotResa']),
     );
   }
 }

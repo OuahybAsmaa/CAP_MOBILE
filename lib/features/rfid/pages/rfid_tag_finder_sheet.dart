@@ -10,10 +10,10 @@ class RfidTagFinderSheet extends ConsumerStatefulWidget {
   final InventoryService service;
 
   const RfidTagFinderSheet({
-    Key? key,
+    super.key,
     required this.epc,
     required this.service,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<RfidTagFinderSheet> createState() => _RfidTagFinderSheetState();
@@ -218,7 +218,7 @@ class _RfidTagFinderSheetState extends ConsumerState<RfidTagFinderSheet>
                 // Cercles de radar animés
                 AnimatedBuilder(
                   animation: _radarCtrl,
-                  builder: (_, __) => CustomPaint(
+                  builder: (_, _) => CustomPaint(
                     size: const Size(200, 200),
                     painter: _RadarPainter(
                       progress:   _radarCtrl.value,
@@ -230,14 +230,14 @@ class _RfidTagFinderSheetState extends ConsumerState<RfidTagFinderSheet>
 
                 AnimatedBuilder(
                   animation: _pulseCtrl,
-                  builder: (_, __) {
+                  builder: (_, _) {
                     final scale = 1.0 + _pulseCtrl.value * 0.08 * _proximity;
                     return Transform.scale(
                       scale: scale,
                       child: Container(
                         width: 90, height: 90,
                         decoration: BoxDecoration(
-                          color: _proximityColor.withOpacity(.15),
+                          color: _proximityColor.withValues(alpha: .15),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: _proximityColor,
@@ -359,7 +359,7 @@ class _RadarPainter extends CustomPainter {
       canvas.drawCircle(
         center, r,
         Paint()
-          ..color  = color.withOpacity(.08)
+          ..color  = color.withValues(alpha: .08)
           ..style  = PaintingStyle.stroke
           ..strokeWidth = 1,
       );
@@ -370,7 +370,7 @@ class _RadarPainter extends CustomPainter {
     canvas.drawCircle(
       center, waveR,
       Paint()
-        ..color  = color.withOpacity((1 - progress) * 0.4)
+        ..color  = color.withValues(alpha: (1 - progress) * 0.4)
         ..style  = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
@@ -383,7 +383,7 @@ class _RadarPainter extends CustomPainter {
       sweepAngle,
       false,
       Paint()
-        ..color  = color.withOpacity(.25)
+        ..color  = color.withValues(alpha: .25)
         ..style  = PaintingStyle.stroke
         ..strokeWidth = 2,
     );

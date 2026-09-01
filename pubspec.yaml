@@ -48,6 +48,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   image_picker: ^1.2.3
   mobile_scanner: ^7.4.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +74,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/logo.png
+    - assets/transporteurs/
+    - assets/reb/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

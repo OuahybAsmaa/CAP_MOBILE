@@ -69,7 +69,7 @@ class AuthServiceMock {
   }
 
   String getPhotoUrl(int codeCollab) {
-    return 'https://ui-avatars.com/api/?name=${codeCollab}&background=random&size=100';
+    return 'https://ui-avatars.com/api/?name=$codeCollab&background=random&size=100';
   }
 
   void addMockCollaborateur(CollaborateurModel collaborateur) {

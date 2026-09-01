@@ -54,7 +54,7 @@ extension MemoryBankExtension on MemoryBank {
 //  PAGE DÉTAIL TAGS
 // ──────────────────────────────────────────────────────────────
 class TagsDetailPage extends ConsumerStatefulWidget {
-  const TagsDetailPage({Key? key}) : super(key: key);
+  const TagsDetailPage({super.key});
 
   @override
   ConsumerState<TagsDetailPage> createState() => _TagsDetailPageState();
@@ -102,7 +102,7 @@ class _TagsDetailPageState extends ConsumerState<TagsDetailPage> {
         color: _C.surface,
         boxShadow: [
           BoxShadow(
-            color: _C.primary.withOpacity(.08),
+            color: _C.primary.withValues(alpha: .08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -194,9 +194,9 @@ class _TagsDetailPageState extends ConsumerState<TagsDetailPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(.1),
+          color: color.withValues(alpha: .1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(.25)),
+          border: Border.all(color: color.withValues(alpha: .25)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -229,7 +229,7 @@ class _TagsDetailPageState extends ConsumerState<TagsDetailPage> {
       decoration: BoxDecoration(
         color: _C.primarySoft,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _C.primary.withOpacity(.2)),
+        border: Border.all(color: _C.primary.withValues(alpha: .2)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<MemoryBank>(
@@ -402,8 +402,9 @@ class _TagsDetailPageState extends ConsumerState<TagsDetailPage> {
     final showExtra = _selectedBank != MemoryBank.none;
 
     Color rssiColor;
-    if (tag.rssi >= -60)      rssiColor = _C.success;
-    else if (tag.rssi >= -80) rssiColor = _C.warning;
+    if (tag.rssi >= -60) {
+      rssiColor = _C.success;
+    } else if (tag.rssi >= -80) rssiColor = _C.warning;
     else                      rssiColor = _C.error;
 
     String extraData = '';
@@ -427,7 +428,7 @@ class _TagsDetailPageState extends ConsumerState<TagsDetailPage> {
       decoration: BoxDecoration(
         color: isEven ? _C.surface : const Color(0xFFF9FAFB),
         border: Border(
-          bottom: BorderSide(color: _C.border.withOpacity(.5), width: 0.5),
+          bottom: BorderSide(color: _C.border.withValues(alpha: .5), width: 0.5),
         ),
       ),
       child: Row(

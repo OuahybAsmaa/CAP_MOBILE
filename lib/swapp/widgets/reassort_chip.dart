@@ -85,7 +85,7 @@ class ReassortChip extends StatelessWidget {
             vertical: dp(4),
           ),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
+            color: color.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
