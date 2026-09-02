@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import '../providers/auth_provider.dart';
 import '../../home/pages/home_page.dart';
 import '../../../core/services/datawedge_service.dart';
-import 'package:cap_mobile/l10n/app_localizations.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -364,7 +364,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                 end: Alignment.bottomRight,
               ).createShader(bounds),
               child: Text(
-                AppLocalizations.of(context)!.appTitle,
+                context.f.appTitle,
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
@@ -382,7 +382,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                     color: _AppColors.cyanDim.withValues(alpha: .5)),
                 const SizedBox(width: 8),
                 Text(
-                  AppLocalizations.of(context)!.welcomeSubtitle,
+                  context.f.welcomeSubtitle,
                   style: TextStyle(
                     fontSize: 11,
                     color: _AppColors.textSecondary,
@@ -479,7 +479,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           ),
           const SizedBox(height: 18),
           Text(
-            AppLocalizations.of(context)!.welcomeScanTitle,
+            context.f.welcomeScanTitle,
             style: TextStyle(
               color: _AppColors.textPrimary,
               fontSize: 17,
@@ -489,7 +489,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           ),
           const SizedBox(height: 6),
           Text(
-            AppLocalizations.of(context)!.welcomeScanSubtitle,
+            context.f.welcomeScanSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: _AppColors.textSecondary,
@@ -534,7 +534,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
           ),
           const SizedBox(height: 16),
           Text(
-            AppLocalizations.of(context)!.welcomeLoadingTitle,
+            context.f.welcomeLoadingTitle,
             style: TextStyle(
               color: _AppColors.textPrimary,
               fontSize: 16,
@@ -547,7 +547,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             builder: (_, _) {
               final dots = '.' * ((_dotsCtrl.value * 3).floor() + 1);
               return Text(
-                '${AppLocalizations.of(context)!.welcomeLoadingSubtitle}$dots',
+                '${context.f.welcomeLoadingSubtitle}$dots',
                 style: const TextStyle(
                   color: _AppColors.textSecondary,
                   fontSize: 13,
@@ -585,7 +585,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             ),
             const SizedBox(height: 14),
             Text(
-              AppLocalizations.of(context)!.welcomeErrorTitle,
+              context.f.welcomeErrorTitle,
               style: TextStyle(
                 color: _AppColors.error,
                 fontSize: 16,
@@ -604,7 +604,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
             ),
             const SizedBox(height: 14),
             Text(
-              AppLocalizations.of(context)!.welcomeErrorRetry,
+              context.f.welcomeErrorRetry,
               style: TextStyle(color: _AppColors.textMuted, fontSize: 12),
             ),
           ],
@@ -627,8 +627,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
         const SizedBox(width: 8),
         Text(
           _dataWedgeReady
-              ? AppLocalizations.of(context)!.welcomeZebraConnected
-              : AppLocalizations.of(context)!.welcomeZebraConnecting,
+              ? context.f.welcomeZebraConnected
+              : context.f.welcomeZebraConnecting,
           style: TextStyle(color: _AppColors.textMuted, fontSize: 12),
         ),
       ],

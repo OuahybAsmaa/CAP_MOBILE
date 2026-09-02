@@ -1,0 +1,1925 @@
+{
+  "files": {
+    "lib\\core\\services\\article_service.dart": [
+      {
+        "text": "Content-Type': 'application/json",
+        "line": 29,
+        "context": "'Content-Type': 'application/json',"
+      },
+      {
+        "text": "Accept':       'application/json",
+        "line": 30,
+        "context": "'Accept':       'application/json',"
+      },
+      {
+        "text": "User-Agent':   'CapMobile/1.0",
+        "line": 31,
+        "context": "'User-Agent':   'CapMobile/1.0',"
+      }
+    ],
+    "lib\\core\\services\\auth_service.dart": [
+      {
+        "text": "Content-Type': 'application/json",
+        "line": 19,
+        "context": "'Content-Type': 'application/json',"
+      },
+      {
+        "text": "Accept': 'application/json",
+        "line": 20,
+        "context": "'Accept': 'application/json',"
+      },
+      {
+        "text": "User-Agent': 'CapMobile/1.0",
+        "line": 21,
+        "context": "'User-Agent': 'CapMobile/1.0',"
+      }
+    ],
+    "lib\\core\\services\\auth_service_mock.dart": [
+      {
+        "text": "Responsable Magasin",
+        "line": 16,
+        "context": "typeCollabLibelle: 'Responsable Magasin',"
+      },
+      {
+        "text": "Magasin Central",
+        "line": 21,
+        "context": "MagasinModel(codeMag: 1, nomMag: 'Magasin Central'),"
+      },
+      {
+        "text": "Magasin Nord",
+        "line": 22,
+        "context": "MagasinModel(codeMag: 2, nomMag: 'Magasin Nord'),"
+      }
+    ],
+    "lib\\core\\services\\datawedge_service.dart": [
+      {
+        "text": "DataWedgeService initialisé + profil créé",
+        "line": 37,
+        "context": "debugPrint('DataWedgeService initialisé + profil créé');"
+      }
+    ],
+    "lib\\core\\services\\exp_service.dart": [
+      {
+        "text": "Content-Type': 'application/json",
+        "line": 17,
+        "context": "'Content-Type': 'application/json',"
+      },
+      {
+        "text": "Accept':       'application/json",
+        "line": 18,
+        "context": "'Accept':       'application/json',"
+      },
+      {
+        "text": "User-Agent':   'CapMobile/1.0",
+        "line": 19,
+        "context": "'User-Agent':   'CapMobile/1.0',"
+      },
+      {
+        "text": "Aucun article trouvé pour cette réception",
+        "line": 38,
+        "context": "throw Exception('Aucun article trouvé pour cette réception');"
+      },
+      {
+        "text": "Pas de connexion réseau",
+        "line": 49,
+        "context": "throw Exception('Pas de connexion réseau');"
+      },
+      {
+        "text": "Délai dépassé, réessayez",
+        "line": 51,
+        "context": "throw Exception('Délai dépassé, réessayez');"
+      }
+    ],
+    "lib\\core\\services\\promo_service.dart": [
+      {
+        "text": "Erreur chargement opérations",
+        "line": 15,
+        "context": "throw Exception('Erreur chargement opérations');"
+      },
+      {
+        "text": "listOp': listOp.join(',",
+        "line": 30,
+        "context": "'listOp': listOp.join(','),"
+      },
+      {
+        "text": "Content-Type': 'application/json",
+        "line": 84,
+        "context": "headers: {'Content-Type': 'application/json'},"
+      },
+      {
+        "text": "message'] ?? 'FDS mises à jour avec succès",
+        "line": 93,
+        "context": "return data['message'] ?? 'FDS mises à jour avec succès';"
+      }
+    ],
+    "lib\\core\\services\\qc_service.dart": [
+      {
+        "text": "Content-Type': 'application/json",
+        "line": 10,
+        "context": "'Content-Type': 'application/json',"
+      },
+      {
+        "text": "Accept':       'application/json",
+        "line": 11,
+        "context": "'Accept':       'application/json',"
+      },
+      {
+        "text": "User-Agent':   'CapMobile/1.0",
+        "line": 12,
+        "context": "'User-Agent':   'CapMobile/1.0',"
+      },
+      {
+        "text": "codeMod'] as String? ?? '",
+        "line": 24,
+        "context": "final codeMod = json['codeMod'] as String? ?? '';"
+      },
+      {
+        "text": "codeMod introuvable",
+        "line": 25,
+        "context": "if (codeMod.isEmpty) throw Exception('codeMod introuvable');"
+      },
+      {
+        "text": "Pas de connexion réseau",
+        "line": 33,
+        "context": "throw Exception('Pas de connexion réseau');"
+      },
+      {
+        "text": "Aucun colis trouvé pour ce code modèle",
+        "line": 48,
+        "context": "throw Exception('Aucun colis trouvé pour ce code modèle');"
+      }
+    ],
+    "lib\\core\\services\\rfid_sse_service.dart": [
+      {
+        "text": "Content-Type': 'application/json",
+        "line": 14,
+        "context": "'Content-Type': 'application/json',"
+      },
+      {
+        "text": "Accept':       'application/json",
+        "line": 15,
+        "context": "'Accept':       'application/json',"
+      },
+      {
+        "text": "User-Agent':   'CapMobile/1.0",
+        "line": 16,
+        "context": "'User-Agent':   'CapMobile/1.0',"
+      },
+      {
+        "text": "Pas de connexion réseau",
+        "line": 49,
+        "context": "throw Exception('Pas de connexion réseau');"
+      }
+    ],
+    "lib\\features\\article\\models\\article_model.dart": [
+      {
+        "text": "libArticle']    as String? ?? '",
+        "line": 48,
+        "context": "libArticle:    json['libArticle']    as String? ?? '',"
+      },
+      {
+        "text": "libRayon']      as String? ?? '",
+        "line": 49,
+        "context": "libRayon:      json['libRayon']      as String? ?? '',"
+      },
+      {
+        "text": "libSaison']     as String? ?? '",
+        "line": 50,
+        "context": "libSaison:     json['libSaison']     as String? ?? '',"
+      },
+      {
+        "text": "libFamille']    as String? ?? '",
+        "line": 51,
+        "context": "libFamille:    json['libFamille']    as String? ?? '',"
+      },
+      {
+        "text": "libSousFamille']as String? ?? '",
+        "line": 52,
+        "context": "libSousFamille:json['libSousFamille']as String? ?? '',"
+      },
+      {
+        "text": "libTheme']      as String? ?? '",
+        "line": 53,
+        "context": "libTheme:      json['libTheme']      as String? ?? '',"
+      },
+      {
+        "text": "codeMod']       as String? ?? '",
+        "line": 54,
+        "context": "codeMod:       json['codeMod']       as String? ?? '',"
+      },
+      {
+        "text": "gencode']       as String? ?? '",
+        "line": 56,
+        "context": "gencode:       json['gencode']       as String? ?? '',"
+      },
+      {
+        "text": "libTaille']     as String? ?? '",
+        "line": 57,
+        "context": "libTaille:     json['libTaille']     as String? ?? '',"
+      },
+      {
+        "text": "marque']        as String? ?? '",
+        "line": 58,
+        "context": "marque:        json['marque']        as String? ?? '',"
+      },
+      {
+        "text": "codeFsr']       as String? ?? '",
+        "line": 59,
+        "context": "codeFsr:       json['codeFsr']       as String? ?? '',"
+      },
+      {
+        "text": "gtin']          as String? ?? '",
+        "line": 60,
+        "context": "gtin:          json['gtin']          as String? ?? '',"
+      },
+      {
+        "text": "libColoris']    as String? ?? '",
+        "line": 61,
+        "context": "libColoris:    json['libColoris']    as String? ?? '',"
+      },
+      {
+        "text": "codeRayon']     as String? ?? '",
+        "line": 62,
+        "context": "codeRayon:     json['codeRayon']     as String? ?? '',"
+      },
+      {
+        "text": "codeFamille']   as String? ?? '",
+        "line": 63,
+        "context": "codeFamille:   json['codeFamille']   as String? ?? '',"
+      },
+      {
+        "text": "codeSsFamille'] as String? ?? '",
+        "line": 64,
+        "context": "codeSsFamille: json['codeSsFamille'] as String? ?? '',"
+      },
+      {
+        "text": "codeMarque']    as String? ?? '",
+        "line": 65,
+        "context": "codeMarque:    json['codeMarque']    as String? ?? '',"
+      },
+      {
+        "text": "codeMarche']    as String? ?? '",
+        "line": 66,
+        "context": "codeMarche:    json['codeMarche']    as String? ?? '',"
+      }
+    ],
+    "lib\\features\\article\\providers\\article_provider.dart": [
+      {
+        "text": "Exception: ', '",
+        "line": 51,
+        "context": "error:     e.toString().replaceFirst('Exception: ', ''),"
+      }
+    ],
+    "lib\\features\\auth\\models\\collaborateur_model.dart": [
+      {
+        "text": "nom'] as String? ?? '",
+        "line": 29,
+        "context": "nom:               json['nom'] as String? ?? '',"
+      },
+      {
+        "text": "prenom'] as String? ?? '",
+        "line": 30,
+        "context": "prenom:            json['prenom'] as String? ?? '',"
+      },
+      {
+        "text": "emailCollab'] as String? ?? '",
+        "line": 31,
+        "context": "email:             json['emailCollab'] as String? ?? '',"
+      },
+      {
+        "text": "typeCollabLibelle'] as String? ?? '",
+        "line": 33,
+        "context": "typeCollabLibelle: json['typeCollabLibelle'] as String? ?? '',"
+      },
+      {
+        "text": "pictureLink'] as String? ?? '",
+        "line": 36,
+        "context": "pictureLink:       json['pictureLink'] as String? ?? '',"
+      },
+      {
+        "text": "nomMag'] as String? ?? '",
+        "line": 60,
+        "context": "nomMag: json['nomMag'] as String? ?? '',"
+      }
+    ],
+    "lib\\features\\auth\\providers\\auth_provider.dart": [
+      {
+        "text": "Exception: ', '",
+        "line": 62,
+        "context": "error:     e.toString().replaceFirst('Exception: ', ''),"
+      }
+    ],
+    "lib\\features\\exp_control\\models\\exp_model.dart": [
+      {
+        "text": "ean']?.toString()       ?? '",
+        "line": 16,
+        "context": "ean:       json['ean']?.toString()       ?? '',"
+      },
+      {
+        "text": "gtin']?.toString()      ?? '",
+        "line": 17,
+        "context": "gtin:      json['gtin']?.toString()      ?? '',"
+      },
+      {
+        "text": "libTaille']?.toString() ?? '",
+        "line": 18,
+        "context": "libTaille: json['libTaille']?.toString() ?? '',"
+      },
+      {
+        "text": "source']?.toString()      ?? '",
+        "line": 58,
+        "context": "source:      json['source']?.toString()      ?? '',"
+      },
+      {
+        "text": "codeRecep']?.toString()   ?? '",
+        "line": 59,
+        "context": "codeRecep:   json['codeRecep']?.toString()   ?? '',"
+      },
+      {
+        "text": "nomMag']?.toString()      ?? '",
+        "line": 61,
+        "context": "nomMag:      json['nomMag']?.toString()      ?? '',"
+      },
+      {
+        "text": "nomMagDest']?.toString()  ?? '",
+        "line": 63,
+        "context": "nomMagDest:  json['nomMagDest']?.toString()  ?? '',"
+      }
+    ],
+    "lib\\features\\exp_control\\pages\\exp_control_page.dart": [
+      {
+        "text": "CONTRÔLE EXP",
+        "line": 166,
+        "context": "'CONTRÔLE EXP',"
+      },
+      {
+        "text": "Réception · Expédition",
+        "line": 175,
+        "context": "'Réception · Expédition',"
+      },
+      {
+        "text": "Connected' : 'Disconnected",
+        "line": 234,
+        "context": "connected != null ? 'Connected' : 'Disconnected',"
+      },
+      {
+        "text": "RFID Reader",
+        "line": 262,
+        "context": "'RFID Reader',"
+      },
+      {
+        "text": "No reader available",
+        "line": 291,
+        "context": "child: Text('No reader available',"
+      },
+      {
+        "text": "abord le code magasin",
+        "line": 414,
+        "context": ": 'Entrez d\\'abord le code magasin',"
+      },
+      {
+        "text": "Le scan du code réception affiche automatiquement",
+        "line": 425,
+        "context": "text: 'Le scan du code réception affiche automatiquement '"
+      },
+      {
+        "text": "les articles attendus dans ce colis.",
+        "line": 426,
+        "context": "'les articles attendus dans ce colis.',"
+      },
+      {
+        "text": "Code magasin",
+        "line": 455,
+        "context": "'Code magasin',"
+      },
+      {
+        "text": "Chargement de la réception...",
+        "line": 543,
+        "context": "'Chargement de la réception...',"
+      },
+      {
+        "text": "Une erreur est survenue",
+        "line": 582,
+        "context": "'Une erreur est survenue',"
+      },
+      {
+        "text": "Scanner à nouveau",
+        "line": 604,
+        "context": "label: const Text('Scanner à nouveau'),"
+      },
+      {
+        "text": "De",
+        "line": 700,
+        "context": "label: 'De',"
+      },
+      {
+        "text": "Vers",
+        "line": 712,
+        "context": "label: 'Vers',"
+      },
+      {
+        "text": "s' : '",
+        "line": 739,
+        "context": "'${r.totalAttendu} article${r.totalAttendu > 1 ? 's' : ''}',"
+      },
+      {
+        "text": "Connectez un lecteur RFID avant de commencer.",
+        "line": 875,
+        "context": "'Connectez un lecteur RFID avant de commencer.',"
+      },
+      {
+        "text": "Lancer le contrôle RFID",
+        "line": 910,
+        "context": "label: const Text('Lancer le contrôle RFID',"
+      }
+    ],
+    "lib\\features\\exp_control\\pages\\exp_inventory_page.dart": [
+      {
+        "text": "Contrôle EXP",
+        "line": 126,
+        "context": "'Contrôle EXP',"
+      },
+      {
+        "text": "Lecture...' : 'En attente",
+        "line": 166,
+        "context": "isRunning ? 'Lecture...' : 'En attente',"
+      },
+      {
+        "text": "Aucun lecteur connecté",
+        "line": 257,
+        "context": ": 'Aucun lecteur connecté',"
+      },
+      {
+        "text": "Taille",
+        "line": 331,
+        "context": "child: Text('Taille',"
+      },
+      {
+        "text": "Attendu",
+        "line": 338,
+        "context": "child: Text('Attendu',"
+      },
+      {
+        "text": "Lu",
+        "line": 346,
+        "context": "child: Text('Lu',"
+      },
+      {
+        "text": "Statut",
+        "line": 354,
+        "context": "child: Text('Statut',"
+      },
+      {
+        "text": "Conforme' : 'Écart",
+        "line": 601,
+        "context": "allOk ? 'Conforme' : 'Écart',"
+      },
+      {
+        "text": "Connectez un lecteur RFID avant de commencer.",
+        "line": 639,
+        "context": "'Connectez un lecteur RFID avant de commencer.',"
+      },
+      {
+        "text": "Démarrer le contrôle",
+        "line": 658,
+        "context": "label: const Text('Démarrer le contrôle',"
+      },
+      {
+        "text": "Arrêter la lecture",
+        "line": 684,
+        "context": "label: const Text('Arrêter la lecture',"
+      },
+      {
+        "text": "s' : '",
+        "line": 712,
+        "context": "Text('$ok conforme${ok > 1 ? 's' : ''}',"
+      },
+      {
+        "text": "Conforme' :",
+        "line": 745,
+        "context": "isOk ? 'Conforme' : 'Écart : $ecart',"
+      },
+      {
+        "text": "Refaire",
+        "line": 763,
+        "context": "label: const Text('Refaire',"
+      },
+      {
+        "text": "Terminer",
+        "line": 786,
+        "context": "label: const Text('Terminer',"
+      }
+    ],
+    "lib\\features\\exp_control\\providers\\exp_provider.dart": [
+      {
+        "text": "Exception: ', '",
+        "line": 121,
+        "context": "error: e.toString().replaceFirst('Exception: ', ''),"
+      },
+      {
+        "text": "event'] == 'tag",
+        "line": 143,
+        "context": "if (event is Map && event['event'] == 'tag') {"
+      }
+    ],
+    "lib\\features\\inventory\\pages\\inventory_page.dart": [
+      {
+        "text": "Connexion...",
+        "line": 149,
+        "context": "Text('Connexion...'),"
+      },
+      {
+        "text": "Choisir un lecteur",
+        "line": 155,
+        "context": "hint: const Text('Choisir un lecteur'),"
+      },
+      {
+        "text": "INVENTAIRE RFID",
+        "line": 231,
+        "context": "'INVENTAIRE RFID',"
+      },
+      {
+        "text": "Stock & localisation RSSI",
+        "line": 240,
+        "context": "'Stock & localisation RSSI',"
+      },
+      {
+        "text": "Inventaire en cours' : 'Inventaire arrêté",
+        "line": 375,
+        "context": "isRunning ? 'Inventaire en cours' : 'Inventaire arrêté',"
+      },
+      {
+        "text": "Appuyez sur Démarrer pour lancer",
+        "line": 386,
+        "context": ": 'Appuyez sur Démarrer pour lancer',"
+      },
+      {
+        "text": "Total Reads",
+        "line": 429,
+        "context": "label: 'Total Reads',"
+      },
+      {
+        "text": "Tags Uniques",
+        "line": 436,
+        "context": "label: 'Tags Uniques',"
+      },
+      {
+        "text": "Cadence",
+        "line": 443,
+        "context": "label: 'Cadence',"
+      },
+      {
+        "text": "Durée",
+        "line": 450,
+        "context": "label: 'Durée',"
+      },
+      {
+        "text": "Arrêter l'inventaire",
+        "line": 566,
+        "context": "isRunning ? \"Arrêter l'inventaire\" : \"Démarrer l'inventaire\","
+      },
+      {
+        "text": "Démarrer l'inventaire",
+        "line": 566,
+        "context": "isRunning ? \"Arrêter l'inventaire\" : \"Démarrer l'inventaire\","
+      },
+      {
+        "text": "Aucun tag pour le moment",
+        "line": 642,
+        "context": ": 'Aucun tag pour le moment',"
+      }
+    ],
+    "lib\\features\\inventory\\pages\\tags_detail_page.dart": [
+      {
+        "text": "DÉTAIL DES TAGS",
+        "line": 141,
+        "context": "'DÉTAIL DES TAGS',"
+      },
+      {
+        "text": "Tags uniques",
+        "line": 165,
+        "context": "tooltip: 'Tags uniques',"
+      },
+      {
+        "text": "Total lectures",
+        "line": 172,
+        "context": "tooltip: 'Total lectures',"
+      },
+      {
+        "text": "Aucun tag trouvé",
+        "line": 298,
+        "context": "'Aucun tag trouvé',"
+      },
+      {
+        "text": "Lancez un inventaire pour lire des tags",
+        "line": 307,
+        "context": "'Lancez un inventaire pour lire des tags',"
+      }
+    ],
+    "lib\\features\\inventory\\providers\\control_provider.dart": [
+      {
+        "text": "Puces vierges (Non encodées)",
+        "line": 18,
+        "context": "return 'Puces vierges (Non encodées)';"
+      },
+      {
+        "text": "Puces encodées",
+        "line": 20,
+        "context": "return 'Puces encodées';"
+      },
+      {
+        "text": "Toutes les puces",
+        "line": 22,
+        "context": "return 'Toutes les puces';"
+      },
+      {
+        "text": "Détecte les puces correctement encodées (3039...)",
+        "line": 31,
+        "context": "return 'Détecte les puces correctement encodées (3039...)';"
+      },
+      {
+        "text": "Affiche toutes les puces détectées sans filtre",
+        "line": 33,
+        "context": "return 'Affiche toutes les puces détectées sans filtre';"
+      },
+      {
+        "text": "event'] == 'tag",
+        "line": 189,
+        "context": "if (event['event'] == 'tag') {"
+      },
+      {
+        "text": "event'] == 'disconnected",
+        "line": 194,
+        "context": "} else if (event['event'] == 'disconnected') {"
+      },
+      {
+        "text": "Lecteur déconnecté",
+        "line": 268,
+        "context": "state = state.copyWith(isRunning: false, error: 'Lecteur déconnecté');"
+      }
+    ],
+    "lib\\features\\inventory\\providers\\inventory_provider.dart": [
+      {
+        "text": "name'] ?? '",
+        "line": 94,
+        "context": "availableReaders: readers.map((r) => r['name'] ?? '').toList(),"
+      },
+      {
+        "text": "event'] == 'tag",
+        "line": 170,
+        "context": "if (event['event'] == 'tag') {"
+      },
+      {
+        "text": "memoryBankData'] as String? ?? '",
+        "line": 174,
+        "context": "memoryBankData: event['memoryBankData'] as String? ?? '',"
+      },
+      {
+        "text": "tidData'] as String? ?? '",
+        "line": 175,
+        "context": "tidData:        event['tidData'] as String? ?? '',"
+      },
+      {
+        "text": "event'] == 'disconnected",
+        "line": 177,
+        "context": "} else if (event['event'] == 'disconnected') {"
+      },
+      {
+        "text": "Lecteur déconnecté",
+        "line": 275,
+        "context": "error:     'Lecteur déconnecté',"
+      }
+    ],
+    "lib\\features\\promo\\pages\\operation_products_page.dart": [
+      {
+        "text": "Exception: ', '",
+        "line": 55,
+        "context": "Text(e.toString().replaceFirst('Exception: ', ''),"
+      },
+      {
+        "text": "Réessayer",
+        "line": 62,
+        "context": "label: const Text('Réessayer'),"
+      },
+      {
+        "text": "Aucune nouveauté dans cette opération",
+        "line": 79,
+        "context": "? 'Aucune nouveauté dans cette opération'"
+      },
+      {
+        "text": "Aucun article dans cette opération",
+        "line": 80,
+        "context": ": 'Aucun article dans cette opération',"
+      },
+      {
+        "text": "les nouveautés",
+        "line": 169,
+        "context": "const Text('les nouveautés',"
+      },
+      {
+        "text": "Article",
+        "line": 189,
+        "context": "child: Text('Article',"
+      },
+      {
+        "text": "PV Ini",
+        "line": 194,
+        "context": "child: Text('PV Ini', textAlign: TextAlign.center,"
+      },
+      {
+        "text": "Promo",
+        "line": 200,
+        "context": "child: Text('Promo', textAlign: TextAlign.center,"
+      },
+      {
+        "text": "Stock",
+        "line": 206,
+        "context": "child: Text('Stock', textAlign: TextAlign.center,"
+      },
+      {
+        "text": "NOUVEAUTÉ",
+        "line": 261,
+        "context": "child: const Text('NOUVEAUTÉ',"
+      }
+    ],
+    "lib\\features\\promo\\pages\\promo_operations_page.dart": [
+      {
+        "text": "Échec de la mise à jour des FDS",
+        "line": 67,
+        "context": "content: Text(message ?? 'Échec de la mise à jour des FDS'),"
+      },
+      {
+        "text": "Mettre à jour mes FDS :)",
+        "line": 108,
+        "context": "'Mettre à jour mes FDS :)',"
+      },
+      {
+        "text": "Opérations Commerciales",
+        "line": 162,
+        "context": "child: Text('Opérations Commerciales',"
+      },
+      {
+        "text": "Réessayer",
+        "line": 283,
+        "context": "label: const Text('Réessayer'),"
+      },
+      {
+        "text": "Aucune opération commerciale disponible",
+        "line": 296,
+        "context": "child: Text('Aucune opération commerciale disponible',"
+      },
+      {
+        "text": "Aucune opération sur cette période",
+        "line": 309,
+        "context": "const Text('Aucune opération sur cette période',"
+      },
+      {
+        "text": "Réinitialiser le filtre",
+        "line": 313,
+        "context": "child: const Text('Réinitialiser le filtre'),"
+      },
+      {
+        "text": "Sélectionnez une ou plusieurs opérations à vérifier",
+        "line": 326,
+        "context": "'Sélectionnez une ou plusieurs opérations à vérifier',"
+      },
+      {
+        "text": "Active' : 'Inactive",
+        "line": 439,
+        "context": "isActive ? 'Active' : 'Inactive',"
+      },
+      {
+        "text": "Application Enseigne",
+        "line": 501,
+        "context": "? 'Application Enseigne'"
+      },
+      {
+        "text": "Application Produit",
+        "line": 502,
+        "context": ": 'Application Produit',"
+      }
+    ],
+    "lib\\features\\promo\\pages\\promo_scan_page.dart": [
+      {
+        "text": "Consulter Tarif",
+        "line": 129,
+        "context": "'Consulter Tarif',"
+      },
+      {
+        "text": "Scanner un article",
+        "line": 138,
+        "context": "'Scanner un article',"
+      },
+      {
+        "text": "Saisir le gencode",
+        "line": 176,
+        "context": "title: const Text('Saisir le gencode',"
+      },
+      {
+        "text": "Ex: 34544068037110",
+        "line": 187,
+        "context": "hintText: 'Ex: 34544068037110',"
+      },
+      {
+        "text": "Annuler",
+        "line": 198,
+        "context": "child: const Text('Annuler'),"
+      },
+      {
+        "text": "Vérifier",
+        "line": 204,
+        "context": "child: const Text('Vérifier'),"
+      },
+      {
+        "text": "Connected' : 'Disconnected",
+        "line": 260,
+        "context": "connected != null ? 'Connected' : 'Disconnected',"
+      },
+      {
+        "text": "RFID Reader",
+        "line": 289,
+        "context": "'RFID Reader',"
+      },
+      {
+        "text": "No reader available",
+        "line": 318,
+        "context": "child: Text('No reader available',"
+      },
+      {
+        "text": "Vérification en cours...",
+        "line": 395,
+        "context": "Text('Vérification en cours...',"
+      },
+      {
+        "text": "article à vérifier",
+        "line": 445,
+        "context": "'Pointez le scanner vers le code-barres\\nde l\\'article à vérifier',"
+      },
+      {
+        "text": "Scanner un autre article",
+        "line": 476,
+        "context": "label: const Text('Scanner un autre article',"
+      },
+      {
+        "text": "EN POURCENTAGE",
+        "line": 629,
+        "context": "'EN POURCENTAGE',"
+      }
+    ],
+    "lib\\features\\promo\\providers\\promo_provider.dart": [
+      {
+        "text": "Exception: ', '",
+        "line": 93,
+        "context": "error: e.toString().replaceFirst('Exception: ', ''),"
+      }
+    ],
+    "lib\\features\\QC\\models\\qc_model.dart": [
+      {
+        "text": "CodeColis']     as String? ?? '",
+        "line": 41,
+        "context": "codeColis:   json['CodeColis']     as String? ?? '',"
+      },
+      {
+        "text": "SupeCommande']  as String? ?? '",
+        "line": 44,
+        "context": "supCommande: json['SupeCommande']  as String? ?? '',"
+      },
+      {
+        "text": "CodeSaison']    as String? ?? '",
+        "line": 45,
+        "context": "codeSaison:  json['CodeSaison']    as String? ?? '',"
+      },
+      {
+        "text": "Img'] as String? ?? '",
+        "line": 50,
+        "context": "img: json['Img'] as String? ?? '',"
+      },
+      {
+        "text": "code']        as String? ?? '",
+        "line": 78,
+        "context": "code:        json['code']        as String? ?? '',"
+      },
+      {
+        "text": "marque']      as String? ?? '",
+        "line": 79,
+        "context": "marque:      json['marque']      as String? ?? '',"
+      },
+      {
+        "text": "saison']      as String? ?? '",
+        "line": 80,
+        "context": "saison:      json['saison']      as String? ?? '',"
+      },
+      {
+        "text": "rayon']       as String? ?? '",
+        "line": 81,
+        "context": "rayon:       json['rayon']       as String? ?? '',"
+      },
+      {
+        "text": "famille']     as String? ?? '",
+        "line": 82,
+        "context": "famille:     json['famille']     as String? ?? '',"
+      },
+      {
+        "text": "sousFamille'] as String? ?? '",
+        "line": 83,
+        "context": "sousFamille: json['sousFamille'] as String? ?? '',"
+      }
+    ],
+    "lib\\features\\QC\\pages\\qc_inventory_page.dart": [
+      {
+        "text": "Full Control' : 'Partial Control",
+        "line": 143,
+        "context": "isFull ? 'Full Control' : 'Partial Control',"
+      },
+      {
+        "text": "Reading...' : 'Waiting",
+        "line": 186,
+        "context": "isRunning ? 'Reading...' : 'Waiting',"
+      },
+      {
+        "text": "Full Control",
+        "line": 222,
+        "context": "? 'Full Control'"
+      },
+      {
+        "text": "No reader connected",
+        "line": 284,
+        "context": ": 'No reader connected',"
+      },
+      {
+        "text": "Size",
+        "line": 369,
+        "context": "child: Text('Size',"
+      },
+      {
+        "text": "Expected",
+        "line": 373,
+        "context": "child: Text('Expected',"
+      },
+      {
+        "text": "Read",
+        "line": 378,
+        "context": "child: Text('Read',"
+      },
+      {
+        "text": "Status",
+        "line": 383,
+        "context": "child: Text('Status',"
+      },
+      {
+        "text": "Compliant' : 'Discrepancy",
+        "line": 598,
+        "context": "allOk ? 'Compliant' : 'Discrepancy',"
+      },
+      {
+        "text": "Please connect an RFID reader before starting.",
+        "line": 633,
+        "context": "'Please connect an RFID reader before starting.',"
+      },
+      {
+        "text": "Start control",
+        "line": 648,
+        "context": "label: const Text('Start control',"
+      },
+      {
+        "text": "Stop reading",
+        "line": 674,
+        "context": "label: const Text('Stop reading',"
+      },
+      {
+        "text": "Redo",
+        "line": 735,
+        "context": "label: const Text('Redo',"
+      },
+      {
+        "text": "Finish",
+        "line": 758,
+        "context": "label: const Text('Finish',"
+      },
+      {
+        "text": "s' : '",
+        "line": 791,
+        "context": "Text('$ok compliant${ok > 1 ? 's' : ''}',"
+      },
+      {
+        "text": "Compliant' :",
+        "line": 812,
+        "context": "Text(isOk ? 'Compliant' : 'Discrepancy : $ecart',"
+      }
+    ],
+    "lib\\features\\QC\\pages\\qc_page.dart": [
+      {
+        "text": "EMDK scan demarre",
+        "line": 120,
+        "context": "debugPrint('EMDK scan demarre');"
+      },
+      {
+        "text": "', '').replaceAll(",
+        "line": 127,
+        "context": "final cleanHex = hex.replaceAll(' ', '').replaceAll('\\n', '');"
+      },
+      {
+        "text": ", '",
+        "line": 127,
+        "context": "final cleanHex = hex.replaceAll(' ', '').replaceAll('\\n', '');"
+      },
+      {
+        "text": "QC RFID",
+        "line": 221,
+        "context": "'QC RFID',"
+      },
+      {
+        "text": "Quality Control",
+        "line": 230,
+        "context": "'Quality Control',"
+      },
+      {
+        "text": "Connected' : 'Disconnected",
+        "line": 290,
+        "context": "connected != null ? 'Connected' : 'Disconnected',"
+      },
+      {
+        "text": "RFID Reader",
+        "line": 319,
+        "context": "'RFID Reader',"
+      },
+      {
+        "text": "No reader available",
+        "line": 348,
+        "context": "child: Text('No reader available',"
+      },
+      {
+        "text": "Scan the article code",
+        "line": 472,
+        "context": "'Scan the article code',"
+      },
+      {
+        "text": "Scanning the barcode will",
+        "line": 493,
+        "context": "text: 'Scanning the barcode will '"
+      },
+      {
+        "text": "automatically retrieve the list of associated parcels.",
+        "line": 494,
+        "context": "'automatically retrieve the list of associated parcels.',"
+      },
+      {
+        "text": "Retrieving model code...",
+        "line": 506,
+        "context": "? 'Retrieving model code...'"
+      },
+      {
+        "text": "Loading parcels...",
+        "line": 507,
+        "context": ": 'Loading parcels...';"
+      },
+      {
+        "text": "An error occurred",
+        "line": 567,
+        "context": "'An error occurred',"
+      },
+      {
+        "text": "Scan again",
+        "line": 588,
+        "context": "label: const Text('Scan again'),"
+      },
+      {
+        "text": "Scan Parcel",
+        "line": 629,
+        "context": "'Scan Parcel',"
+      },
+      {
+        "text": "Full Control",
+        "line": 667,
+        "context": "'Full Control',"
+      },
+      {
+        "text": "Assortments",
+        "line": 768,
+        "context": "label: 'Assortments',"
+      },
+      {
+        "text": "Pairs",
+        "line": 776,
+        "context": "label: 'Pairs',"
+      },
+      {
+        "text": "Colis sélectionnés",
+        "line": 850,
+        "context": "'Colis sélectionnés',"
+      },
+      {
+        "text": "s' : '",
+        "line": 866,
+        "context": "'$totalUnites unité${totalUnites > 1 ? 's' : ''}',"
+      },
+      {
+        "text": "Connectez un lecteur RFID avant de lancer.",
+        "line": 987,
+        "context": "'Connectez un lecteur RFID avant de lancer.',"
+      },
+      {
+        "text": "Scannez au moins un colis",
+        "line": 1032,
+        "context": "? 'Scannez au moins un colis'"
+      }
+    ],
+    "lib\\features\\QC\\providers\\qc_provider.dart": [
+      {
+        "text": "Exception: ', '",
+        "line": 197,
+        "context": "error: e.toString().replaceFirst('Exception: ', ''),"
+      },
+      {
+        "text": "', codeSaison: '",
+        "line": 340,
+        "context": "nbArt: 0, supCommande: '', codeSaison: '',"
+      },
+      {
+        "text": "FULL CONTROL",
+        "line": 375,
+        "context": "codeColis:   'FULL CONTROL',"
+      },
+      {
+        "text": "event'] == 'tag",
+        "line": 429,
+        "context": "if (event is Map && event['event'] == 'tag') {"
+      },
+      {
+        "text": "IGNORÉ: puce vierge",
+        "line": 505,
+        "context": "print('IGNORÉ: puce vierge');"
+      },
+      {
+        "text": "IGNORÉ: article null",
+        "line": 519,
+        "context": "print('IGNORÉ: article null');"
+      },
+      {
+        "text": "IGNORÉ: codeMod différent",
+        "line": 523,
+        "context": "print('IGNORÉ: codeMod différent');"
+      }
+    ],
+    "lib\\features\\rfid\\models\\rfid_reader_model.dart": [
+      {
+        "text": "name']    ?? 'Inconnu",
+        "line": 12,
+        "context": "name:    map['name']    ?? 'Inconnu',"
+      },
+      {
+        "text": "address'] ?? 'N/A",
+        "line": 13,
+        "context": "address: map['address'] ?? 'N/A',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_constants.dart": [
+      {
+        "text": "Encodage étiquette",
+        "line": 48,
+        "context": "label: 'Encodage étiquette',"
+      },
+      {
+        "text": "Écriture EPC dans une puce vierge",
+        "line": 49,
+        "context": "subtitle: 'Écriture EPC dans une puce vierge',"
+      },
+      {
+        "text": "Inventaire",
+        "line": 56,
+        "context": "label: 'Inventaire',"
+      },
+      {
+        "text": "Lecture & comptage des puces",
+        "line": 57,
+        "context": "subtitle: 'Lecture & comptage des puces',"
+      },
+      {
+        "text": "Localisation RSSI",
+        "line": 64,
+        "context": "label: 'Localisation RSSI',"
+      },
+      {
+        "text": "Recherche article par signal",
+        "line": 65,
+        "context": "subtitle: 'Recherche article par signal',"
+      },
+      {
+        "text": "Audit stock",
+        "line": 72,
+        "context": "label: 'Audit stock',"
+      },
+      {
+        "text": "Vérification & rapprochement",
+        "line": 73,
+        "context": "subtitle: 'Vérification & rapprochement',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_control_results_page.dart": [
+      {
+        "text": "Puces vierges",
+        "line": 27,
+        "context": "accentTitle = 'Puces vierges';"
+      },
+      {
+        "text": "Puces encodées",
+        "line": 32,
+        "context": "accentTitle = 'Puces encodées';"
+      },
+      {
+        "text": "Toutes les puces",
+        "line": 37,
+        "context": "accentTitle = 'Toutes les puces';"
+      },
+      {
+        "text": "Arrêter",
+        "line": 61,
+        "context": "label: const Text('Arrêter',"
+      },
+      {
+        "text": "Vierges",
+        "line": 81,
+        "context": "label: 'Vierges',"
+      },
+      {
+        "text": "Encodées",
+        "line": 89,
+        "context": "label: 'Encodées',"
+      },
+      {
+        "text": "Total",
+        "line": 97,
+        "context": "label: 'Total',"
+      },
+      {
+        "text": "En cours",
+        "line": 114,
+        "context": "const Text('En cours',"
+      },
+      {
+        "text": "Aucun tag pour ce filtre",
+        "line": 138,
+        "context": ": 'Aucun tag pour ce filtre',"
+      },
+      {
+        "text": ": 'Encodée",
+        "line": 279,
+        "context": "isVirgin ? '🔍 Localiser' : 'Encodée',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_control_tab.dart": [
+      {
+        "text": "Type de contrôle",
+        "line": 61,
+        "context": "title: 'Type de contrôle',"
+      },
+      {
+        "text": "inventaire",
+        "line": 67,
+        "context": "title: 'Lancer l\\'inventaire',"
+      },
+      {
+        "text": "Arrêter le contrôle",
+        "line": 274,
+        "context": "? 'Arrêter le contrôle'"
+      },
+      {
+        "text": "Démarrer le contrôle",
+        "line": 276,
+        "context": "? 'Démarrer le contrôle'"
+      },
+      {
+        "text": "Connectez un lecteur (onglet Encodage)",
+        "line": 277,
+        "context": ": 'Connectez un lecteur (onglet Encodage)',"
+      },
+      {
+        "text": "Réinitialiser",
+        "line": 308,
+        "context": "Text('Réinitialiser',"
+      },
+      {
+        "text": "Voir les résultats",
+        "line": 342,
+        "context": "Text('Voir les résultats',"
+      },
+      {
+        "text": "Vierges',  value:",
+        "line": 385,
+        "context": "_QuickStat(label: 'Vierges',  value: '${controlState.virginCount}',"
+      },
+      {
+        "text": "Encodées', value:",
+        "line": 387,
+        "context": "_QuickStat(label: 'Encodées', value: '${controlState.encodedCount}',"
+      },
+      {
+        "text": "Total',    value:",
+        "line": 389,
+        "context": "_QuickStat(label: 'Total',    value: '${controlState.uniqueCount}',"
+      },
+      {
+        "text": "onglet Encodage pour en connecter un.",
+        "line": 481,
+        "context": "'Aucun lecteur connecté — allez dans l\\'onglet Encodage pour en connecter un.'),"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_encoding_page.dart": [
+      {
+        "text": "opération.",
+        "line": 208,
+        "context": "'Scanner désactivé — inventaire en cours.\\nAttendez la fin de l\\'opération.',"
+      },
+      {
+        "text": "Confirmer la puce détectée",
+        "line": 486,
+        "context": "'Confirmer la puce détectée',"
+      },
+      {
+        "text": "étiquette physique.",
+        "line": 496,
+        "context": "'Vérifiez que ce numéro de série\\ncorrespond à l\\'étiquette physique.',"
+      },
+      {
+        "text": "Numéro de série détecté",
+        "line": 520,
+        "context": "'Numéro de série détecté',"
+      },
+      {
+        "text": "EPC non calculé",
+        "line": 607,
+        "context": "if (newEpc == null) throw Exception('EPC non calculé');"
+      },
+      {
+        "text": "Repositionnez la puce et réessayez.",
+        "line": 644,
+        "context": "'Repositionnez la puce et réessayez.',"
+      },
+      {
+        "text": "Encodage étiquette",
+        "line": 765,
+        "context": "const Text('Encodage étiquette',"
+      },
+      {
+        "text": "Touchez le compteur pour voir la liste",
+        "line": 772,
+        "context": "? 'Touchez le compteur pour voir la liste'"
+      },
+      {
+        "text": "Écriture EPC · Puce vierge",
+        "line": 773,
+        "context": ": 'Écriture EPC · Puce vierge',"
+      },
+      {
+        "text": "s' : '",
+        "line": 807,
+        "context": "'$_encodedCount encodé${_encodedCount > 1 ? 's' : ''}',"
+      },
+      {
+        "text": "Scannez le code article",
+        "line": 870,
+        "context": "const Text('Scannez le code article',"
+      },
+      {
+        "text": "Pointez le pistolet vers le code-barres du produit",
+        "line": 876,
+        "context": "Text('Pointez le pistolet vers le code-barres du produit',"
+      },
+      {
+        "text": "Annuler",
+        "line": 894,
+        "context": "child: const Text('Annuler',"
+      },
+      {
+        "text": "Article introuvable",
+        "line": 935,
+        "context": "'Article introuvable',"
+      },
+      {
+        "text": "Prêt",
+        "line": 1068,
+        "context": "const Text('Prêt',"
+      },
+      {
+        "text": "Chargement article...",
+        "line": 1099,
+        "context": "Text('Chargement article...',"
+      },
+      {
+        "text": "Puce déjà utilisée",
+        "line": 1169,
+        "context": "Text('Puce déjà utilisée',"
+      },
+      {
+        "text": "sur le bouton Zebra pour la réécrire.",
+        "line": 1178,
+        "context": "'sur le bouton Zebra pour la réécrire.',"
+      },
+      {
+        "text": "inventaire",
+        "line": 1200,
+        "context": "label: const Text('Lancer l\\'inventaire',"
+      },
+      {
+        "text": "Approchez la puce",
+        "line": 1264,
+        "context": "const Text('Approchez la puce',"
+      },
+      {
+        "text": "Encodage en cours...",
+        "line": 1311,
+        "context": "Text('Encodage en cours...',"
+      },
+      {
+        "text": "Ne bougez pas la puce du lecteur",
+        "line": 1317,
+        "context": "Text('Ne bougez pas la puce du lecteur',"
+      },
+      {
+        "text": "Transformation EPC",
+        "line": 1354,
+        "context": "Text('Transformation EPC',"
+      },
+      {
+        "text": "EPC usine",
+        "line": 1364,
+        "context": "label: 'EPC usine',"
+      },
+      {
+        "text": "Nouvel EPC",
+        "line": 1385,
+        "context": "label: 'Nouvel EPC',"
+      },
+      {
+        "text": "Encodage réussi !",
+        "line": 1433,
+        "context": "const Text('Encodage réussi !',"
+      },
+      {
+        "text": "Réessayer",
+        "line": 1531,
+        "context": "label: const Text('Réessayer',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_page.dart": [
+      {
+        "text": "3034', '3035",
+        "line": 37,
+        "context": "static const _headerOptions = ['3034', '3035'];"
+      },
+      {
+        "text": "Encodage",
+        "line": 201,
+        "context": "Tab(text: 'Encodage'),"
+      },
+      {
+        "text": "Contrôle",
+        "line": 202,
+        "context": "Tab(text: 'Contrôle'),"
+      },
+      {
+        "text": "Header étiquette vierge",
+        "line": 235,
+        "context": "title: 'Header étiquette vierge',"
+      },
+      {
+        "text": "Service RFID",
+        "line": 302,
+        "context": "'Service RFID',"
+      },
+      {
+        "text": "Encodage des puces",
+        "line": 312,
+        "context": "? 'Encodage des puces'"
+      },
+      {
+        "text": "Contrôle qualité",
+        "line": 313,
+        "context": ": 'Contrôle qualité',"
+      },
+      {
+        "text": "Connecté' : 'Déconnecté",
+        "line": 366,
+        "context": "connected != null ? 'Connecté' : 'Déconnecté',"
+      },
+      {
+        "text": "Lecteur RFID",
+        "line": 393,
+        "context": "'Lecteur RFID',"
+      },
+      {
+        "text": "Aucun lecteur disponible",
+        "line": 422,
+        "context": "child: Text('Aucun lecteur disponible',"
+      },
+      {
+        "text": "Choisir un header",
+        "line": 570,
+        "context": "'Choisir un header',"
+      },
+      {
+        "text": "Configuration requise",
+        "line": 631,
+        "context": "title: 'Configuration requise',"
+      },
+      {
+        "text": "① Connectez un lecteur RFID",
+        "line": 633,
+        "context": "'① Connectez un lecteur RFID',"
+      },
+      {
+        "text": "② Validez le header",
+        "line": 634,
+        "context": "'② Validez le header',"
+      },
+      {
+        "text": "③ Scan démarre automatiquement",
+        "line": 635,
+        "context": "'③ Scan démarre automatiquement',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_tag_finder_sheet.dart": [
+      {
+        "text": "event'] == 'tagFinding",
+        "line": 70,
+        "context": "if (event is Map && event['event'] == 'tagFinding') {"
+      },
+      {
+        "text": "Très loin",
+        "line": 125,
+        "context": "if (_proximity < 0.2) return 'Très loin';"
+      },
+      {
+        "text": "Très proche",
+        "line": 128,
+        "context": "if (_proximity < 0.8) return 'Très proche';"
+      },
+      {
+        "text": "Localisation de la puce",
+        "line": 166,
+        "context": "const Text('Localisation de la puce',"
+      }
+    ],
+    "lib\\features\\rfid\\providers\\rfid_provider.dart": [
+      {
+        "text": "event'] == 'disconnected",
+        "line": 111,
+        "context": "if (event['event'] == 'disconnected') {"
+      },
+      {
+        "text": "Lecteur déconnecté",
+        "line": 115,
+        "context": "error: 'Lecteur déconnecté',"
+      }
+    ],
+    "lib\\features\\rfid\\utils\\epc_calculator.dart": [
+      {
+        "text": "3034' + '0000000000",
+        "line": 8,
+        "context": "return '3034' + '0000000000' + serialHex;"
+      }
+    ],
+    "lib\\features\\SSE\\pages\\rfid_sse_list_page.dart": [
+      {
+        "text": "Encodages de la session",
+        "line": 124,
+        "context": "const Text('Encodages de la session',"
+      },
+      {
+        "text": "s' : '",
+        "line": 131,
+        "context": "'$total puce${total > 1 ? 's' : ''} encodée${total > 1 ? 's' : ''} au total',"
+      },
+      {
+        "text": "Rechercher par article, marque, EPC...",
+        "line": 179,
+        "context": "hintText: 'Rechercher par article, marque, EPC...',"
+      },
+      {
+        "text": "Puce encodée",
+        "line": 286,
+        "context": "const Text('Puce encodée',"
+      },
+      {
+        "text": "EPC copié !",
+        "line": 398,
+        "context": "content: const Text('EPC copié !'),"
+      },
+      {
+        "text": "EPC encodé",
+        "line": 425,
+        "context": "const Text('EPC encodé',"
+      },
+      {
+        "text": "Aucun encodage cette session",
+        "line": 486,
+        "context": "const Text('Aucun encodage cette session',"
+      },
+      {
+        "text": "Aucun résultat pour",
+        "line": 511,
+        "context": "Text('Aucun résultat pour \"$_searchQuery\"',"
+      }
+    ]
+  },
+  "arb_additions": {
+    "articleContentTypeApplicationJson": "Content-Type': 'application/json",
+    "articleAcceptApplicationJson": "Accept':       'application/json",
+    "articleUserAgentCapmobile10": "User-Agent':   'CapMobile/1.0",
+    "authContentTypeApplicationJson": "Content-Type': 'application/json",
+    "authAcceptApplicationJson": "Accept': 'application/json",
+    "authUserAgentCapmobile10": "User-Agent': 'CapMobile/1.0",
+    "authResponsableMagasin": "Responsable Magasin",
+    "authMagasinCentral": "Magasin Central",
+    "authMagasinNord": "Magasin Nord",
+    "datawedgeDatawedgeserviceInitialisProfil": "DataWedgeService initialisé + profil créé",
+    "expContentTypeApplicationJson": "Content-Type': 'application/json",
+    "expAcceptApplicationJson": "Accept':       'application/json",
+    "expUserAgentCapmobile10": "User-Agent':   'CapMobile/1.0",
+    "expAucunArticleTrouvPourCette": "Aucun article trouvé pour cette réception",
+    "expPasDeConnexionRSeau": "Pas de connexion réseau",
+    "expDLaiDPassR": "Délai dépassé, réessayez",
+    "promoErreurChargementOpRations": "Erreur chargement opérations",
+    "promoListopListopJoin": "listOp': listOp.join(',",
+    "promoContentTypeApplicationJson": "Content-Type': 'application/json",
+    "promoMessageFdsMisesJourAvec": "message'] ?? 'FDS mises à jour avec succès",
+    "qcContentTypeApplicationJson": "Content-Type': 'application/json",
+    "qcAcceptApplicationJson": "Accept':       'application/json",
+    "qcUserAgentCapmobile10": "User-Agent':   'CapMobile/1.0",
+    "qcCodemodAsString": "codeMod'] as String? ?? '",
+    "qcCodemodIntrouvable": "codeMod introuvable",
+    "qcPasDeConnexionRSeau": "Pas de connexion réseau",
+    "qcAucunColisTrouvPourCe": "Aucun colis trouvé pour ce code modèle",
+    "rfidContentTypeApplicationJson": "Content-Type': 'application/json",
+    "rfidAcceptApplicationJson": "Accept':       'application/json",
+    "rfidUserAgentCapmobile10": "User-Agent':   'CapMobile/1.0",
+    "rfidPasDeConnexionRSeau": "Pas de connexion réseau",
+    "articleLibarticleAsString": "libArticle']    as String? ?? '",
+    "articleLibrayonAsString": "libRayon']      as String? ?? '",
+    "articleLibsaisonAsString": "libSaison']     as String? ?? '",
+    "articleLibfamilleAsString": "libFamille']    as String? ?? '",
+    "articleLibsousfamilleAsString": "libSousFamille']as String? ?? '",
+    "articleLibthemeAsString": "libTheme']      as String? ?? '",
+    "articleCodemodAsString": "codeMod']       as String? ?? '",
+    "articleGencodeAsString": "gencode']       as String? ?? '",
+    "articleLibtailleAsString": "libTaille']     as String? ?? '",
+    "articleMarqueAsString": "marque']        as String? ?? '",
+    "articleCodefsrAsString": "codeFsr']       as String? ?? '",
+    "articleGtinAsString": "gtin']          as String? ?? '",
+    "articleLibcolorisAsString": "libColoris']    as String? ?? '",
+    "articleCoderayonAsString": "codeRayon']     as String? ?? '",
+    "articleCodefamilleAsString": "codeFamille']   as String? ?? '",
+    "articleCodessfamilleAsString": "codeSsFamille'] as String? ?? '",
+    "articleCodemarqueAsString": "codeMarque']    as String? ?? '",
+    "articleCodemarcheAsString": "codeMarche']    as String? ?? '",
+    "articleException": "Exception: ', '",
+    "collaborateurNomAsString": "nom'] as String? ?? '",
+    "collaborateurPrenomAsString": "prenom'] as String? ?? '",
+    "collaborateurEmailcollabAsString": "emailCollab'] as String? ?? '",
+    "collaborateurTypecollablibelleAsString": "typeCollabLibelle'] as String? ?? '",
+    "collaborateurPicturelinkAsString": "pictureLink'] as String? ?? '",
+    "collaborateurNommagAsString": "nomMag'] as String? ?? '",
+    "authException": "Exception: ', '",
+    "expEanTostring": "ean']?.toString()       ?? '",
+    "expGtinTostring": "gtin']?.toString()      ?? '",
+    "expLibtailleTostring": "libTaille']?.toString() ?? '",
+    "expSourceTostring": "source']?.toString()      ?? '",
+    "expCoderecepTostring": "codeRecep']?.toString()   ?? '",
+    "expNommagTostring": "nomMag']?.toString()      ?? '",
+    "expNommagdestTostring": "nomMagDest']?.toString()  ?? '",
+    "expContrLeExp": "CONTRÔLE EXP",
+    "expRCeptionExpDition": "Réception · Expédition",
+    "expConnectedDisconnected": "Connected' : 'Disconnected",
+    "expRfidReader": "RFID Reader",
+    "expNoReaderAvailable": "No reader available",
+    "expAbordLeCodeMagasin": "abord le code magasin",
+    "expLeScanDuCodeR": "Le scan du code réception affiche automatiquement",
+    "expLesArticlesAttendusDansCe": "les articles attendus dans ce colis.",
+    "expCodeMagasin": "Code magasin",
+    "expChargementDeLaRCeption": "Chargement de la réception...",
+    "expUneErreurEstSurvenue": "Une erreur est survenue",
+    "expScannerNouveau": "Scanner à nouveau",
+    "expDe": "De",
+    "expVers": "Vers",
+    "expS": "s' : '",
+    "expConnectezUnLecteurRfidAvant": "Connectez un lecteur RFID avant de commencer.",
+    "expLancerLeContrLeRfid": "Lancer le contrôle RFID",
+    "expLectureEnAttente": "Lecture...' : 'En attente",
+    "expAucunLecteurConnect": "Aucun lecteur connecté",
+    "expTaille": "Taille",
+    "expAttendu": "Attendu",
+    "expLu": "Lu",
+    "expStatut": "Statut",
+    "expConformeCart": "Conforme' : 'Écart",
+    "expDMarrerLeContrLe": "Démarrer le contrôle",
+    "expArrTerLaLecture": "Arrêter la lecture",
+    "expConforme": "Conforme' :",
+    "expRefaire": "Refaire",
+    "expTerminer": "Terminer",
+    "expException": "Exception: ', '",
+    "expEventTag": "event'] == 'tag",
+    "inventoryConnexion": "Connexion...",
+    "inventoryChoisirUnLecteur": "Choisir un lecteur",
+    "inventoryInventaireRfid": "INVENTAIRE RFID",
+    "inventoryStockLocalisationRssi": "Stock & localisation RSSI",
+    "inventoryInventaireEnCoursInventaireArr": "Inventaire en cours' : 'Inventaire arrêté",
+    "inventoryAppuyezSurDMarrerPour": "Appuyez sur Démarrer pour lancer",
+    "inventoryTotalReads": "Total Reads",
+    "inventoryTagsUniques": "Tags Uniques",
+    "inventoryCadence": "Cadence",
+    "inventoryDurE": "Durée",
+    "inventoryArrTerLInventaire": "Arrêter l'inventaire",
+    "inventoryDMarrerLInventaire": "Démarrer l'inventaire",
+    "inventoryAucunTagPourLeMoment": "Aucun tag pour le moment",
+    "tagsDTailDesTags": "DÉTAIL DES TAGS",
+    "tagsTagsUniques": "Tags uniques",
+    "tagsTotalLectures": "Total lectures",
+    "tagsAucunTagTrouv": "Aucun tag trouvé",
+    "tagsLancezUnInventairePourLire": "Lancez un inventaire pour lire des tags",
+    "controlPucesViergesNonEncodEs": "Puces vierges (Non encodées)",
+    "controlPucesEncodEs": "Puces encodées",
+    "controlToutesLesPuces": "Toutes les puces",
+    "controlDTecteLesPucesCorrectement": "Détecte les puces correctement encodées (3039...)",
+    "controlAfficheToutesLesPucesD": "Affiche toutes les puces détectées sans filtre",
+    "controlEventTag": "event'] == 'tag",
+    "controlEventDisconnected": "event'] == 'disconnected",
+    "controlLecteurDConnect": "Lecteur déconnecté",
+    "inventoryName": "name'] ?? '",
+    "inventoryEventTag": "event'] == 'tag",
+    "inventoryMemorybankdataAsString": "memoryBankData'] as String? ?? '",
+    "inventoryTiddataAsString": "tidData'] as String? ?? '",
+    "inventoryEventDisconnected": "event'] == 'disconnected",
+    "inventoryLecteurDConnect": "Lecteur déconnecté",
+    "operationException": "Exception: ', '",
+    "operationREssayer": "Réessayer",
+    "operationAucuneNouveautDansCetteOp": "Aucune nouveauté dans cette opération",
+    "operationAucunArticleDansCetteOp": "Aucun article dans cette opération",
+    "operationLesNouveautS": "les nouveautés",
+    "operationArticle": "Article",
+    "operationPvIni": "PV Ini",
+    "operationPromo": "Promo",
+    "operationStock": "Stock",
+    "operationNouveaut": "NOUVEAUTÉ",
+    "promoChecDeLaMiseJour": "Échec de la mise à jour des FDS",
+    "promoMettreJourMesFds": "Mettre à jour mes FDS :)",
+    "promoOpRationsCommerciales": "Opérations Commerciales",
+    "promoREssayer": "Réessayer",
+    "promoAucuneOpRationCommercialeDisponible": "Aucune opération commerciale disponible",
+    "promoAucuneOpRationSurCette": "Aucune opération sur cette période",
+    "promoRInitialiserLeFiltre": "Réinitialiser le filtre",
+    "promoSLectionnezUneOuPlusieurs": "Sélectionnez une ou plusieurs opérations à vérifier",
+    "promoActiveInactive": "Active' : 'Inactive",
+    "promoApplicationEnseigne": "Application Enseigne",
+    "promoApplicationProduit": "Application Produit",
+    "promoConsulterTarif": "Consulter Tarif",
+    "promoScannerUnArticle": "Scanner un article",
+    "promoSaisirLeGencode": "Saisir le gencode",
+    "promoEx34544068037110": "Ex: 34544068037110",
+    "promoAnnuler": "Annuler",
+    "promoVRifier": "Vérifier",
+    "promoConnectedDisconnected": "Connected' : 'Disconnected",
+    "promoRfidReader": "RFID Reader",
+    "promoNoReaderAvailable": "No reader available",
+    "promoVRificationEnCours": "Vérification en cours...",
+    "promoArticleVRifier": "article à vérifier",
+    "promoScannerUnAutreArticle": "Scanner un autre article",
+    "promoEnPourcentage": "EN POURCENTAGE",
+    "promoException": "Exception: ', '",
+    "qcCodecolisAsString": "CodeColis']     as String? ?? '",
+    "qcSupecommandeAsString": "SupeCommande']  as String? ?? '",
+    "qcCodesaisonAsString": "CodeSaison']    as String? ?? '",
+    "qcImgAsString": "Img'] as String? ?? '",
+    "qcCodeAsString": "code']        as String? ?? '",
+    "qcMarqueAsString": "marque']      as String? ?? '",
+    "qcSaisonAsString": "saison']      as String? ?? '",
+    "qcRayonAsString": "rayon']       as String? ?? '",
+    "qcFamilleAsString": "famille']     as String? ?? '",
+    "qcSousfamilleAsString": "sousFamille'] as String? ?? '",
+    "qcFullControlPartialControl": "Full Control' : 'Partial Control",
+    "qcReadingWaiting": "Reading...' : 'Waiting",
+    "qcFullControl": "Full Control",
+    "qcNoReaderConnected": "No reader connected",
+    "qcSize": "Size",
+    "qcExpected": "Expected",
+    "qcRead": "Read",
+    "qcStatus": "Status",
+    "qcCompliantDiscrepancy": "Compliant' : 'Discrepancy",
+    "qcPleaseConnectAnRfidReader": "Please connect an RFID reader before starting.",
+    "qcStartControl": "Start control",
+    "qcStopReading": "Stop reading",
+    "qcRedo": "Redo",
+    "qcFinish": "Finish",
+    "qcS": "s' : '",
+    "qcCompliant": "Compliant' :",
+    "qcEmdkScanDemarre": "EMDK scan demarre",
+    "qcReplaceall": "', '').replaceAll(",
+    "qcQcRfid": "QC RFID",
+    "qcQualityControl": "Quality Control",
+    "qcConnectedDisconnected": "Connected' : 'Disconnected",
+    "qcRfidReader": "RFID Reader",
+    "qcNoReaderAvailable": "No reader available",
+    "qcScanTheArticleCode": "Scan the article code",
+    "qcScanningTheBarcodeWill": "Scanning the barcode will",
+    "qcAutomaticallyRetrieveTheListOf": "automatically retrieve the list of associated parcels.",
+    "qcRetrievingModelCode": "Retrieving model code...",
+    "qcLoadingParcels": "Loading parcels...",
+    "qcAnErrorOccurred": "An error occurred",
+    "qcScanAgain": "Scan again",
+    "qcScanParcel": "Scan Parcel",
+    "qcAssortments": "Assortments",
+    "qcPairs": "Pairs",
+    "qcColisSLectionnS": "Colis sélectionnés",
+    "qcConnectezUnLecteurRfidAvant": "Connectez un lecteur RFID avant de lancer.",
+    "qcScannezAuMoinsUnColis": "Scannez au moins un colis",
+    "qcException": "Exception: ', '",
+    "qcCodesaison": "', codeSaison: '",
+    "qcEventTag": "event'] == 'tag",
+    "qcIgnorPuceVierge": "IGNORÉ: puce vierge",
+    "qcIgnorArticleNull": "IGNORÉ: article null",
+    "qcIgnorCodemodDiffRent": "IGNORÉ: codeMod différent",
+    "rfidNameInconnu": "name']    ?? 'Inconnu",
+    "rfidAddressNA": "address'] ?? 'N/A",
+    "rfidEncodageTiquette": "Encodage étiquette",
+    "rfidCritureEpcDansUnePuce": "Écriture EPC dans une puce vierge",
+    "rfidInventaire": "Inventaire",
+    "rfidLectureComptageDesPuces": "Lecture & comptage des puces",
+    "rfidLocalisationRssi": "Localisation RSSI",
+    "rfidRechercheArticleParSignal": "Recherche article par signal",
+    "rfidAuditStock": "Audit stock",
+    "rfidVRificationRapprochement": "Vérification & rapprochement",
+    "rfidPucesVierges": "Puces vierges",
+    "rfidPucesEncodEs": "Puces encodées",
+    "rfidToutesLesPuces": "Toutes les puces",
+    "rfidArrTer": "Arrêter",
+    "rfidVierges": "Vierges",
+    "rfidEncodEs": "Encodées",
+    "rfidTotal": "Total",
+    "rfidEnCours": "En cours",
+    "rfidAucunTagPourCeFiltre": "Aucun tag pour ce filtre",
+    "rfidEncodE": ": 'Encodée",
+    "rfidTypeDeContrLe": "Type de contrôle",
+    "rfidArrTerLeContrLe": "Arrêter le contrôle",
+    "rfidDMarrerLeContrLe": "Démarrer le contrôle",
+    "rfidConnectezUnLecteurOngletEncodage": "Connectez un lecteur (onglet Encodage)",
+    "rfidRInitialiser": "Réinitialiser",
+    "rfidVoirLesRSultats": "Voir les résultats",
+    "rfidViergesValue": "Vierges',  value:",
+    "rfidEncodEsValue": "Encodées', value:",
+    "rfidTotalValue": "Total',    value:",
+    "rfidOngletEncodagePourEnConnecter": "onglet Encodage pour en connecter un.",
+    "rfidOpRation": "opération.",
+    "rfidConfirmerLaPuceDTect": "Confirmer la puce détectée",
+    "rfidTiquettePhysique": "étiquette physique.",
+    "rfidNumRoDeSRie": "Numéro de série détecté",
+    "rfidEpcNonCalcul": "EPC non calculé",
+    "rfidRepositionnezLaPuceEtR": "Repositionnez la puce et réessayez.",
+    "rfidTouchezLeCompteurPourVoir": "Touchez le compteur pour voir la liste",
+    "rfidCritureEpcPuceVierge": "Écriture EPC · Puce vierge",
+    "rfidS": "s' : '",
+    "rfidScannezLeCodeArticle": "Scannez le code article",
+    "rfidPointezLePistoletVersLe": "Pointez le pistolet vers le code-barres du produit",
+    "rfidAnnuler": "Annuler",
+    "rfidArticleIntrouvable": "Article introuvable",
+    "rfidPrT": "Prêt",
+    "rfidChargementArticle": "Chargement article...",
+    "rfidPuceDJUtilisE": "Puce déjà utilisée",
+    "rfidSurLeBoutonZebraPour": "sur le bouton Zebra pour la réécrire.",
+    "rfidApprochezLaPuce": "Approchez la puce",
+    "rfidEncodageEnCours": "Encodage en cours...",
+    "rfidNeBougezPasLaPuce": "Ne bougez pas la puce du lecteur",
+    "rfidTransformationEpc": "Transformation EPC",
+    "rfidEpcUsine": "EPC usine",
+    "rfidNouvelEpc": "Nouvel EPC",
+    "rfidEncodageRUssi": "Encodage réussi !",
+    "rfidREssayer": "Réessayer",
+    "rfid30343035": "3034', '3035",
+    "rfidEncodage": "Encodage",
+    "rfidContrLe": "Contrôle",
+    "rfidHeaderTiquetteVierge": "Header étiquette vierge",
+    "rfidServiceRfid": "Service RFID",
+    "rfidEncodageDesPuces": "Encodage des puces",
+    "rfidContrLeQualit": "Contrôle qualité",
+    "rfidConnectDConnect": "Connecté' : 'Déconnecté",
+    "rfidLecteurRfid": "Lecteur RFID",
+    "rfidAucunLecteurDisponible": "Aucun lecteur disponible",
+    "rfidChoisirUnHeader": "Choisir un header",
+    "rfidConfigurationRequise": "Configuration requise",
+    "rfidConnectezUnLecteurRfid": "① Connectez un lecteur RFID",
+    "rfidValidezLeHeader": "② Validez le header",
+    "rfidScanDMarreAutomatiquement": "③ Scan démarre automatiquement",
+    "rfidEventTagfinding": "event'] == 'tagFinding",
+    "rfidTrSLoin": "Très loin",
+    "rfidTrSProche": "Très proche",
+    "rfidLocalisationDeLaPuce": "Localisation de la puce",
+    "rfidEventDisconnected": "event'] == 'disconnected",
+    "rfidLecteurDConnect": "Lecteur déconnecté",
+    "epc30340000000000": "3034' + '0000000000",
+    "rfidEncodagesDeLaSession": "Encodages de la session",
+    "rfidRechercherParArticleMarqueEpc": "Rechercher par article, marque, EPC...",
+    "rfidPuceEncodE": "Puce encodée",
+    "rfidEpcCopi": "EPC copié !",
+    "rfidEpcEncod": "EPC encodé",
+    "rfidAucunEncodageCetteSession": "Aucun encodage cette session",
+    "rfidAucunRSultatPour": "Aucun résultat pour"
+  }
+}

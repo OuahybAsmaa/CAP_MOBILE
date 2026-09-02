@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import 'package:cap_mobile/l10n/app_localizations.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -130,35 +130,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // ── Infos personnelles ──
-                        _sectionTitle(AppLocalizations.of(context)!.profileSectionPersonal),
+                        _sectionTitle(context.f.profileSectionPersonal),
                         const SizedBox(height: 12),
                         _buildInfoCard([
                           _InfoRow(
                             icon: Icons.badge_outlined,
-                            label: AppLocalizations.of(context)!.profileLabelCode,
+                            label: context.f.profileLabelCode,
                             value: collab.codeCollab.toString(),
                             color: _C.primary,
                           ),
                           _InfoRow(
                             icon: Icons.person_outline_rounded,
-                            label: AppLocalizations.of(context)!.profileLabelFullName,
+                            label: context.f.profileLabelFullName,
                             value: collab.fullName,
                             color: _C.primary,
                           ),
                           _InfoRow(
                             icon: Icons.email_outlined,
-                            label: AppLocalizations.of(context)!.profileLabelEmail,
+                            label: context.f.profileLabelEmail,
                             value: collab.email.isNotEmpty
                                 ? collab.email
-                                : AppLocalizations.of(context)!.profileLabelEmailEmpty,
+                                : context.f.profileLabelEmailEmpty,
                             color: _C.primary,
                           ),
                           _InfoRow(
                             icon: Icons.phone_outlined,
-                            label: AppLocalizations.of(context)!.profileLabelPhone,
+                            label: context.f.profileLabelPhone,
                             value: collab.tel != null && collab.tel!.isNotEmpty
                                 ? collab.tel!
-                                : AppLocalizations.of(context)!.profileLabelPhoneEmpty,
+                                : context.f.profileLabelPhoneEmpty,
                             color: _C.primary,
                           ),
                         ]),
@@ -166,26 +166,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         const SizedBox(height: 24),
 
                         // ── Informations magasin ──
-                        _sectionTitle(AppLocalizations.of(context)!.profileSectionStore),
+                        _sectionTitle(context.f.profileSectionStore),
                         const SizedBox(height: 12),
                         _buildInfoCard([
                           _InfoRow(
                             icon: Icons.store_outlined,
-                            label: AppLocalizations.of(context)!.profileLabelStore,
+                            label: context.f.profileLabelStore,
                             value: collab.magasinNom,
                             color: const Color(0xFF059669),
                           ),
                           _InfoRow(
                             icon: Icons.work_outline_rounded,
-                            label: AppLocalizations.of(context)!.profileLabelType,
+                            label: context.f.profileLabelType,
                             value: collab.typeCollabLibelle,
                             color: const Color(0xFF059669),
                           ),
                           if (collab.estAdministrateur)
                             _InfoRow(
                               icon: Icons.admin_panel_settings_outlined,
-                              label: AppLocalizations.of(context)!.profileLabelRights,
-                              value: AppLocalizations.of(context)!.profileLabelAdmin,
+                              label: context.f.profileLabelRights,
+                              value: context.f.profileLabelAdmin,
                               color: const Color(0xFFD97706),
                               chip: true,
                             ),
@@ -207,7 +207,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                             ),
                             icon: const Icon(Icons.logout_rounded, size: 18),
                             label: Text(
-                              AppLocalizations.of(context)!.profileLogout,
+                              context.f.profileLogout,
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 15,

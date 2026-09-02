@@ -1,0 +1,634 @@
+{
+  "files": {
+    "lib\\features\\exp_control\\pages\\exp_control_page.dart": [
+      {
+        "text": "No reader available",
+        "line": 291,
+        "context": "child: Text('No reader available',"
+      },
+      {
+        "text": "Scanner à nouveau",
+        "line": 604,
+        "context": "label: const Text('Scanner à nouveau'),"
+      },
+      {
+        "text": "Lancer le contrôle RFID",
+        "line": 910,
+        "context": "label: const Text('Lancer le contrôle RFID',"
+      },
+      {
+        "text": "De",
+        "line": 700,
+        "context": "label: 'De',"
+      },
+      {
+        "text": "Vers",
+        "line": 712,
+        "context": "label: 'Vers',"
+      }
+    ],
+    "lib\\features\\exp_control\\pages\\exp_inventory_page.dart": [
+      {
+        "text": "Taille",
+        "line": 331,
+        "context": "child: Text('Taille',"
+      },
+      {
+        "text": "Attendu",
+        "line": 338,
+        "context": "child: Text('Attendu',"
+      },
+      {
+        "text": "Lu",
+        "line": 346,
+        "context": "child: Text('Lu',"
+      },
+      {
+        "text": "Statut",
+        "line": 354,
+        "context": "child: Text('Statut',"
+      },
+      {
+        "text": "— En attente du lancement —",
+        "line": 545,
+        "context": "child: Text('— En attente du lancement —',"
+      },
+      {
+        "text": "Démarrer le contrôle",
+        "line": 658,
+        "context": "label: const Text('Démarrer le contrôle',"
+      },
+      {
+        "text": "Arrêter la lecture",
+        "line": 684,
+        "context": "label: const Text('Arrêter la lecture',"
+      },
+      {
+        "text": "Refaire",
+        "line": 763,
+        "context": "label: const Text('Refaire',"
+      },
+      {
+        "text": "Terminer",
+        "line": 786,
+        "context": "label: const Text('Terminer',"
+      }
+    ],
+    "lib\\features\\inventory\\pages\\inventory_page.dart": [
+      {
+        "text": "Connexion...",
+        "line": 149,
+        "context": "Text('Connexion...'),"
+      },
+      {
+        "text": "Choisir un lecteur",
+        "line": 155,
+        "context": "hint: const Text('Choisir un lecteur'),"
+      },
+      {
+        "text": "Total Reads",
+        "line": 429,
+        "context": "label: 'Total Reads',"
+      },
+      {
+        "text": "Tags Uniques",
+        "line": 436,
+        "context": "label: 'Tags Uniques',"
+      },
+      {
+        "text": "Cadence",
+        "line": 443,
+        "context": "label: 'Cadence',"
+      },
+      {
+        "text": "Durée",
+        "line": 450,
+        "context": "label: 'Durée',"
+      }
+    ],
+    "lib\\features\\promo\\pages\\operation_products_page.dart": [
+      {
+        "text": "Réessayer",
+        "line": 62,
+        "context": "label: const Text('Réessayer'),"
+      },
+      {
+        "text": "les nouveautés",
+        "line": 169,
+        "context": "const Text('les nouveautés',"
+      },
+      {
+        "text": "Article",
+        "line": 189,
+        "context": "child: Text('Article',"
+      },
+      {
+        "text": "PV Ini",
+        "line": 194,
+        "context": "child: Text('PV Ini', textAlign: TextAlign.center,"
+      },
+      {
+        "text": "Promo",
+        "line": 200,
+        "context": "child: Text('Promo', textAlign: TextAlign.center,"
+      },
+      {
+        "text": "Stock",
+        "line": 206,
+        "context": "child: Text('Stock', textAlign: TextAlign.center,"
+      },
+      {
+        "text": "NOUVEAUTÉ",
+        "line": 261,
+        "context": "child: const Text('NOUVEAUTÉ',"
+      }
+    ],
+    "lib\\features\\promo\\pages\\promo_operations_page.dart": [
+      {
+        "text": "Opérations Commerciales",
+        "line": 162,
+        "context": "child: Text('Opérations Commerciales',"
+      },
+      {
+        "text": "Réessayer",
+        "line": 283,
+        "context": "label: const Text('Réessayer'),"
+      },
+      {
+        "text": "Aucune opération commerciale disponible",
+        "line": 296,
+        "context": "child: Text('Aucune opération commerciale disponible',"
+      },
+      {
+        "text": "Aucune opération sur cette période",
+        "line": 309,
+        "context": "const Text('Aucune opération sur cette période',"
+      },
+      {
+        "text": "Réinitialiser le filtre",
+        "line": 313,
+        "context": "child: const Text('Réinitialiser le filtre'),"
+      }
+    ],
+    "lib\\features\\promo\\pages\\promo_scan_page.dart": [
+      {
+        "text": "Saisir le gencode",
+        "line": 176,
+        "context": "title: const Text('Saisir le gencode',"
+      },
+      {
+        "text": "Annuler",
+        "line": 198,
+        "context": "child: const Text('Annuler'),"
+      },
+      {
+        "text": "Vérifier",
+        "line": 204,
+        "context": "child: const Text('Vérifier'),"
+      },
+      {
+        "text": "No reader available",
+        "line": 318,
+        "context": "child: Text('No reader available',"
+      },
+      {
+        "text": "Vérification en cours...",
+        "line": 395,
+        "context": "Text('Vérification en cours...',"
+      },
+      {
+        "text": "Scanner un article",
+        "line": 439,
+        "context": "const Text('Scanner un article',"
+      },
+      {
+        "text": "Scanner un autre article",
+        "line": 476,
+        "context": "label: const Text('Scanner un autre article',"
+      },
+      {
+        "text": "Ex: 34544068037110",
+        "line": 187,
+        "context": "hintText: 'Ex: 34544068037110',"
+      }
+    ],
+    "lib\\features\\QC\\pages\\qc_inventory_page.dart": [
+      {
+        "text": "Size",
+        "line": 369,
+        "context": "child: Text('Size',"
+      },
+      {
+        "text": "Expected",
+        "line": 373,
+        "context": "child: Text('Expected',"
+      },
+      {
+        "text": "Read",
+        "line": 378,
+        "context": "child: Text('Read',"
+      },
+      {
+        "text": "Status",
+        "line": 383,
+        "context": "child: Text('Status',"
+      },
+      {
+        "text": "— Waiting to start —",
+        "line": 554,
+        "context": "child: Text('— Waiting to start —',"
+      },
+      {
+        "text": "Start control",
+        "line": 648,
+        "context": "label: const Text('Start control',"
+      },
+      {
+        "text": "Stop reading",
+        "line": 674,
+        "context": "label: const Text('Stop reading',"
+      },
+      {
+        "text": "Redo",
+        "line": 735,
+        "context": "label: const Text('Redo',"
+      },
+      {
+        "text": "Finish",
+        "line": 758,
+        "context": "label: const Text('Finish',"
+      }
+    ],
+    "lib\\features\\QC\\pages\\qc_page.dart": [
+      {
+        "text": "No reader available",
+        "line": 348,
+        "context": "child: Text('No reader available',"
+      },
+      {
+        "text": "Scan again",
+        "line": 588,
+        "context": "label: const Text('Scan again'),"
+      },
+      {
+        "text": "Assortments",
+        "line": 768,
+        "context": "label: 'Assortments',"
+      },
+      {
+        "text": "Pairs",
+        "line": 776,
+        "context": "label: 'Pairs',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_constants.dart": [
+      {
+        "text": "Encodage étiquette",
+        "line": 48,
+        "context": "label: 'Encodage étiquette',"
+      },
+      {
+        "text": "Inventaire",
+        "line": 56,
+        "context": "label: 'Inventaire',"
+      },
+      {
+        "text": "Localisation RSSI",
+        "line": 64,
+        "context": "label: 'Localisation RSSI',"
+      },
+      {
+        "text": "Audit stock",
+        "line": 72,
+        "context": "label: 'Audit stock',"
+      },
+      {
+        "text": "Écriture EPC dans une puce vierge",
+        "line": 49,
+        "context": "subtitle: 'Écriture EPC dans une puce vierge',"
+      },
+      {
+        "text": "Lecture & comptage des puces",
+        "line": 57,
+        "context": "subtitle: 'Lecture & comptage des puces',"
+      },
+      {
+        "text": "Recherche article par signal",
+        "line": 65,
+        "context": "subtitle: 'Recherche article par signal',"
+      },
+      {
+        "text": "Vérification & rapprochement",
+        "line": 73,
+        "context": "subtitle: 'Vérification & rapprochement',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_control_results_page.dart": [
+      {
+        "text": "Arrêter",
+        "line": 61,
+        "context": "label: const Text('Arrêter',"
+      },
+      {
+        "text": "En cours",
+        "line": 114,
+        "context": "const Text('En cours',"
+      },
+      {
+        "text": "Vierges",
+        "line": 81,
+        "context": "label: 'Vierges',"
+      },
+      {
+        "text": "Encodées",
+        "line": 89,
+        "context": "label: 'Encodées',"
+      },
+      {
+        "text": "Total",
+        "line": 97,
+        "context": "label: 'Total',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_control_tab.dart": [
+      {
+        "text": "Réinitialiser",
+        "line": 308,
+        "context": "Text('Réinitialiser',"
+      },
+      {
+        "text": "Voir les résultats",
+        "line": 342,
+        "context": "Text('Voir les résultats',"
+      },
+      {
+        "text": "Vierges",
+        "line": 385,
+        "context": "_QuickStat(label: 'Vierges',  value: '${controlState.virginCount}',"
+      },
+      {
+        "text": "Encodées",
+        "line": 387,
+        "context": "_QuickStat(label: 'Encodées', value: '${controlState.encodedCount}',"
+      },
+      {
+        "text": "Total",
+        "line": 389,
+        "context": "_QuickStat(label: 'Total',    value: '${controlState.uniqueCount}',"
+      },
+      {
+        "text": "Type de contrôle",
+        "line": 61,
+        "context": "title: 'Type de contrôle',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_encoding_page.dart": [
+      {
+        "text": "Encodage étiquette",
+        "line": 765,
+        "context": "const Text('Encodage étiquette',"
+      },
+      {
+        "text": "Scannez le code article",
+        "line": 870,
+        "context": "const Text('Scannez le code article',"
+      },
+      {
+        "text": "Pointez le pistolet vers le code-barres du produit",
+        "line": 876,
+        "context": "Text('Pointez le pistolet vers le code-barres du produit',"
+      },
+      {
+        "text": "Annuler",
+        "line": 894,
+        "context": "child: const Text('Annuler',"
+      },
+      {
+        "text": "Prêt",
+        "line": 1068,
+        "context": "const Text('Prêt',"
+      },
+      {
+        "text": "Chargement article...",
+        "line": 1099,
+        "context": "Text('Chargement article...',"
+      },
+      {
+        "text": "Puce déjà utilisée",
+        "line": 1169,
+        "context": "Text('Puce déjà utilisée',"
+      },
+      {
+        "text": "Approchez la puce",
+        "line": 1264,
+        "context": "const Text('Approchez la puce',"
+      },
+      {
+        "text": "Encodage en cours...",
+        "line": 1311,
+        "context": "Text('Encodage en cours...',"
+      },
+      {
+        "text": "Ne bougez pas la puce du lecteur",
+        "line": 1317,
+        "context": "Text('Ne bougez pas la puce du lecteur',"
+      },
+      {
+        "text": "Transformation EPC",
+        "line": 1354,
+        "context": "Text('Transformation EPC',"
+      },
+      {
+        "text": "Encodage réussi !",
+        "line": 1433,
+        "context": "const Text('Encodage réussi !',"
+      },
+      {
+        "text": "Réessayer",
+        "line": 1531,
+        "context": "label: const Text('Réessayer',"
+      },
+      {
+        "text": "EPC usine",
+        "line": 1364,
+        "context": "label: 'EPC usine',"
+      },
+      {
+        "text": "Nouvel EPC",
+        "line": 1385,
+        "context": "label: 'Nouvel EPC',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_page.dart": [
+      {
+        "text": "Aucun lecteur disponible",
+        "line": 422,
+        "context": "child: Text('Aucun lecteur disponible',"
+      },
+      {
+        "text": "Header étiquette vierge",
+        "line": 235,
+        "context": "title: 'Header étiquette vierge',"
+      },
+      {
+        "text": "Configuration requise",
+        "line": 631,
+        "context": "title: 'Configuration requise',"
+      },
+      {
+        "text": "Prêt — scannez le code article",
+        "line": 648,
+        "context": "title: 'Prêt — scannez le code article',"
+      }
+    ],
+    "lib\\features\\rfid\\pages\\rfid_tag_finder_sheet.dart": [
+      {
+        "text": "Localisation de la puce",
+        "line": 166,
+        "context": "const Text('Localisation de la puce',"
+      }
+    ],
+    "lib\\features\\SSE\\pages\\rfid_sse_list_page.dart": [
+      {
+        "text": "Encodages de la session",
+        "line": 124,
+        "context": "const Text('Encodages de la session',"
+      },
+      {
+        "text": "Puce encodée",
+        "line": 286,
+        "context": "const Text('Puce encodée',"
+      },
+      {
+        "text": "EPC copié !",
+        "line": 398,
+        "context": "content: const Text('EPC copié !'),"
+      },
+      {
+        "text": "EPC encodé",
+        "line": 425,
+        "context": "const Text('EPC encodé',"
+      },
+      {
+        "text": "Aucun encodage cette session",
+        "line": 486,
+        "context": "const Text('Aucun encodage cette session',"
+      },
+      {
+        "text": "Aucun résultat pour",
+        "line": 511,
+        "context": "Text('Aucun résultat pour \"$_searchQuery\"',"
+      },
+      {
+        "text": "Rechercher par article, marque, EPC...",
+        "line": 179,
+        "context": "hintText: 'Rechercher par article, marque, EPC...',"
+      }
+    ],
+    "lib\\main.dart": [
+      {
+        "text": "CapMobile",
+        "line": 24,
+        "context": "title: 'CapMobile',"
+      }
+    ]
+  },
+  "arb_additions": {
+    "expNoReaderAvailable": "No reader available",
+    "expScannerNouveau": "Scanner à nouveau",
+    "expLancerLeContrLeRfid": "Lancer le contrôle RFID",
+    "expDe": "De",
+    "expVers": "Vers",
+    "expTaille": "Taille",
+    "expAttendu": "Attendu",
+    "expLu": "Lu",
+    "expStatut": "Statut",
+    "expEnAttenteDuLancement": "— En attente du lancement —",
+    "expDMarrerLeContrLe": "Démarrer le contrôle",
+    "expArrTerLaLecture": "Arrêter la lecture",
+    "expRefaire": "Refaire",
+    "expTerminer": "Terminer",
+    "inventoryConnexion": "Connexion...",
+    "inventoryChoisirUnLecteur": "Choisir un lecteur",
+    "inventoryTotalReads": "Total Reads",
+    "inventoryTagsUniques": "Tags Uniques",
+    "inventoryCadence": "Cadence",
+    "inventoryDurE": "Durée",
+    "operationREssayer": "Réessayer",
+    "operationLesNouveautS": "les nouveautés",
+    "operationArticle": "Article",
+    "operationPvIni": "PV Ini",
+    "operationPromo": "Promo",
+    "operationStock": "Stock",
+    "operationNouveaut": "NOUVEAUTÉ",
+    "promoOpRationsCommerciales": "Opérations Commerciales",
+    "promoREssayer": "Réessayer",
+    "promoAucuneOpRationCommercialeDisponible": "Aucune opération commerciale disponible",
+    "promoAucuneOpRationSurCette": "Aucune opération sur cette période",
+    "promoRInitialiserLeFiltre": "Réinitialiser le filtre",
+    "promoSaisirLeGencode": "Saisir le gencode",
+    "promoAnnuler": "Annuler",
+    "promoVRifier": "Vérifier",
+    "promoNoReaderAvailable": "No reader available",
+    "promoVRificationEnCours": "Vérification en cours...",
+    "promoScannerUnArticle": "Scanner un article",
+    "promoScannerUnAutreArticle": "Scanner un autre article",
+    "promoEx34544068037110": "Ex: 34544068037110",
+    "qcSize": "Size",
+    "qcExpected": "Expected",
+    "qcRead": "Read",
+    "qcStatus": "Status",
+    "qcWaitingToStart": "— Waiting to start —",
+    "qcStartControl": "Start control",
+    "qcStopReading": "Stop reading",
+    "qcRedo": "Redo",
+    "qcFinish": "Finish",
+    "qcNoReaderAvailable": "No reader available",
+    "qcScanAgain": "Scan again",
+    "qcAssortments": "Assortments",
+    "qcPairs": "Pairs",
+    "rfidEncodageTiquette": "Encodage étiquette",
+    "rfidInventaire": "Inventaire",
+    "rfidLocalisationRssi": "Localisation RSSI",
+    "rfidAuditStock": "Audit stock",
+    "rfidCritureEpcDansUnePuce": "Écriture EPC dans une puce vierge",
+    "rfidLectureComptageDesPuces": "Lecture & comptage des puces",
+    "rfidRechercheArticleParSignal": "Recherche article par signal",
+    "rfidVRificationRapprochement": "Vérification & rapprochement",
+    "rfidArrTer": "Arrêter",
+    "rfidEnCours": "En cours",
+    "rfidVierges": "Vierges",
+    "rfidEncodEs": "Encodées",
+    "rfidTotal": "Total",
+    "rfidRInitialiser": "Réinitialiser",
+    "rfidVoirLesRSultats": "Voir les résultats",
+    "rfidTypeDeContrLe": "Type de contrôle",
+    "rfidScannezLeCodeArticle": "Scannez le code article",
+    "rfidPointezLePistoletVersLe": "Pointez le pistolet vers le code-barres du produit",
+    "rfidAnnuler": "Annuler",
+    "rfidPrT": "Prêt",
+    "rfidChargementArticle": "Chargement article...",
+    "rfidPuceDJUtilisE": "Puce déjà utilisée",
+    "rfidApprochezLaPuce": "Approchez la puce",
+    "rfidEncodageEnCours": "Encodage en cours...",
+    "rfidNeBougezPasLaPuce": "Ne bougez pas la puce du lecteur",
+    "rfidTransformationEpc": "Transformation EPC",
+    "rfidEncodageRUssi": "Encodage réussi !",
+    "rfidREssayer": "Réessayer",
+    "rfidEpcUsine": "EPC usine",
+    "rfidNouvelEpc": "Nouvel EPC",
+    "rfidAucunLecteurDisponible": "Aucun lecteur disponible",
+    "rfidHeaderTiquetteVierge": "Header étiquette vierge",
+    "rfidConfigurationRequise": "Configuration requise",
+    "rfidPrTScannezLeCode": "Prêt — scannez le code article",
+    "rfidLocalisationDeLaPuce": "Localisation de la puce",
+    "rfidEncodagesDeLaSession": "Encodages de la session",
+    "rfidPuceEncodE": "Puce encodée",
+    "rfidEpcCopi": "EPC copié !",
+    "rfidEpcEncod": "EPC encodé",
+    "rfidAucunEncodageCetteSession": "Aucun encodage cette session",
+    "rfidAucunRSultatPour": "Aucun résultat pour",
+    "rfidRechercherParArticleMarqueEpc": "Rechercher par article, marque, EPC...",
+    "mainCapmobile": "CapMobile"
+  }
+}
