@@ -11,7 +11,7 @@ import '../../../features/article/models/article_model.dart';
 // ─────────────────────────────────────────────────────────────
 
 class ExpService {
-  static const String _baseUrl = ApiConstants.baseUrl;
+  static const String _baseUrl = ApiConstants.digitalStoreBaseUrl;
 
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',

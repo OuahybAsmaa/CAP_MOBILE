@@ -5,7 +5,7 @@ import '../../features/article/models/article_model.dart';
 import '../api/api_constants.dart';
 
 class ArticleService {
-  static const String _baseUrl = ApiConstants.baseUrl;
+  static const String _baseUrl = ApiConstants.digitalStoreBaseUrl;
 
   String _extractGencode(String scannedValue) {
     try {

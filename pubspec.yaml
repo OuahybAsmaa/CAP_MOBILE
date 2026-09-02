@@ -38,6 +38,7 @@ dependencies:
   flutter_datawedge: ^3.2.0
   vibration: ^3.1.7
   permission_handler: ^11.0.0
+  speech_to_text: ^7.4.0
   flutter_blue_plus: ^1.31.0
   http: ^1.2.0
   shared_preferences: ^2.2.2

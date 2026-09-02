@@ -5,7 +5,7 @@ import '../../../core/api/api_constants.dart';
 import '../../features/QC/models/qc_model.dart';
 import '../../features/article/models/article_model.dart';
 class QcService {
-  static const String _baseUrl = ApiConstants.baseUrl;
+  static const String _baseUrl = ApiConstants.digitalStoreBaseUrl;
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
     'Accept':       'application/json',

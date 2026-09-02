@@ -25,7 +25,7 @@ class ClientApiConstants {
       if (codeMag != null && codeMag > 0) 'codeMag': '$codeMag',
     };
 
-    return Uri.parse('${ApiConstants.baseUrl}/api/client/search')
+    return Uri.parse('${ApiConstants.digitalStoreBaseUrl}/api/client/search')
         .replace(queryParameters: params.isEmpty ? null : params);
   }
 }

@@ -8,10 +8,12 @@
 // Auteur         : H.AMIZIANI
 // =============================================================================
 
-import 'package:cap_mobile/core/apiswap/tarif/data/info_tarif_article_test_data.dart';
 import 'dart:math' as math;
 
+import 'package:cap_mobile/core/apiswap/shared/config/swapp_api_constants.dart';
+import 'package:cap_mobile/core/apiswap/tarif/providers/tarif_api_provider.dart';
 import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
+import 'package:cap_mobile/features/auth/providers/auth_provider.dart';
 import 'package:cap_mobile/swapp/models/info_tarif_article_item.dart';
 import 'package:cap_mobile/swapp/models/info_tarif_item.dart';
 import 'package:cap_mobile/swapp/pages/produit/detail_produit_page.dart';
@@ -65,17 +67,41 @@ class _InfoTarifArticlesPageState extends ConsumerState<InfoTarifArticlesPage> {
   bool _showPhotos = true;
   bool _filterNouveautes = false;
 
-  late List<InfoTarifArticleItem> _articles;
+  List<InfoTarifArticleItem> _articles = const [];
+  bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _articles = InfoTarifArticleDemoData.articlesForOperations(
-      widget.operations.map((o) => o.code),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadArticles());
   }
 
-  int get _inStockCount => _articles.where((a) => a.stock > 0).length;
+  Future<void> _loadArticles() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final collab = ref.read(authProvider).collaborateur;
+      final codeMag = SwappApiConstants.resolveCodeMagFromCollab(collab);
+      final articles = await ref.read(tarifApiServiceProvider).fetchArticles(
+        codeMag: codeMag,
+        operations: widget.operations,
+      );
+      if (!mounted) return;
+      setState(() {
+        _articles = articles;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
 
   Future<void> _openProduct(String codeArticle) async {
     HapticFeedback.lightImpact();
@@ -103,9 +129,7 @@ class _InfoTarifArticlesPageState extends ConsumerState<InfoTarifArticlesPage> {
     double dp(double v) => v * scale;
     final top = MediaQuery.paddingOf(context).top;
 
-    final base = _filterNouveautes
-        ? _articles.where((a) => a.isNouveaute).toList()
-        : List<InfoTarifArticleItem>.from(_articles);
+    final base = List<InfoTarifArticleItem>.from(_articles);
     base.sort((a, b) {
       final aOk = a.stock > 0;
       final bOk = b.stock > 0;
@@ -130,12 +154,36 @@ class _InfoTarifArticlesPageState extends ConsumerState<InfoTarifArticlesPage> {
               dp: dp,
               top: top,
               refCount: articles.length,
-              inStockCount: _inStockCount,
+              inStockCount: articles.where((a) => a.stock > 0).length,
               opLabel: opLabel,
               onBack: () => Navigator.pop(context),
             ),
             Expanded(
-              child: articles.isEmpty
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                  ? Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(dp(24)),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: SwappMenuColors.inkDim),
+                            ),
+                            SizedBox(height: dp(12)),
+                            FilledButton.icon(
+                              onPressed: _loadArticles,
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Réessayer'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : articles.isEmpty
                   ? _EmptyArticles(dp: dp)
                   : ListView(
                       padding: EdgeInsets.fromLTRB(
@@ -166,6 +214,7 @@ class _InfoTarifArticlesPageState extends ConsumerState<InfoTarifArticlesPage> {
                               dp: dp,
                               item: item,
                               showPhoto: _showPhotos,
+                              showNouveaute: _filterNouveautes,
                               onOpenDetail: () =>
                                   _openProduct(item.codeArticle),
                             ),
@@ -344,6 +393,8 @@ class _ToolsCard extends StatelessWidget {
           SwappCompactToolbar(
             buttonSize: dp(36),
             gap: dp(8),
+            showRanger: false,
+            showNfc: false,
             onQrScan: onScanQr,
           ),
         ],
@@ -399,7 +450,10 @@ class _FiltersCard extends StatelessWidget {
           SizedBox(height: dp(10)),
           Align(
             alignment: Alignment.centerRight,
-            child: _PriceColumnHeaders(dp: dp),
+            child: _PriceColumnHeaders(
+              dp: dp,
+              showNouveaute: filterNouveautes,
+            ),
           ),
         ],
       ),
@@ -409,15 +463,19 @@ class _FiltersCard extends StatelessWidget {
 
 class _PriceColumnHeaders extends StatelessWidget {
   final double Function(double) dp;
+  final bool showNouveaute;
 
-  const _PriceColumnHeaders({required this.dp});
+  const _PriceColumnHeaders({required this.dp, required this.showNouveaute});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _HeaderChip(dp: dp, label: 'NEW', bg: const Color(0xFFE53935)),
+        if (showNouveaute)
+          _HeaderChip(dp: dp, label: 'NEW', bg: const Color(0xFFE53935))
+        else
+          SizedBox(width: _priceSize(dp)),
         SizedBox(width: _priceGap(dp)),
         _HeaderChip(dp: dp, label: 'PV Ini', bg: SwappMenuColors.ink),
         SizedBox(width: _priceGap(dp)),
@@ -529,12 +587,14 @@ class _ArticleCard extends StatelessWidget {
   final double Function(double) dp;
   final InfoTarifArticleItem item;
   final bool showPhoto;
+  final bool showNouveaute;
   final VoidCallback onOpenDetail;
 
   const _ArticleCard({
     required this.dp,
     required this.item,
     required this.showPhoto,
+    required this.showNouveaute,
     required this.onOpenDetail,
   });
 
@@ -604,7 +664,7 @@ class _ArticleCard extends StatelessWidget {
     return Row(
       children: [
         if (leading != null) ...[leading, const Spacer()],
-        _NewBadge(dp: dp, visible: item.isNouveaute),
+        _NewBadge(dp: dp, visible: showNouveaute && item.isNouveaute),
         SizedBox(width: _priceGap(dp)),
         _PricePill(
           dp: dp,

@@ -5,6 +5,7 @@
 // Utilisé par Mes remises et Ajouter une remise.
 // =============================================================================
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cap_mobile/swapp/widgets/swapp_menu_kit.dart';
@@ -29,6 +30,23 @@ class RebBordereauImage extends StatelessWidget {
     if (_empty) return const _Missing();
 
     final path = source!.trim();
+
+    if (path.startsWith('data:image/')) {
+      try {
+        final separator = path.indexOf(',');
+        if (separator < 0) return const _Missing();
+        final bytes = base64Decode(path.substring(separator + 1));
+        return Image.memory(
+          bytes,
+          fit: fit,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (_, _, _) => const _Missing(),
+        );
+      } catch (_) {
+        return const _Missing();
+      }
+    }
 
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return Image.network(

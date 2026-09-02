@@ -9,10 +9,18 @@
 // =============================================================================
 
 import 'package:cap_mobile/core/apiswap/tarif/providers/info_tarif_provider.dart';
+import 'package:cap_mobile/core/apiswap/shared/config/swapp_api_constants.dart';
+import 'package:cap_mobile/core/widgets/app_popup.dart';
 import 'package:cap_mobile/core/theme/app_colors.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
+import 'package:cap_mobile/core/apiswap/produit/providers/swapp_product_provider.dart';
 import 'package:cap_mobile/features/auth/providers/auth_provider.dart';
 import 'package:cap_mobile/swapp/models/info_tarif_item.dart';
 import 'package:cap_mobile/swapp/pages/tarif/info_tarif_articles_page.dart';
+import 'package:cap_mobile/swapp/pages/tarif/info_tarif_product_page.dart';
+import 'package:cap_mobile/swapp/pages/produit/detail_produit_page.dart';
+import 'package:cap_mobile/swapp/widgets/qr_camera_scanner_page.dart';
+import 'package:cap_mobile/swapp/widgets/swapp_tool_buttons.dart';
 import 'package:cap_mobile/swapp/widgets/swapp_menu_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,48 +50,58 @@ class _InfoTarifPageState extends ConsumerState<InfoTarifPage> {
     final collab = ref.read(authProvider).collaborateur;
     await ref
         .read(infoTarifProvider.notifier)
-        .fetchOperations(codeMag: collab?.codeMag);
+        .fetchOperations(
+          codeMag: SwappApiConstants.resolveCodeMagFromCollab(collab),
+        );
   }
 
   Future<void> _syncFds() async {
     HapticFeedback.mediumImpact();
     final collab = ref.read(authProvider).collaborateur;
+    final codeCollab = collab?.codeCollab ?? 0;
+    if (codeCollab <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Utilisateur connecté invalide')),
+      );
+      return;
+    }
+    final confirmed = await AppPopup.confirm(
+      context,
+      icon: Icons.sync_rounded,
+      title: 'Mettre à jour les FDS ?',
+      message: 'Vous allez recalculer votre opération FDS, continuez ?',
+    );
+    if (confirmed != true || !mounted) return;
     await ref
         .read(infoTarifProvider.notifier)
-        .syncFds(codeMag: collab?.codeMag);
+        .syncFds(
+          codeMag: SwappApiConstants.resolveCodeMagFromCollab(collab),
+          codeCollab: codeCollab,
+        );
     if (!mounted) return;
+    final error = ref.read(infoTarifProvider).error;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('FDS mis à jour (mode démo)'),
+      SnackBar(
+        content: Text(error ?? 'FDS mis à jour'),
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
   Future<void> _openAgendaCalendar() async {
-    HapticFeedback.selectionClick();
     final state = ref.read(infoTarifProvider);
-    final picked = await showDatePicker(
+    final selection = await showModalBottomSheet<_TarifDateSelection>(
       context: context,
-      initialDate: state.filterDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
-      locale: const Locale('fr', 'FR'),
-      helpText: 'Choisir une date',
-      cancelText: 'Annuler',
-      confirmText: 'OK',
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: SwappMenuColors.indigo,
-            brightness: Brightness.light,
-          ),
-        ),
-        child: child!,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (context) => _InfoTarifDateFilterSheet(
+        initialDate: state.filterDate,
       ),
     );
-    if (!mounted || picked == null) return;
-    ref.read(infoTarifProvider.notifier).setFilterDate(picked);
+    if (!mounted || selection == null) return;
+    ref.read(infoTarifProvider.notifier).setFilterDate(selection.date);
   }
 
   void _toggleSelectAll() {
@@ -91,10 +109,71 @@ class _InfoTarifPageState extends ConsumerState<InfoTarifPage> {
     ref.read(infoTarifProvider.notifier).toggleSelectAllVisible();
   }
 
+  Future<void> _openProductCode(String code) async {
+    final value = code.trim();
+    if (value.isEmpty) return;
+    await ref
+        .read(swappProductProvider.notifier)
+        .fetchModele(codeModele: value);
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      DetailProduitPage.fadeRoute(loadDefaultProduct: false),
+    );
+  }
+
+  Future<void> _scanQr() async {
+    final code = await openQrCameraScanner(context, context.l10n);
+    if (!mounted || code == null) return;
+    await _openProductCode(code);
+  }
+
+  Future<void> _enterBarcode() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Text('Saisir un code-barres'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.search,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.keyboard_alt_rounded),
+            hintText: 'Code article ou code-barres',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Rechercher'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (!mounted || code == null) return;
+    await _openProductCode(code);
+  }
+
   void _openArticles(List<InfoTarifItem> operations) {
     if (operations.isEmpty) return;
     HapticFeedback.lightImpact();
     Navigator.push(context, InfoTarifArticlesPage.fadeRoute(operations));
+  }
+
+  void _openTarifProduct(List<InfoTarifItem> operations) {
+    if (operations.isEmpty) return;
+    HapticFeedback.lightImpact();
+    Navigator.push(context, InfoTarifProductPage.fadeRoute(operations));
   }
 
   List<InfoTarifItem> _selectedOperations(InfoTarifState state) {
@@ -122,12 +201,17 @@ class _InfoTarifPageState extends ConsumerState<InfoTarifPage> {
             onToggleSelectAll: _toggleSelectAll,
             allSelected: state.allVisibleSelected,
             hasOperations: state.visibleOperations.isNotEmpty,
-            onNext: selected.isNotEmpty ? () => _openArticles(selected) : null,
+            dateFilterActive: state.filterDate != null,
+            onNext: selected.isNotEmpty
+                ? () => _openTarifProduct(selected)
+                : null,
           ),
           _LegacyToolbar(
             dp: dp,
             isSyncing: state.isSyncingFds,
             onSyncFds: _syncFds,
+            onEnterBarcode: _enterBarcode,
+            onScanQr: _scanQr,
           ),
           _LegacySectionBanner(
             dp: dp,
@@ -217,6 +301,7 @@ class _LegacyAppBar extends StatelessWidget {
   final VoidCallback onToggleSelectAll;
   final bool allSelected;
   final bool hasOperations;
+  final bool dateFilterActive;
   final VoidCallback? onNext;
 
   const _LegacyAppBar({
@@ -226,6 +311,7 @@ class _LegacyAppBar extends StatelessWidget {
     required this.onToggleSelectAll,
     required this.allSelected,
     required this.hasOperations,
+    required this.dateFilterActive,
     required this.onNext,
   });
 
@@ -253,14 +339,10 @@ class _LegacyAppBar extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: onCalendar,
-            icon: Icon(
-              Icons.calendar_today_outlined,
-              color: Colors.white.withValues(alpha: 0.9),
-              size: dp(20),
-            ),
-            tooltip: 'Agenda',
+          _TarifCalendarButton(
+            dp: dp,
+            active: dateFilterActive,
+            onTap: onCalendar,
           ),
           IconButton(
             onPressed: hasOperations ? onToggleSelectAll : null,
@@ -288,15 +370,418 @@ class _LegacyAppBar extends StatelessWidget {
   }
 }
 
+/// Même bouton agenda que celui utilisé dans « Remises en banque ».
+class _TarifCalendarButton extends StatelessWidget {
+  const _TarifCalendarButton({
+    required this.dp,
+    required this.active,
+    required this.onTap,
+  });
+
+  final double Function(double) dp;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: active ? 'Modifier la date' : 'Filtrer par date',
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(dp(12)),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(dp(12)),
+        child: Container(
+          width: dp(38),
+          height: dp(38),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFC857), Color(0xFFF59E0B)],
+            ),
+            borderRadius: BorderRadius.circular(dp(12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.38)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x55F59E0B),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.calendar_month_rounded,
+                color: Colors.white,
+                size: dp(20),
+              ),
+              if (active)
+                Positioned(
+                  top: dp(4),
+                  right: dp(4),
+                  child: Container(
+                    width: dp(8),
+                    height: dp(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _TarifDateSelection {
+  const _TarifDateSelection(this.date);
+
+  final DateTime? date;
+}
+
+class _InfoTarifDateFilterSheet extends StatefulWidget {
+  const _InfoTarifDateFilterSheet({required this.initialDate});
+
+  final DateTime? initialDate;
+
+  @override
+  State<_InfoTarifDateFilterSheet> createState() =>
+      _InfoTarifDateFilterSheetState();
+}
+
+class _InfoTarifDateFilterSheetState
+    extends State<_InfoTarifDateFilterSheet> {
+  static final _dateFormat = DateFormat('dd/MM/yyyy');
+  static final _firstDate = DateTime(2020);
+  static final _lastDate = DateTime(2035, 12, 31);
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    final candidate = widget.initialDate ?? DateTime.now();
+    if (candidate.isBefore(_firstDate)) {
+      _selectedDate = _firstDate;
+    } else if (candidate.isAfter(_lastDate)) {
+      _selectedDate = _lastDate;
+    } else {
+      _selectedDate = DateTime(candidate.year, candidate.month, candidate.day);
+    }
+  }
+
+  void _selectQuickDate(DateTime date) {
+    HapticFeedback.selectionClick();
+    setState(() => _selectedDate = DateTime(date.year, date.month, date.day));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFFC857), Color(0xFFF59E0B)],
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x44F59E0B),
+                          blurRadius: 12,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Colors.white,
+                      size: 25,
+                    ),
+                  ),
+                  const SizedBox(width: 13),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Filtrer par date',
+                          style: TextStyle(
+                            color: Color(0xFF172033),
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Sélectionnez la date des opérations',
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                    color: const Color(0xFF64748B),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 15),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.event_available_rounded,
+                      color: Color(0xFF1D4ED8),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _dateFormat.format(_selectedDate),
+                      style: const TextStyle(
+                        color: Color(0xFF1E3A8A),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: const Color(0xFF24318F),
+                    brightness: Brightness.light,
+                  ),
+                  datePickerTheme: const DatePickerThemeData(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: CalendarDatePicker(
+                    key: ValueKey(_selectedDate),
+                    initialDate: _selectedDate,
+                    firstDate: _firstDate,
+                    lastDate: _lastDate,
+                    onDateChanged: (date) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selectedDate = date);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TarifQuickDateButton(
+                      label: 'Hier',
+                      onTap: () => _selectQuickDate(
+                        now.subtract(const Duration(days: 1)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _TarifQuickDateButton(
+                      label: "Aujourd’hui",
+                      emphasized: true,
+                      onTap: () => _selectQuickDate(now),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _TarifQuickDateButton(
+                      label: 'Demain',
+                      onTap: () => _selectQuickDate(
+                        now.add(const Duration(days: 1)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(
+                        context,
+                        const _TarifDateSelection(null),
+                      ),
+                      icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                      label: const Text('Tout afficher'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF475569),
+                        minimumSize: const Size(0, 48),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x4424318F),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: FilledButton.icon(
+                        onPressed: () => Navigator.pop(
+                          context,
+                          _TarifDateSelection(_selectedDate),
+                        ),
+                        icon: const Icon(Icons.check_rounded, size: 19),
+                        label: const Text('Appliquer'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          minimumSize: const Size(0, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TarifQuickDateButton extends StatelessWidget {
+  const _TarifQuickDateButton({
+    required this.label,
+    required this.onTap,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: emphasized ? const Color(0xFFE0E7FF) : Colors.white,
+    borderRadius: BorderRadius.circular(12),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: emphasized
+                ? const Color(0xFFA5B4FC)
+                : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: emphasized
+                ? const Color(0xFF3730A3)
+                : const Color(0xFF475569),
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class _LegacyToolbar extends StatelessWidget {
   final double Function(double) dp;
   final bool isSyncing;
   final VoidCallback onSyncFds;
+  final VoidCallback onEnterBarcode;
+  final VoidCallback onScanQr;
 
   const _LegacyToolbar({
     required this.dp,
     required this.isSyncing,
     required this.onSyncFds,
+    required this.onEnterBarcode,
+    required this.onScanQr,
   });
 
   @override
@@ -306,47 +791,63 @@ class _LegacyToolbar extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(dp(14), dp(10), dp(14), dp(10)),
       child: Row(
         children: [
-          Container(
-            width: dp(44),
-            height: dp(44),
-            decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(dp(12)),
-            ),
-            child: Icon(
-              Icons.qr_code_scanner_rounded,
-              color: AppColors.error,
-              size: dp(24),
-            ),
+          SwappCompactToolbar(
+            buttonSize: dp(48),
+            gap: dp(8),
+            showRanger: false,
+            showNfc: false,
+            onArticleSearch: onEnterBarcode,
+            onQrScan: onScanQr,
           ),
           SizedBox(width: dp(10)),
           Expanded(
-            child: FilledButton.tonalIcon(
-              onPressed: isSyncing ? null : onSyncFds,
-              style: FilledButton.styleFrom(
-                backgroundColor: SwappMenuColors.p2Bg,
-                foregroundColor: SwappMenuColors.p2,
-                padding: EdgeInsets.symmetric(
-                  horizontal: dp(12),
-                  vertical: dp(12),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(dp(24)),
-                ),
-              ),
-              icon: isSyncing
-                  ? SizedBox(
-                      width: dp(18),
-                      height: dp(18),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: SwappMenuColors.p2,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(dp(18)),
+              elevation: 7,
+              shadowColor: const Color(0xFF00695C).withValues(alpha: 0.45),
+              child: InkWell(
+                onTap: isSyncing ? null : onSyncFds,
+                borderRadius: BorderRadius.circular(dp(18)),
+                child: Ink(
+                  height: dp(48),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(dp(18)),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0C9B87), Color(0xFF006A61)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isSyncing)
+                        SizedBox(
+                          width: dp(18),
+                          height: dp(18),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      else
+                        Icon(Icons.sync_rounded, color: Colors.white, size: dp(20)),
+                      SizedBox(width: dp(7)),
+                      Flexible(
+                        child: Text(
+                          'Mettre à jour FDS',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: dp(11.5),
+                          ),
+                        ),
                       ),
-                    )
-                  : Icon(Icons.sync_rounded, size: dp(20)),
-              label: Text(
-                'Mettre à jour mes FDS :)',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: dp(12)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

@@ -73,6 +73,8 @@ class SwappCompactToolbar extends StatelessWidget {
   final VoidCallback? onNfc;
   final VoidCallback? onQrScan;
   final bool rangerActive;
+  final bool showRanger;
+  final bool showNfc;
 
   const SwappCompactToolbar({
     super.key,
@@ -83,6 +85,8 @@ class SwappCompactToolbar extends StatelessWidget {
     this.onNfc,
     this.onQrScan,
     this.rangerActive = false,
+    this.showRanger = true,
+    this.showNfc = true,
   });
 
   @override
@@ -97,23 +101,27 @@ class SwappCompactToolbar extends StatelessWidget {
           onTap: onArticleSearch,
           tooltip: 'Recherche article',
         ),
-        SizedBox(width: gap),
-        SwappToolButton(
-          icon: Icons.move_to_inbox_rounded,
-          color: AppColors.success,
-          size: buttonSize,
-          onTap: onRanger,
-          highlighted: rangerActive,
-          tooltip: 'Ranger',
-        ),
-        SizedBox(width: gap),
-        SwappToolButton(
-          icon: Icons.nfc_rounded,
-          color: AppColors.warning,
-          size: buttonSize,
-          onTap: onNfc,
-          tooltip: 'NFC',
-        ),
+        if (showRanger) ...[
+          SizedBox(width: gap),
+          SwappToolButton(
+            icon: Icons.move_to_inbox_rounded,
+            color: AppColors.success,
+            size: buttonSize,
+            onTap: onRanger,
+            highlighted: rangerActive,
+            tooltip: 'Ranger',
+          ),
+        ],
+        if (showNfc) ...[
+          SizedBox(width: gap),
+          SwappToolButton(
+            icon: Icons.nfc_rounded,
+            color: AppColors.warning,
+            size: buttonSize,
+            onTap: onNfc,
+            tooltip: 'NFC',
+          ),
+        ],
         SizedBox(width: gap),
         SwappToolButton(
           icon: Icons.qr_code_scanner_rounded,

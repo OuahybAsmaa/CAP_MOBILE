@@ -84,8 +84,6 @@ class InfoTarifNotifier extends StateNotifier<InfoTarifState> {
   Future<void> fetchOperations({int? codeMag}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      // TODO(API) : remplacer par _service.fetchInfoTarifs(codeMag: codeMag)
-      await Future<void>.delayed(const Duration(milliseconds: 350));
       final items = await _service.fetchOperations(codeMag: codeMag);
       state = state.copyWith(
         allOperations: items,
@@ -93,7 +91,10 @@ class InfoTarifNotifier extends StateNotifier<InfoTarifState> {
         selectedIds: {},
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
     }
   }
 
@@ -136,16 +137,17 @@ class InfoTarifNotifier extends StateNotifier<InfoTarifState> {
     }
   }
 
-  /// Sync FDS — placeholder en attendant l'endpoint réel.
-  Future<void> syncFds({int? codeMag}) async {
+  /// Lance la mise à jour FDS sur le serveur puis recharge la liste.
+  Future<void> syncFds({int? codeMag, required int codeCollab}) async {
     if (state.isSyncingFds) return;
     state = state.copyWith(isSyncingFds: true, clearError: true);
     try {
-      // TODO(API) : await _service.syncInfoTarifFds(codeMag: codeMag);
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+      await _service.updateFds(codeMag: codeMag, codeCollab: codeCollab);
       await fetchOperations(codeMag: codeMag);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
     } finally {
       state = state.copyWith(isSyncingFds: false);
     }

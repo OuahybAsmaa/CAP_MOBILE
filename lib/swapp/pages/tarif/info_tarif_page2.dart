@@ -9,6 +9,8 @@
 // =============================================================================
 
 import 'package:cap_mobile/core/apiswap/tarif/providers/info_tarif_provider.dart';
+import 'package:cap_mobile/core/apiswap/shared/config/swapp_api_constants.dart';
+import 'package:cap_mobile/core/widgets/app_popup.dart';
 import 'package:cap_mobile/features/auth/providers/auth_provider.dart';
 import 'package:cap_mobile/swapp/models/info_tarif_item.dart';
 import 'package:cap_mobile/swapp/pages/tarif/info_tarif_articles_page.dart';
@@ -51,19 +53,39 @@ class _InfoTarifPage2State extends ConsumerState<InfoTarifPage2> {
     final collab = ref.read(authProvider).collaborateur;
     await ref
         .read(infoTarifProvider.notifier)
-        .fetchOperations(codeMag: collab?.codeMag);
+        .fetchOperations(
+          codeMag: SwappApiConstants.resolveCodeMagFromCollab(collab),
+        );
   }
 
   Future<void> _syncFds() async {
     HapticFeedback.mediumImpact();
     final collab = ref.read(authProvider).collaborateur;
+    final codeCollab = collab?.codeCollab ?? 0;
+    if (codeCollab <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Utilisateur connecté invalide')),
+      );
+      return;
+    }
+    final confirmed = await AppPopup.confirm(
+      context,
+      icon: Icons.sync_rounded,
+      title: 'Mettre à jour les FDS ?',
+      message: 'Vous allez recalculer votre opération FDS, continuez ?',
+    );
+    if (confirmed != true || !mounted) return;
     await ref
         .read(infoTarifProvider.notifier)
-        .syncFds(codeMag: collab?.codeMag);
+        .syncFds(
+          codeMag: SwappApiConstants.resolveCodeMagFromCollab(collab),
+          codeCollab: codeCollab,
+        );
     if (!mounted) return;
+    final error = ref.read(infoTarifProvider).error;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('FDS mis à jour'),
+        content: Text(error ?? 'FDS mis à jour'),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

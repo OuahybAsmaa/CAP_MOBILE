@@ -44,27 +44,27 @@ class SwappApiConstants {
 
   /// Token JWT store-api (header Authorization: Bearer).
   static const String bearerToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2RlQ29sbGFiIjoxNTQsInRva2VuIjoiZWQ5NzRiNTAtNTI5NC00NGQzLTg0MDktZjYyOTlkOWI1NmRiIiwiaWF0IjoxNzg4MTQwMDgyLCJleHAiOjE3ODgxNDM2ODJ9.XNRFkbVD9iah-JbuBTNX4O6j9Qr28rkVdEQ5FwU0gkE';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2RlQ29sbGFiIjoxNTQsInRva2VuIjoiYzA1MDQ0ZDUtNDA1OS00ODlmLWEyZjMtZWUzOGIzNGI3NzkxIiwiaWF0IjoxNzg3NDQ1MjI1LCJleHAiOjE3ODc0NDg4MjV9.bFeLsy-YKwsrXy1qrjF8SqLNk798MMxvlEAWyzyR1g4';
 
   /// GET modèle global + stock magasin pour un codeMag donné.
   static String modeleGlobalUrl(String codeModele, int codeMag) =>
-      '${ApiConstants.baseUrl}/api/modele/$codeModele/mag/$codeMag/global';
+      '${ApiConstants.digitalStoreBaseUrl}/api/modele/$codeModele/mag/$codeMag/global';
 
   /// URL image produit (JPEG) sur le serveur.
   static String productPhotoUrl(String codeModele) =>
-      '${ApiConstants.baseUrl}/api/image/produit/$codeModele.jpg';
+      '${ApiConstants.digitalStoreBaseUrl}/api/image/produit/$codeModele.jpg';
 
   /// GET stock web SFS (Ship From Store) par taille.
   static String stockWebUrl(String codeModele) =>
-      '${ApiConstants.baseUrl}/api/stock/$codeModele/sfs';
+      '${ApiConstants.digitalStoreBaseUrl}/api/stock/$codeModele/sfs';
 
   /// GET stock magasins alentours (gencode + magasin de référence utilisateur).
   static String nearbyStockUrl(String codeArticle, int codeMag) =>
-      '${ApiConstants.baseUrl}/api/stock/$codeArticle/$codeMag/nearby';
+      '${ApiConstants.digitalStoreBaseUrl}/api/stock/$codeArticle/$codeMag/nearby';
 
   /// GET avis produit par code article (gencode) et code collaborateur.
   static String modeleReviewUrl(String codeArticle, int codeCollab) =>
-      '${ApiConstants.baseUrl}/api/modele/$codeArticle/review/$codeCollab';
+      '${ApiConstants.digitalStoreBaseUrl}/api/modele/$codeArticle/review/$codeCollab';
 
   // -------------------------------------------------------------------------
   // Remises en banque
@@ -72,10 +72,10 @@ class SwappApiConstants {
   // page Flutter ni aucun modèle métier ne devra être modifié.
   // -------------------------------------------------------------------------
   static String rebsUrl(int codeMag) =>
-      '${ApiConstants.baseUrl}/api/rebs/$codeMag';
+      '${ApiConstants.digitalStoreBaseUrl}/api/rebs/$codeMag';
 
   static String rebEncaissementsUrl(int codeMag, DateTime date) {
     final day = date.toIso8601String().split('T').first;
-    return '${ApiConstants.baseUrl}/api/rebs/$codeMag/encaissements?date=$day';
+    return '${ApiConstants.digitalStoreBaseUrl}/api/rebs/$codeMag/encaissements?date=$day';
   }
 }

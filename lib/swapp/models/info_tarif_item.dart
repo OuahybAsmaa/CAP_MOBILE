@@ -36,6 +36,9 @@ class InfoTarifItem {
   /// Identifiant unique pour sélection UI.
   String get id => code;
 
+  /// Code opération transmis par l'API dans le champ `codePromo`.
+  String get codePromo => code;
+
   /// Titre complet — « 3133 OP DEFAUTS ».
   String get displayTitle => '$code $label';
 
@@ -54,18 +57,21 @@ class InfoTarifItem {
   ///    "dateFin": "2026-09-07", "statut": "N" }`
   factory InfoTarifItem.fromJson(Map<String, dynamic> json) {
     return InfoTarifItem(
-      code: '${json['code'] ?? json['codeOp'] ?? ''}'.trim(),
-      label: '${json['libelle'] ?? json['label'] ?? ''}'.trim(),
+      code: '${json['codePromo'] ?? json['code'] ?? json['codeOp'] ?? ''}'
+          .trim(),
+      label:
+          '${json['libPromo'] ?? json['libelle'] ?? json['label'] ?? ''}'
+              .trim(),
       dateDebut: _parseDate(json['dateDebut']),
       dateFin: _parseDate(json['dateFin']),
-      statut: '${json['statut'] ?? 'N'}'.trim(),
+      statut: '${json['etatPromo'] ?? json['statut'] ?? 'N'}'.trim(),
     );
   }
 
   static DateTime _parseDate(Object? raw) {
     if (raw is String && raw.isNotEmpty) {
       final iso = DateTime.tryParse(raw);
-      if (iso != null) return iso;
+      if (iso != null) return iso.isUtc ? iso.toLocal() : iso;
       final parts = raw.split('/');
       if (parts.length == 3) {
         final d = int.tryParse(parts[0]);

@@ -1,3 +1,5 @@
+import 'package:cap_mobile/core/api/api_constants.dart';
+
 // =============================================================================
 // CapMobile — Swapp — Entité métier Remise En Banque
 // -----------------------------------------------------------------------------
@@ -30,6 +32,20 @@ class RebItem {
   final String? observations;
   final RebStatut statut;
 
+  /// Informations détaillées retournées par vstoreapi.
+  final DateTime? dateVente;
+  final DateTime? dateReb;
+  final String codeCaissiereEnc;
+  final String prenomCaissiereEnc;
+  final String? photoCaissiereEnc;
+  final String codeCaissiereReb;
+  final String prenomCaissiereReb;
+  final String? photoCaissiereReb;
+  final String? codeBanque;
+  final String? codeMediaBnq;
+  final String? codeMediaSig;
+  final String? signatureUrl;
+
   const RebItem({
     required this.numReb,
     required this.date,
@@ -42,6 +58,18 @@ class RebItem {
     this.photoUrl,
     this.bordereauUrl,
     this.observations,
+    this.dateVente,
+    this.dateReb,
+    this.codeCaissiereEnc = '',
+    this.prenomCaissiereEnc = '',
+    this.photoCaissiereEnc,
+    this.codeCaissiereReb = '',
+    this.prenomCaissiereReb = '',
+    this.photoCaissiereReb,
+    this.codeBanque,
+    this.codeMediaBnq,
+    this.codeMediaSig,
+    this.signatureUrl,
   });
 
   String get id => numReb;
@@ -73,6 +101,18 @@ class RebItem {
       bordereauUrl: bordereauUrl ?? this.bordereauUrl,
       observations: observations ?? this.observations,
       statut: statut ?? this.statut,
+      dateVente: dateVente,
+      dateReb: dateReb,
+      codeCaissiereEnc: codeCaissiereEnc,
+      prenomCaissiereEnc: prenomCaissiereEnc,
+      photoCaissiereEnc: photoCaissiereEnc,
+      codeCaissiereReb: codeCaissiereReb,
+      prenomCaissiereReb: prenomCaissiereReb,
+      photoCaissiereReb: photoCaissiereReb,
+      codeBanque: codeBanque,
+      codeMediaBnq: codeMediaBnq,
+      codeMediaSig: codeMediaSig,
+      signatureUrl: signatureUrl,
     );
   }
 
@@ -87,50 +127,102 @@ class RebItem {
     final collab = collabRaw is Map
         ? Map<String, dynamic>.from(collabRaw)
         : const <String, dynamic>{};
+    final dateVente = _parseNullableDate(json['dateVente'] ?? json['date']);
+    final dateReb = _parseNullableDate(json['dateReb'] ?? json['dateRemise']);
+    final codeEnc = '${json['codeCaissiereEnc'] ?? ''}'.trim();
+    final prenomEnc = '${json['prenomCaissiereEnc'] ?? ''}'.trim();
+    final codeReb = '${json['codeCaissiereReb'] ?? ''}'.trim();
+    final prenomReb = '${json['prenomCaissiereReb'] ?? ''}'.trim();
+    final resolvedDate = dateReb ?? dateVente ?? DateTime.now();
+    final rawNumReb = '${json['numReb'] ?? json['numeroReb'] ?? json['id'] ?? ''}'
+        .trim();
+    final resolvedNumReb = rawNumReb.isNotEmpty
+        ? rawNumReb
+        : 'ATT-${resolvedDate.millisecondsSinceEpoch}-$codeEnc';
+    final photoEnc = _resolveVstoreUrl(json['photoCaissiereEnc']);
+    final photoReb = _resolveVstoreUrl(json['photoCaissiereReb']);
+    final traite = dateReb != null || rawNumReb.isNotEmpty;
+
     return RebItem(
-      numReb: '${json['numReb'] ?? json['numeroReb'] ?? json['id'] ?? ''}'
-          .trim(),
-      date: _parseDate(
-        json['date'] ?? json['dateReb'] ?? json['dateRemise'],
-      ),
+      numReb: resolvedNumReb,
+      date: resolvedDate,
       codeCollab: _parseInt(
-        json['codeCollab'] ?? collab['codeCollab'] ?? collab['id'],
+        json['codeCollab'] ??
+            (codeReb.isNotEmpty
+                ? codeReb
+                : codeEnc.isNotEmpty
+                ? codeEnc
+                : null) ??
+            collab['codeCollab'] ??
+            collab['id'],
       ),
-      prenom: '${json['prenom'] ?? collab['prenom'] ?? ''}'.trim(),
+      prenom:
+          '${json['prenom'] ?? (prenomReb.isNotEmpty ? prenomReb : prenomEnc.isNotEmpty ? prenomEnc : null) ?? collab['prenom'] ?? ''}'
+              .trim(),
       nom: '${json['nom'] ?? collab['nom'] ?? ''}'.trim(),
       photoUrl: _nullableString(
-        json['photoUrl'] ?? collab['pictureLink'] ?? collab['photoUrl'],
+        json['photoUrl'] ??
+            (photoReb?.isNotEmpty == true
+                ? photoReb
+                : photoEnc?.isNotEmpty == true
+                ? photoEnc
+                : null) ??
+            collab['pictureLink'] ??
+            collab['photoUrl'],
       ),
       encaissement: _parseAmount(
-        json['encaissement'] ??
+        json['montantEncaisse'] ??
+            json['montantEncaisseReb'] ??
+            json['encaissement'] ??
             json['montantEncaissement'] ??
             json['montantCaisse'] ??
-            json['montant'],
+            json['montantEncaisse'],
       ),
       declareReb: _parseAmount(
         json['declareReb'] ??
             json['declare'] ??
             json['montantDeclare'] ??
             json['montantReb'] ??
+            json['montantEncaisseReb'] ??
+            json['montantEncaisse'] ??
             json['montant'],
       ),
-      bordereauUrl: _nullableString(
-        json['bordereauUrl'] ?? json['urlBordereau'] ?? json['bordereau'],
+      bordereauUrl: _resolveVstoreUrl(
+        json['justificatif'] ??
+            json['bordereauUrl'] ??
+            json['urlBordereau'] ??
+            json['bordereau'],
       ),
       observations: _nullableString(
-        json['observations'] ?? json['observation'] ?? json['commentaire'],
+        json['description'] ??
+            json['observations'] ??
+            json['observation'] ??
+            json['commentaire'],
       ),
-      statut: '${json['statut'] ?? json['libStatut'] ?? ''}'
-                  .trim()
-                  .toLowerCase() ==
-              'traitee'
+      statut: traite ||
+              '${json['statut'] ?? json['libStatut'] ?? ''}'
+                      .trim()
+                      .toLowerCase() ==
+                  'traitee'
           ? RebStatut.traitee
           : RebStatut.enAttente,
+      dateVente: dateVente,
+      dateReb: dateReb,
+      codeCaissiereEnc: codeEnc,
+      prenomCaissiereEnc: prenomEnc,
+      photoCaissiereEnc: photoEnc,
+      codeCaissiereReb: codeReb,
+      prenomCaissiereReb: prenomReb,
+      photoCaissiereReb: photoReb,
+      codeBanque: _nullableString(json['codeBanque']),
+      codeMediaBnq: _nullableString(json['codeMediaBnq']),
+      codeMediaSig: _nullableString(json['codeMediaSig']),
+      signatureUrl: _resolveVstoreUrl(json['signature']),
     );
   }
 
   static DateTime _parseDate(Object? raw) {
-    if (raw is DateTime) return raw;
+    if (raw is DateTime) return raw.toLocal();
     final value = '${raw ?? ''}'.trim();
     if (RegExp(r'^\d{8}$').hasMatch(value)) {
       return DateTime(
@@ -139,7 +231,27 @@ class RebItem {
         int.parse(value.substring(6, 8)),
       );
     }
-    return DateTime.tryParse(value) ?? DateTime.now();
+    return DateTime.tryParse(value)?.toLocal() ?? DateTime.now();
+  }
+
+  static DateTime? _parseNullableDate(Object? raw) {
+    if (raw == null || '$raw'.trim().isEmpty) return null;
+    return _parseDate(raw);
+  }
+
+  static String? _resolveVstoreUrl(Object? raw) {
+    final value = _nullableString(raw);
+    if (value == null) return null;
+    if (value.startsWith('data:image/')) return value;
+    final compact = value.replaceAll(RegExp(r'\s+'), '');
+    if (compact.length > 200 &&
+        RegExp(r'^[A-Za-z0-9+/]+={0,2}$').hasMatch(compact)) {
+      return 'data:image/jpeg;base64,$compact';
+    }
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    return ApiConstants.apiUrl(value);
   }
 
   static double _parseAmount(Object? raw) => raw is num

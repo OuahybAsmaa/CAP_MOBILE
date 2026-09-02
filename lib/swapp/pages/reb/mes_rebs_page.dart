@@ -14,7 +14,6 @@
 // =============================================================================
 
 import 'package:cap_mobile/core/theme/app_colors.dart';
-import 'package:cap_mobile/core/widgets/app_popup.dart';
 import 'package:cap_mobile/core/apiswap/reb/providers/reb_provider.dart';
 import 'package:cap_mobile/core/apiswap/shared/config/swapp_api_constants.dart';
 import 'package:cap_mobile/features/auth/providers/auth_provider.dart';
@@ -53,8 +52,6 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
   static final _dateFormat = DateFormat('dd/MM/yyyy');
 
   static const _green = Color(0xFF22C55E);
-  static const _greenBg = Color(0xFFDCFCE7);
-  static const _greenInk = Color(0xFF15803D);
 
   _RebTab _tab = _RebTab.enAttente;
   DateTimeRange? _dateRange;
@@ -62,10 +59,32 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRebs());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _loadBothRebs(reset: true),
+    );
   }
 
-  Future<void> _loadRebs({DateTimeRange? range}) {
+  Future<void> _loadBothRebs({
+    DateTimeRange? range,
+    bool reset = false,
+  }) async {
+    await _loadRebs(
+      range: range,
+      enAttente: true,
+      reset: reset,
+    );
+    if (!mounted) return;
+    await _loadRebs(
+      range: range,
+      enAttente: false,
+    );
+  }
+
+  Future<void> _loadRebs({
+    DateTimeRange? range,
+    required bool enAttente,
+    bool reset = false,
+  }) {
     final collab = ref.read(authProvider).collaborateur;
     final codeMag = SwappApiConstants.resolveCodeMagFromCollab(collab);
     return ref
@@ -74,7 +93,8 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
           codeMag: codeMag,
           du: range?.start,
           au: range?.end,
-          enAttente: true,
+          enAttente: enAttente,
+          reset: reset,
         );
   }
 
@@ -119,55 +139,49 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
     if (tab == _tab) return;
     HapticFeedback.selectionClick();
     setState(() => _tab = tab);
+    final expected = tab == _RebTab.enAttente
+        ? RebStatut.enAttente
+        : RebStatut.traitee;
+    final alreadyLoaded = ref
+        .read(rebProvider)
+        .items
+        .any((item) => item.statut == expected);
+    if (!alreadyLoaded) {
+      _loadRebs(
+        range: _dateRange,
+        enAttente: tab == _RebTab.enAttente,
+      );
+    }
   }
 
   /// Ouvre l'agenda de période : premier jour, dernier jour, puis « Valider ».
   Future<void> _selectDateRange() async {
     HapticFeedback.selectionClick();
-    final now = DateTime.now();
-    final selected = await showDateRangePicker(
+    final selected = await showModalBottomSheet<DateTimeRange>(
       context: context,
-      locale: const Locale('fr', 'FR'),
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: _dateRange,
-      helpText: 'SÉLECTIONNER UNE PÉRIODE',
-      fieldStartHintText: 'Date de début',
-      fieldEndHintText: 'Date de fin',
-      saveText: 'VALIDER',
-      cancelText: 'ANNULER',
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme.copyWith(
-            primary: SwappAttenteColors.headerNavy,
-            secondary: _green,
-          ),
-        ),
-        child: child!,
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: _rebHeaderDeep.withValues(alpha: 0.55),
+      builder: (_) => _RebDateFilterSheet(initialRange: _dateRange),
     );
     if (selected == null || !mounted) return;
     setState(() => _dateRange = selected);
-    await _loadRebs(range: selected);
+    await _loadBothRebs(
+      range: selected,
+      reset: true,
+    );
   }
 
-  /// Valide la remise — passage en « Traitées » (démo).
+  /// Ouvre l'écran vert avec la remise et son montant déjà sélectionnés.
   Future<void> _validerRemise(RebItem reb) async {
     HapticFeedback.mediumImpact();
-    final confirmed = await AppPopup.confirm(
+    final created = await Navigator.push<RebItem?>(
       context,
-      icon: Icons.account_balance_rounded,
-      title: 'Valider la remise ?',
-      message:
-          'Remise du ${_dateFormat.format(reb.date)} — ${reb.prenom}\n'
-          'Encaissement ${_euro.format(reb.encaissement)} · '
-          'déclaré ${_euro.format(reb.declareReb)}'
-          '${reb.ecart.abs() < 0.005 ? '' : '\nÉcart de ${_euro.format(reb.ecart)} à justifier.'}',
+      AjouterRebPage.fadeRoute(initialReb: reb),
     );
-    if (confirmed != true || !mounted) return;
-
-    ref.read(rebProvider.notifier).markAsTraitee(reb.id);
-    _snack('Remise du ${_dateFormat.format(reb.date)} validée (mode démo)');
+    if (!mounted || created == null) return;
+    setState(() => _tab = _RebTab.traitees);
+    _snack('Remise du ${_dateFormat.format(reb.date)} validée.');
   }
 
   /// Ouvre le formulaire. La création est effectuée par rebProvider ; au
@@ -179,8 +193,8 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
       AjouterRebPage.fadeRoute(),
     );
     if (!mounted || created == null) return;
-    setState(() => _tab = _RebTab.enAttente);
-    _snack('Nouvelle remise créée avec succès.');
+    setState(() => _tab = _RebTab.traitees);
+    _snack('Remise en banque validée avec succès.');
   }
 
   void _ajouterBordereau(RebItem reb) {
@@ -234,7 +248,7 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
               onFilterDate: _selectDateRange,
               onClearDateRange: () {
                 setState(() => _dateRange = null);
-                _loadRebs();
+                _loadBothRebs(reset: true);
               },
               onCreate: _openCreate,
               onBanque: () => _snack('Coordonnées bancaires — bientôt'),
@@ -279,8 +293,9 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
                           dateLabel: _dateFormat.format(reb.date),
                           encaissementLabel: _euro.format(reb.encaissement),
                           declareLabel: _euro.format(reb.declareReb),
-                          greenBg: _greenBg,
-                          greenInk: _greenInk,
+                          venteDateLabel: reb.dateVente == null
+                              ? _dateFormat.format(reb.date)
+                              : _dateFormat.format(reb.dateVente!),
                           onValider: () => _validerRemise(reb),
                           onAjouterBordereau: () => _ajouterBordereau(reb),
                         );
@@ -292,6 +307,300 @@ class _MesRebsPageState extends ConsumerState<MesRebsPage> {
       ),
     );
   }
+}
+
+class _RebDateFilterSheet extends StatefulWidget {
+  const _RebDateFilterSheet({this.initialRange});
+
+  final DateTimeRange? initialRange;
+
+  @override
+  State<_RebDateFilterSheet> createState() => _RebDateFilterSheetState();
+}
+
+class _RebDateFilterSheetState extends State<_RebDateFilterSheet> {
+  static final _format = DateFormat('dd/MM/yyyy');
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _startController;
+  late final TextEditingController _endController;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final range = widget.initialRange ??
+        DateTimeRange(
+          start: now.subtract(const Duration(days: 8)),
+          end: now,
+        );
+    _startController = TextEditingController(text: _format.format(range.start));
+    _endController = TextEditingController(text: _format.format(range.end));
+  }
+
+  @override
+  void dispose() {
+    _startController.dispose();
+    _endController.dispose();
+    super.dispose();
+  }
+
+  DateTime? _parse(String value) {
+    try {
+      return _format.parseStrict(value.trim());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _pick(TextEditingController controller) async {
+    FocusScope.of(context).unfocus();
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      locale: const Locale('fr', 'FR'),
+      initialDate: _parse(controller.text) ?? now,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+            primary: _rebHeaderIndigo,
+            secondary: const Color(0xFFF59E0B),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) controller.text = _format.format(picked);
+  }
+
+  void _preset(int days) {
+    final end = DateTime.now();
+    final start = end.subtract(Duration(days: days));
+    setState(() {
+      _startController.text = _format.format(start);
+      _endController.text = _format.format(end);
+    });
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final start = _parse(_startController.text)!;
+    final end = _parse(_endController.text)!;
+    if (end.isBefore(start)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La date de fin précède la date de début.')),
+      );
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    Navigator.pop(context, DateTimeRange(start: start, end: end));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      padding: EdgeInsets.only(bottom: bottom),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD7DAE8),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_rebHeaderIndigo, Color(0xFF6269E8)],
+                          ),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(
+                          Icons.date_range_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Filtrer par période',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: _rebHeaderDeep,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Saisissez une date ou utilisez le calendrier',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: SwappMenuColors.inkDim,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      for (final days in const [7, 15, 30]) ...[
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _preset(days),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: _rebHeaderIndigo,
+                              side: const BorderSide(color: Color(0xFFD9DCF5)),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text('$days jours'),
+                          ),
+                        ),
+                        if (days != 30) const SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _RebDateField(
+                          label: 'Du',
+                          controller: _startController,
+                          onCalendar: () => _pick(_startController),
+                          parser: _parse,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(8, 42, 8, 0),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          color: SwappMenuColors.inkDim,
+                        ),
+                      ),
+                      Expanded(
+                        child: _RebDateField(
+                          label: 'Au',
+                          controller: _endController,
+                          onCalendar: () => _pick(_endController),
+                          parser: _parse,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: const Text('Annuler'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton.icon(
+                          onPressed: _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _rebHeaderIndigo,
+                            minimumSize: const Size(0, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          icon: const Icon(Icons.sync_rounded),
+                          label: const Text('Appliquer et synchroniser'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RebDateField extends StatelessWidget {
+  const _RebDateField({
+    required this.label,
+    required this.controller,
+    required this.onCalendar,
+    required this.parser,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final VoidCallback onCalendar;
+  final DateTime? Function(String) parser;
+
+  @override
+  Widget build(BuildContext context) => TextFormField(
+    controller: controller,
+    keyboardType: TextInputType.datetime,
+    textInputAction: TextInputAction.next,
+    validator: (value) => parser(value ?? '') == null ? 'Date invalide' : null,
+    decoration: InputDecoration(
+      labelText: label,
+      hintText: 'jj/mm/aaaa',
+      filled: true,
+      fillColor: const Color(0xFFF5F6FC),
+      suffixIcon: IconButton(
+        onPressed: onCalendar,
+        icon: const Icon(Icons.calendar_month_rounded),
+      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFE1E4F0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: _rebHeaderIndigo, width: 2),
+      ),
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -384,6 +693,12 @@ class _Header extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                SizedBox(width: dp(8)),
+                _RebCalendarButton(
+                  dp: dp,
+                  active: dateRangeLabel != null,
+                  onTap: onFilterDate,
                 ),
                 SizedBox(width: dp(8)),
                 _RebHeaderGlassButton(
@@ -479,6 +794,78 @@ class _RebHeaderGlassButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RebCalendarButton extends StatelessWidget {
+  const _RebCalendarButton({
+    required this.dp,
+    required this.active,
+    required this.onTap,
+  });
+
+  final double Function(double) dp;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: active ? 'Modifier la période' : 'Filtrer par date',
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(dp(12)),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(dp(12)),
+        child: Container(
+          width: dp(38),
+          height: dp(38),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFC857), Color(0xFFF59E0B)],
+            ),
+            borderRadius: BorderRadius.circular(dp(12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.38)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x55F59E0B),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.calendar_month_rounded,
+                color: Colors.white,
+                size: dp(20),
+              ),
+              if (active)
+                Positioned(
+                  top: dp(4),
+                  right: dp(4),
+                  child: Container(
+                    width: dp(8),
+                    height: dp(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _RebHeaderStat extends StatelessWidget {
@@ -737,8 +1124,7 @@ class _RebCard extends StatelessWidget {
   final String dateLabel;
   final String encaissementLabel;
   final String declareLabel;
-  final Color greenBg;
-  final Color greenInk;
+  final String venteDateLabel;
   final VoidCallback onValider;
   final VoidCallback onAjouterBordereau;
 
@@ -748,8 +1134,7 @@ class _RebCard extends StatelessWidget {
     required this.dateLabel,
     required this.encaissementLabel,
     required this.declareLabel,
-    required this.greenBg,
-    required this.greenInk,
+    required this.venteDateLabel,
     required this.onValider,
     required this.onAjouterBordereau,
   });
@@ -757,7 +1142,7 @@ class _RebCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(dp(10), dp(11), dp(10), dp(11)),
+      padding: EdgeInsets.fromLTRB(dp(8), dp(9), dp(8), dp(9)),
       decoration: BoxDecoration(
         color: SwappMenuColors.panel,
         borderRadius: BorderRadius.circular(dp(18)),
@@ -769,43 +1154,79 @@ class _RebCard extends StatelessWidget {
           ),
         ],
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Colonne 1 — collaborateur + date
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: dp(
+              reb.statut == RebStatut.enAttente ? 200 : 190,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+            // Colonne 1 — avatar, date, puis signature
             Expanded(
-              flex: 22,
-              child: _ProfileColumn(dp: dp, reb: reb, dateLabel: dateLabel),
+              flex: 27,
+              child: _IdentitySignatureColumn(
+                dp: dp,
+                reb: reb,
+                dateLabel: dateLabel,
+                signatureUrl: reb.signatureUrl,
+                showSignature: reb.statut == RebStatut.traitee,
+                onMissingTap: onAjouterBordereau,
+              ),
             ),
             _VDivider(dp: dp),
-            // Colonne 2 — aperçu bordereau
+            // Colonne 2 — justificatif agrandi au milieu
             Expanded(
-              flex: 34,
+              flex: 35,
               child: _DocumentColumn(
                 dp: dp,
-                url: reb.bordereauUrl,
+                justificatifUrl: reb.bordereauUrl,
                 onMissingTap: onAjouterBordereau,
               ),
             ),
             _VDivider(dp: dp),
             // Colonne 3 — montants + action (sans badge Conforme)
             Expanded(
-              flex: 44,
+              flex: 38,
               child: _AmountsColumn(
                 dp: dp,
                 bordereauLabel: encaissementLabel,
                 declareLabel: declareLabel,
+                venteDateLabel: venteDateLabel,
+                caissiereLabel: reb.prenomCaissiereEnc,
+                banqueLabel: reb.codeBanque,
                 traite: reb.statut == RebStatut.traitee,
-                bordereauManquant: reb.bordereauManquant,
-                greenBg: greenBg,
-                greenInk: greenInk,
                 onValider: onValider,
-                onAjouterBordereau: onAjouterBordereau,
+              ),
+            ),
+              ],
+            ),
+          ),
+          if (reb.observations?.trim().isNotEmpty == true) ...[
+            SizedBox(height: dp(9)),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: dp(10),
+                vertical: dp(7),
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(dp(10)),
+              ),
+              child: Text(
+                reb.observations!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: dp(10.5),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -819,7 +1240,7 @@ class _VDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      margin: EdgeInsets.symmetric(horizontal: dp(5)),
+      margin: EdgeInsets.symmetric(horizontal: dp(3)),
       color: SwappMenuColors.ink.withValues(alpha: 0.08),
     );
   }
@@ -838,7 +1259,7 @@ class _ProfileColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = dp(54);
+    final size = dp(48);
 
     return Column(
       children: [
@@ -865,49 +1286,40 @@ class _ProfileColumn extends StatelessWidget {
                 )
               : _initiales(),
         ),
-        SizedBox(height: dp(7)),
+        SizedBox(height: dp(4)),
         Text(
-          reb.prenom,
+          reb.prenom.isEmpty ? 'Collaborateur' : reb.prenom,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: dp(13),
+            fontSize: dp(11.5),
             fontWeight: FontWeight.w900,
             color: SwappAttenteColors.headerNavy,
           ),
         ),
-        Text(
-          reb.initiales,
-          style: TextStyle(
-            fontSize: dp(10),
-            fontWeight: FontWeight.w700,
-            color: SwappMenuColors.inkDim,
+        SizedBox(height: dp(5)),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: dp(3),
+            vertical: dp(4),
           ),
-        ),
-        SizedBox(height: dp(8)),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.calendar_today_rounded,
-              size: dp(11),
-              color: SwappMenuColors.indigo,
+          decoration: BoxDecoration(
+            color: SwappMenuColors.p1Bg,
+            borderRadius: BorderRadius.circular(dp(8)),
+          ),
+          child: Text(
+            dateLabel,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: dp(9),
+              fontWeight: FontWeight.w900,
+              color: SwappAttenteColors.headerNavy,
+              height: 1,
             ),
-            SizedBox(width: dp(4)),
-            Flexible(
-              child: Text(
-                dateLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: dp(10.5),
-                  fontWeight: FontWeight.w800,
-                  color: SwappAttenteColors.headerNavy,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -925,102 +1337,36 @@ class _ProfileColumn extends StatelessWidget {
 
 class _DocumentColumn extends StatelessWidget {
   final double Function(double) dp;
-  final String? url;
+  final String? justificatifUrl;
   final VoidCallback onMissingTap;
 
   const _DocumentColumn({
     required this.dp,
-    required this.url,
+    required this.justificatifUrl,
     required this.onMissingTap,
   });
-
-  bool get _manquant => url == null || url!.trim().isEmpty;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'ENCAISSEMENT',
-          style: TextStyle(
-            fontSize: dp(9),
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.7,
-            color: SwappMenuColors.inkDim,
-          ),
-        ),
-        SizedBox(height: dp(7)),
         Expanded(
-          child: Material(
-            color: _manquant ? SwappMenuColors.p5Bg : SwappMenuColors.bg,
-            borderRadius: BorderRadius.circular(dp(10)),
-            child: InkWell(
-              onTap: _manquant ? onMissingTap : () => _openFullscreen(context),
-              borderRadius: BorderRadius.circular(dp(10)),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(dp(10)),
-                child: SizedBox(
-                  height: dp(88),
-                  child: _manquant
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_a_photo_rounded,
-                              size: dp(22),
-                              color: SwappMenuColors.p5,
-                            ),
-                            SizedBox(height: dp(5)),
-                            Text(
-                              'Photo manquante',
-                              style: TextStyle(
-                                fontSize: dp(10),
-                                fontWeight: FontWeight.w800,
-                                color: SwappMenuColors.p5,
-                              ),
-                            ),
-                          ],
-                        )
-                      : RebBordereauImage(source: url),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: dp(6)),
-        InkWell(
-          onTap: _manquant ? onMissingTap : () => _openFullscreen(context),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.open_in_full_rounded,
-                size: dp(12),
-                color: SwappMenuColors.indigo,
-              ),
-              SizedBox(width: dp(4)),
-              Flexible(
-                child: Text(
-                  'Voir en plein écran',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: dp(10.5),
-                    fontWeight: FontWeight.w700,
-                    color: SwappMenuColors.indigo,
-                  ),
-                ),
-              ),
-            ],
+          child: _MediaPreview(
+            dp: dp,
+            label: 'JUSTIFICATIF',
+            source: justificatifUrl,
+            missingIcon: Icons.add_a_photo_rounded,
+            onMissingTap: onMissingTap,
+            onOpen: () => _openFullscreen(context, justificatifUrl),
           ),
         ),
       ],
     );
   }
 
-  void _openFullscreen(BuildContext context) {
-    if (_manquant) return;
+  void _openFullscreen(BuildContext context, String? source) {
+    if (source == null || source.trim().isEmpty) return;
     HapticFeedback.selectionClick();
     showDialog<void>(
       context: context,
@@ -1030,7 +1376,155 @@ class _DocumentColumn extends StatelessWidget {
           Positioned.fill(
             child: InteractiveViewer(
               maxScale: 5,
-              child: RebBordereauImage(source: url, fit: BoxFit.contain),
+              child: RebBordereauImage(source: source, fit: BoxFit.contain),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.paddingOf(ctx).top + 8,
+            right: 12,
+            child: IconButton(
+              onPressed: () => Navigator.pop(ctx),
+              icon: const Icon(Icons.close_rounded, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MediaPreview extends StatelessWidget {
+  const _MediaPreview({
+    required this.dp,
+    required this.label,
+    required this.source,
+    required this.missingIcon,
+    required this.onMissingTap,
+    required this.onOpen,
+  });
+
+  final double Function(double) dp;
+  final String label;
+  final String? source;
+  final IconData missingIcon;
+  final VoidCallback onMissingTap;
+  final VoidCallback onOpen;
+
+  bool get _missing => source == null || source!.trim().isEmpty;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: dp(8),
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+          color: SwappMenuColors.inkDim,
+        ),
+      ),
+      SizedBox(height: dp(3)),
+      Expanded(
+        child: Material(
+          color: _missing ? SwappMenuColors.p5Bg : SwappMenuColors.bg,
+          borderRadius: BorderRadius.circular(dp(8)),
+          child: InkWell(
+            onTap: _missing ? onMissingTap : onOpen,
+            borderRadius: BorderRadius.circular(dp(8)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(dp(8)),
+              child: _missing
+                  ? Center(
+                      child: Icon(
+                        missingIcon,
+                        size: dp(18),
+                        color: SwappMenuColors.p5,
+                      ),
+                    )
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        RebBordereauImage(source: source),
+                        Positioned(
+                          right: dp(4),
+                          bottom: dp(4),
+                          child: Container(
+                            padding: EdgeInsets.all(dp(3)),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.55),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.open_in_full_rounded,
+                              size: dp(10),
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+class _IdentitySignatureColumn extends StatelessWidget {
+  const _IdentitySignatureColumn({
+    required this.dp,
+    required this.reb,
+    required this.dateLabel,
+    required this.signatureUrl,
+    required this.showSignature,
+    required this.onMissingTap,
+  });
+
+  final double Function(double) dp;
+  final RebItem reb;
+  final String dateLabel;
+  final String? signatureUrl;
+  final bool showSignature;
+  final VoidCallback onMissingTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = _ProfileColumn(dp: dp, reb: reb, dateLabel: dateLabel);
+    if (!showSignature) return Center(child: profile);
+
+    return Column(
+      children: [
+        profile,
+        SizedBox(height: dp(5)),
+        Expanded(
+          child: _MediaPreview(
+            dp: dp,
+            label: 'SIGNATURE',
+            source: signatureUrl,
+            missingIcon: Icons.draw_rounded,
+            onMissingTap: onMissingTap,
+            onOpen: () => _openFullscreen(context, signatureUrl),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openFullscreen(BuildContext context, String? source) {
+    if (source == null || source.trim().isEmpty) return;
+    HapticFeedback.selectionClick();
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.92),
+      builder: (ctx) => Stack(
+        children: [
+          Positioned.fill(
+            child: InteractiveViewer(
+              maxScale: 5,
+              child: RebBordereauImage(source: source, fit: BoxFit.contain),
             ),
           ),
           Positioned(
@@ -1051,23 +1545,21 @@ class _AmountsColumn extends StatelessWidget {
   final double Function(double) dp;
   final String bordereauLabel;
   final String declareLabel;
+  final String venteDateLabel;
+  final String caissiereLabel;
+  final String? banqueLabel;
   final bool traite;
-  final bool bordereauManquant;
-  final Color greenBg;
-  final Color greenInk;
   final VoidCallback onValider;
-  final VoidCallback onAjouterBordereau;
 
   const _AmountsColumn({
     required this.dp,
     required this.bordereauLabel,
     required this.declareLabel,
+    required this.venteDateLabel,
+    required this.caissiereLabel,
+    required this.banqueLabel,
     required this.traite,
-    required this.bordereauManquant,
-    required this.greenBg,
-    required this.greenInk,
     required this.onValider,
-    required this.onAjouterBordereau,
   });
 
   @override
@@ -1075,17 +1567,63 @@ class _AmountsColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: Icon(
-            Icons.chevron_right_rounded,
-            size: dp(18),
-            color: SwappMenuColors.inkDim,
+        SizedBox(height: dp(14)),
+        Container(
+          padding: EdgeInsets.all(dp(7)),
+          decoration: BoxDecoration(
+            color: SwappMenuColors.p1Bg,
+            borderRadius: BorderRadius.circular(dp(9)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.event_rounded,
+                size: dp(13),
+                color: SwappMenuColors.indigo,
+              ),
+              SizedBox(width: dp(5)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      venteDateLabel,
+                      style: TextStyle(
+                        fontSize: dp(9.5),
+                        fontWeight: FontWeight.w900,
+                        color: SwappAttenteColors.headerNavy,
+                      ),
+                    ),
+                    if (caissiereLabel.trim().isNotEmpty)
+                      Text(
+                        caissiereLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: dp(9),
+                          fontWeight: FontWeight.w700,
+                          color: SwappMenuColors.inkDim,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (banqueLabel?.trim().isNotEmpty == true)
+                Text(
+                  banqueLabel!,
+                  style: TextStyle(
+                    fontSize: dp(9),
+                    fontWeight: FontWeight.w900,
+                    color: SwappMenuColors.indigo,
+                  ),
+                ),
+            ],
           ),
         ),
+        SizedBox(height: dp(8)),
         _AmountLine(
           dp: dp,
-          label: 'BORDEREAU',
+          label: 'ENCAISSEMENT',
           value: bordereauLabel,
           color: _orangeAmount,
         ),
@@ -1098,47 +1636,17 @@ class _AmountsColumn extends StatelessWidget {
           value: declareLabel,
           color: SwappAttenteColors.headerNavy,
         ),
-        const Spacer(),
-        SizedBox(height: dp(10)),
-        if (traite)
-          Container(
-            padding: EdgeInsets.symmetric(vertical: dp(10)),
-            decoration: BoxDecoration(
-              color: greenBg,
-              borderRadius: BorderRadius.circular(dp(12)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.verified_rounded, size: dp(15), color: greenInk),
-                SizedBox(width: dp(5)),
-                Text(
-                  'Validée',
-                  style: TextStyle(
-                    fontSize: dp(11.5),
-                    fontWeight: FontWeight.w900,
-                    color: greenInk,
-                  ),
-                ),
-              ],
-            ),
-          )
-        else if (bordereauManquant)
+        if (traite) const Spacer(),
+        if (!traite) ...[
+          SizedBox(height: dp(7)),
           _ActionButton(
             dp: dp,
-            color: AppColors.warning,
-            icon: Icons.photo_camera_rounded,
-            label: 'Ajouter photo',
-            onTap: onAjouterBordereau,
-          )
-        else
-          _ActionButton(
-            dp: dp,
-            color: SwappAttenteColors.headerNavy,
-            icon: Icons.check_circle_outline_rounded,
-            label: 'Valider la remise',
+            color: AppColors.success,
+            icon: Icons.check_rounded,
+            label: 'Valider',
             onTap: onValider,
           ),
+        ],
       ],
     );
   }

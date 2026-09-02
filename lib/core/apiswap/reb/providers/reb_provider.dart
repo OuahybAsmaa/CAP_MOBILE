@@ -39,6 +39,7 @@ class RebNotifier extends StateNotifier<RebState> {
     DateTime? du,
     DateTime? au,
     bool enAttente = true,
+    bool reset = false,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -49,7 +50,17 @@ class RebNotifier extends StateNotifier<RebState> {
         enAttente: enAttente,
       )
         ..sort(RebItem.compareRecent);
-      state = state.copyWith(items: items, isLoading: false);
+      final preserved = reset
+          ? const <RebItem>[]
+          : state.items
+                .where(
+                  (item) => enAttente
+                      ? item.statut != RebStatut.enAttente
+                      : item.statut != RebStatut.traitee,
+                )
+                .toList(growable: false);
+      final merged = [...preserved, ...items]..sort(RebItem.compareRecent);
+      state = state.copyWith(items: merged, isLoading: false);
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -88,6 +99,18 @@ class RebNotifier extends StateNotifier<RebState> {
       ],
     );
     // TODO(API): PATCH /api/rebs/{id}/statut.
+  }
+
+  /// Remplace la ligne en attente par la remise finalisée créée par le
+  /// formulaire, sans conserver de doublon dans la liste locale.
+  void completePending(String pendingId, RebItem created) {
+    final completed = created.copyWith(statut: RebStatut.traitee);
+    final updated = state.items
+        .where((item) => item.id != pendingId && item.id != created.id)
+        .toList(growable: true)
+      ..add(completed)
+      ..sort(RebItem.compareRecent);
+    state = state.copyWith(items: updated);
   }
 }
 

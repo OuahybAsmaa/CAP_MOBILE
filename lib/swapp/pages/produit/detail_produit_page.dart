@@ -2395,7 +2395,7 @@ class _ReviewCard extends StatelessWidget {
     final isOwn = review.codeCollab == currentCodeCollab;
     final authorLabel = isOwn ? l10n.you : review.authorLabel;
     final apiPhotoUrl =
-        '${ApiConstants.baseUrl}/api/collaborateurs/${review.codeCollab}/photo';
+        '${ApiConstants.digitalStoreBaseUrl}/api/collaborateurs/${review.codeCollab}/photo';
     final reviewPhotoUrl = review.collab?.pictureLink.trim() ?? '';
     final photoUrl = reviewPhotoUrl.isNotEmpty ? reviewPhotoUrl : apiPhotoUrl;
     final dateLabel = review.dateReview != null

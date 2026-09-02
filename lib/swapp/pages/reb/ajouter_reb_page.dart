@@ -7,7 +7,9 @@
 // Architecture : état via rebProvider ; données démo isolées dans le service.
 // =============================================================================
 
+import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:cap_mobile/core/apiswap/reb/providers/reb_provider.dart';
 import 'package:cap_mobile/core/apiswap/shared/config/swapp_api_constants.dart';
@@ -20,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // Palette issue de la maquette HTML.
 const _bg = Color(0xFFEFF0F8);
@@ -38,10 +41,13 @@ const _slateTint = Color(0xFFEEEFF6);
 const _grayBorder = Color(0xFFE9EAF2);
 
 class AjouterRebPage extends ConsumerStatefulWidget {
-  const AjouterRebPage({super.key});
+  final RebItem? initialReb;
 
-  static Route<RebItem?> fadeRoute() => PageRouteBuilder<RebItem?>(
-    pageBuilder: (_, _, _) => const AjouterRebPage(),
+  const AjouterRebPage({super.key, this.initialReb});
+
+  static Route<RebItem?> fadeRoute({RebItem? initialReb}) =>
+      PageRouteBuilder<RebItem?>(
+    pageBuilder: (_, _, _) => AjouterRebPage(initialReb: initialReb),
     transitionsBuilder: (_, animation, _, child) =>
         FadeTransition(opacity: animation, child: child),
     transitionDuration: const Duration(milliseconds: 300),
@@ -63,6 +69,7 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
 
   final _observationController = TextEditingController();
   final _picker = ImagePicker();
+  final _speech = stt.SpeechToText();
   final _selectedIds = <String>{};
   final _strokes = <List<Offset>>[];
   List<Offset> _currentStroke = [];
@@ -71,6 +78,9 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
   List<RebEncaissementItem> _encaissements = const [];
   bool _loading = true;
   bool _pickingPhoto = false;
+  bool _isListening = false;
+  bool _isSigning = false;
+  String _speechPrefix = '';
   String? _photoPath;
   String? _loadError;
 
@@ -81,6 +91,14 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
   double get _totalSelected => _encaissements
       .where((item) => _selectedIds.contains(item.id))
       .fold(0.0, (total, item) => total + item.montant);
+
+  RebEncaissementItem? get _selectedEncaissement {
+    if (_selectedIds.length != 1) return null;
+    for (final item in _encaissements) {
+      if (item.id == _selectedIds.single) return item;
+    }
+    return null;
+  }
 
   int get _selectableCount =>
       _encaissements.where((item) => !item.dejaRemis).length;
@@ -96,6 +114,7 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
 
   @override
   void dispose() {
+    _speech.stop();
     _observationController.dispose();
     super.dispose();
   }
@@ -106,17 +125,33 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
       _loadError = null;
     });
     try {
-      final items = await ref
-          .read(rebProvider.notifier)
-          .fetchEncaissements(codeMag: _codeMag, date: _selectedDate);
+      var pending = widget.initialReb == null
+          ? ref
+              .read(rebProvider)
+              .items
+              .where((item) => item.statut == RebStatut.enAttente)
+              .toList(growable: false)
+          : <RebItem>[widget.initialReb!];
+      if (pending.isEmpty && widget.initialReb == null) {
+        await ref.read(rebProvider.notifier).fetchRebs(
+          codeMag: _codeMag,
+          enAttente: true,
+        );
+        pending = ref
+            .read(rebProvider)
+            .items
+            .where((item) => item.statut == RebStatut.enAttente)
+            .toList(growable: false);
+      }
+      final items = pending.map(_toEncaissement).toList(growable: false);
       if (!mounted) return;
       setState(() {
         _encaissements = items;
-        _selectedIds
-          ..clear()
-          ..addAll(
-            items.where((item) => !item.dejaRemis).map((item) => item.id),
-          );
+        _selectedIds.clear();
+        if (widget.initialReb != null && items.isNotEmpty) {
+          _selectedIds.add(items.first.id);
+          _selectedDate = widget.initialReb!.date;
+        }
         _loading = false;
       });
     } catch (error) {
@@ -128,11 +163,27 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
     }
   }
 
+  RebEncaissementItem _toEncaissement(RebItem reb) => RebEncaissementItem(
+    id: reb.id,
+    date: reb.dateVente ?? reb.date,
+    montant: reb.encaissement,
+    collaborateur: reb.prenomCaissiereEnc.trim().isNotEmpty
+        ? reb.prenomCaissiereEnc
+        : reb.prenom,
+    photoUrl: reb.photoCaissiereEnc ?? reb.photoUrl,
+  );
+
   void _toggleEncaissement(RebEncaissementItem item) {
     if (item.dejaRemis) return;
     HapticFeedback.selectionClick();
     setState(() {
-      if (!_selectedIds.add(item.id)) _selectedIds.remove(item.id);
+      if (_selectedIds.contains(item.id)) {
+        _selectedIds.clear();
+      } else {
+        _selectedIds
+          ..clear()
+          ..add(item.id);
+      }
     });
   }
 
@@ -150,7 +201,6 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
     );
     if (selected == null || !mounted) return;
     setState(() => _selectedDate = selected);
-    await _loadEncaissements();
   }
 
   Future<void> _pickProof(ImageSource source) async {
@@ -199,9 +249,112 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
     });
   }
 
+  Future<void> _toggleSpeech() async {
+    if (_isListening) {
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
+    final permission = await Permission.microphone.request();
+    if (!permission.isGranted) {
+      _snack('Autorisez le microphone pour dicter une observation.');
+      return;
+    }
+    final available = await _speech.initialize(
+      onStatus: (status) {
+        if (!mounted) return;
+        if (status == 'done' || status == 'notListening') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        if (!mounted) return;
+        setState(() => _isListening = false);
+        _snack('Reconnaissance vocale indisponible : ${error.errorMsg}');
+      },
+    );
+    if (!available || !mounted) {
+      _snack("La reconnaissance vocale n'est pas disponible sur cet appareil.");
+      return;
+    }
+
+    final existing = _observationController.text.trim();
+    _speechPrefix = existing.isEmpty ? '' : '$existing ';
+    setState(() => _isListening = true);
+    await _speech.listen(
+      localeId: 'fr_FR',
+      partialResults: true,
+      listenFor: const Duration(minutes: 1),
+      pauseFor: const Duration(seconds: 4),
+      onResult: (result) {
+        if (!mounted) return;
+        final value = '$_speechPrefix${result.recognizedWords}'.trim();
+        _observationController.value = TextEditingValue(
+          text: value,
+          selection: TextSelection.collapsed(offset: value.length),
+        );
+        if (result.finalResult) setState(() => _isListening = false);
+      },
+    );
+  }
+
+  Future<String> _encodeSignature() async {
+    final strokes = <List<Offset>>[
+      ..._strokes.where((stroke) => stroke.length > 1),
+      if (_currentStroke.length > 1) _currentStroke,
+    ];
+    final points = strokes.expand((stroke) => stroke).toList(growable: false);
+    final left = points.map((p) => p.dx).reduce((a, b) => a < b ? a : b);
+    final right = points.map((p) => p.dx).reduce((a, b) => a > b ? a : b);
+    final top = points.map((p) => p.dy).reduce((a, b) => a < b ? a : b);
+    final bottom = points.map((p) => p.dy).reduce((a, b) => a > b ? a : b);
+
+    const width = 800.0;
+    const height = 300.0;
+    const padding = 24.0;
+    final sourceWidth = (right - left).clamp(1.0, double.infinity).toDouble();
+    final sourceHeight = (bottom - top).clamp(1.0, double.infinity).toDouble();
+    final scale = ((width - padding * 2) / sourceWidth)
+        .clamp(0.1, (height - padding * 2) / sourceHeight)
+        .toDouble();
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    canvas.drawColor(Colors.white, BlendMode.src);
+    final paint = Paint()
+      ..color = _indigo
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+    for (final stroke in strokes) {
+      final path = Path();
+      for (var i = 0; i < stroke.length; i++) {
+        final point = Offset(
+          padding + (stroke[i].dx - left) * scale,
+          padding + (stroke[i].dy - top) * scale,
+        );
+        if (i == 0) {
+          path.moveTo(point.dx, point.dy);
+        } else {
+          path.lineTo(point.dx, point.dy);
+        }
+      }
+      canvas.drawPath(path, paint);
+    }
+    final image = await recorder.endRecording().toImage(
+      width.toInt(),
+      height.toInt(),
+    );
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (bytes == null) throw Exception('Signature impossible à encoder');
+    return base64Encode(bytes.buffer.asUint8List());
+  }
+
   Future<void> _submit() async {
-    if (_selectedIds.isEmpty) {
-      _snack('Sélectionnez au moins un encaissement.');
+    if (_selectedIds.length != 1) {
+      _snack('Sélectionnez une seule remise en attente.');
       return;
     }
     if (_photoPath == null) {
@@ -214,8 +367,12 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
     }
 
     final collab = ref.read(authProvider).collaborateur;
+    final selectedEncaissement = _selectedEncaissement!;
+    final signatureBase64 = await _encodeSignature();
+    if (!mounted) return;
     final request = RebCreateRequest(
       date: _selectedDate,
+      dateEncaissement: selectedEncaissement.date,
       codeMag: _codeMag,
       codeCollab: collab?.codeCollab ?? 0,
       prenom: collab?.prenom.trim().isNotEmpty == true
@@ -226,6 +383,7 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
       encaissementIds: _selectedIds.toList(growable: false),
       totalEncaissements: _totalSelected,
       montantDeclare: _totalSelected,
+      signatureBase64: signatureBase64,
       observations: _observationController.text,
       bordereauLocalPath: _photoPath,
     );
@@ -237,6 +395,9 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
       _snack(ref.read(rebProvider).error ?? 'Création impossible.');
       return;
     }
+    ref
+        .read(rebProvider.notifier)
+        .completePending(_selectedIds.single, created);
     Navigator.pop(context, created);
   }
 
@@ -289,6 +450,9 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
             ),
             Expanded(
               child: ListView(
+                physics: _isSigning
+                    ? const NeverScrollableScrollPhysics()
+                    : const BouncingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(dp(14), dp(18), dp(14), dp(18)),
                 children: [
                   _SectionHeader(
@@ -296,8 +460,8 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
                     badgeColor: _indigoTint,
                     iconColor: _indigo,
                     icon: Icons.account_balance_wallet_rounded,
-                    title: 'Encaissements non remis',
-                    subtitle: 'Sélectionnez ceux à inclure',
+                    title: 'Remises en attente',
+                    subtitle: 'Sélectionnez une seule remise',
                     countLabel: '${_selectedIds.length}/$_selectableCount',
                   ),
                   SizedBox(height: dp(10)),
@@ -350,12 +514,13 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
                     currentStroke: _currentStroke,
                     onClear: _clearSignature,
                     onPanStart: (offset) {
-                      setState(() => _currentStroke = [offset]);
+                      setState(() {
+                        _isSigning = true;
+                        _currentStroke = [offset];
+                      });
                     },
                     onPanUpdate: (offset) {
-                      setState(
-                        () => _currentStroke = [..._currentStroke, offset],
-                      );
+                      setState(() => _currentStroke.add(offset));
                     },
                     onPanEnd: () {
                       setState(() {
@@ -363,6 +528,7 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
                           _strokes.add(List.of(_currentStroke));
                         }
                         _currentStroke = [];
+                        _isSigning = false;
                       });
                     },
                   ),
@@ -376,7 +542,12 @@ class _AjouterRebPageState extends ConsumerState<AjouterRebPage> {
                     subtitle: 'Optionnel',
                   ),
                   SizedBox(height: dp(10)),
-                  _ObservationsCard(dp: dp, controller: _observationController),
+                  _ObservationsCard(
+                    dp: dp,
+                    controller: _observationController,
+                    listening: _isListening,
+                    onMic: _toggleSpeech,
+                  ),
                   SizedBox(height: dp(90)),
                 ],
               ),
@@ -1335,10 +1506,12 @@ class _SignatureCard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(dp(14)),
-              child: GestureDetector(
-                onPanStart: (d) => onPanStart(d.localPosition),
-                onPanUpdate: (d) => onPanUpdate(d.localPosition),
-                onPanEnd: (_) => onPanEnd(),
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (event) => onPanStart(event.localPosition),
+                onPointerMove: (event) => onPanUpdate(event.localPosition),
+                onPointerUp: (_) => onPanEnd(),
+                onPointerCancel: (_) => onPanEnd(),
                 child: CustomPaint(
                   painter: _SignaturePainter(
                     strokes: strokes,
@@ -1433,8 +1606,15 @@ class _SignaturePainter extends CustomPainter {
 class _ObservationsCard extends StatelessWidget {
   final double Function(double) dp;
   final TextEditingController controller;
+  final bool listening;
+  final VoidCallback onMic;
 
-  const _ObservationsCard({required this.dp, required this.controller});
+  const _ObservationsCard({
+    required this.dp,
+    required this.controller,
+    required this.listening,
+    required this.onMic,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1475,21 +1655,25 @@ class _ObservationsCard extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            width: dp(36),
-            height: dp(36),
-            decoration: BoxDecoration(
-              color: _indigo,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: _indigo.withValues(alpha: 0.35),
-                  blurRadius: dp(12),
-                  offset: Offset(0, dp(4)),
+          Material(
+            color: listening ? const Color(0xFFE53935) : _indigo,
+            shape: const CircleBorder(),
+            elevation: listening ? 8 : 4,
+            shadowColor: (listening ? const Color(0xFFE53935) : _indigo)
+                .withValues(alpha: 0.4),
+            child: InkWell(
+              onTap: onMic,
+              customBorder: const CircleBorder(),
+              child: SizedBox(
+                width: dp(40),
+                height: dp(40),
+                child: Icon(
+                  listening ? Icons.stop_rounded : Icons.mic_rounded,
+                  color: Colors.white,
+                  size: dp(19),
                 ),
-              ],
+              ),
             ),
-            child: Icon(Icons.mic_rounded, color: Colors.white, size: dp(16)),
           ),
         ],
       ),

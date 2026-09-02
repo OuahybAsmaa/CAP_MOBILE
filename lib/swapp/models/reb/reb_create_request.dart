@@ -7,6 +7,7 @@
 
 class RebCreateRequest {
   final DateTime date;
+  final DateTime dateEncaissement;
   final int codeMag;
   final int codeCollab;
   final String prenom;
@@ -17,9 +18,11 @@ class RebCreateRequest {
   final double montantDeclare;
   final String? observations;
   final String? bordereauLocalPath;
+  final String signatureBase64;
 
   const RebCreateRequest({
     required this.date,
+    required this.dateEncaissement,
     required this.codeMag,
     required this.codeCollab,
     required this.prenom,
@@ -27,23 +30,25 @@ class RebCreateRequest {
     required this.encaissementIds,
     required this.totalEncaissements,
     required this.montantDeclare,
+    required this.signatureBase64,
     this.photoCollaborateurUrl,
     this.observations,
     this.bordereauLocalPath,
   });
 
-  /// Corps JSON prévu pour le futur POST `/api/rebs`.
-  ///
-  /// Le fichier du bordereau n'est pas encodé ici : il devra être envoyé en
-  /// multipart, puis son URL distante ajoutée au payload selon le contrat API.
-  Map<String, dynamic> toJson() => {
-    'date': date.toIso8601String(),
-    'codeMag': codeMag,
-    'codeCollab': codeCollab,
-    'encaissementIds': encaissementIds,
-    'totalEncaissements': totalEncaissements,
-    'montantDeclare': montantDeclare,
-    if (observations?.trim().isNotEmpty == true)
-      'observations': observations!.trim(),
+  /// Corps attendu par POST `/api/magasins/{codeMag}/rebs`.
+  Map<String, dynamic> toApiJson({required String mediaReb}) => {
+    'dateReb': date.toIso8601String(),
+    // Les lignes en attente n'ont pas encore de numReb côté API. Leur ID
+    // local commence alors par ATT- et ne doit pas être envoyé au backend.
+    'numReb': encaissementIds.single.startsWith('ATT-')
+        ? ''
+        : encaissementIds.single,
+    'dateEncaissement': dateEncaissement.toIso8601String(),
+    'description': observations?.trim() ?? '',
+    'codeCollab': codeCollab.toString(),
+    'montant': montantDeclare.toStringAsFixed(2),
+    'mediaReb': mediaReb,
+    'signature': signatureBase64,
   };
 }

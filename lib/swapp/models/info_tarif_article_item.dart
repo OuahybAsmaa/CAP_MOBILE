@@ -70,11 +70,20 @@ class InfoTarifArticleItem {
 
   factory InfoTarifArticleItem.fromJson(Map<String, dynamic> json) {
     return InfoTarifArticleItem(
-      codeArticle: '${json['codeArticle'] ?? json['gencode'] ?? ''}'.trim(),
-      prixInitial: _toDouble(json['prixInitial'] ?? json['pvIni']),
-      prixPromo: _toDouble(json['prixPromo'] ?? json['promo']),
-      stock: (json['stock'] as num?)?.toInt() ?? 0,
-      photoUrl: json['photoUrl']?.toString(),
+      codeArticle:
+          '${json['codeMod'] ?? json['codeModele'] ?? json['codeArticle'] ?? json['gencode'] ?? ''}'
+              .trim(),
+      prixInitial: _toDouble(
+        json['pvInitial'] ??
+            json['prixInitial'] ??
+            json['pvIni'] ??
+            json['prixVenteInitial'],
+      ),
+      prixPromo: _toDouble(
+        json['prixPromo'] ?? json['pvPromo'] ?? json['prixFds'] ?? json['promo'],
+      ),
+      stock: _toInt(json['stock'] ?? json['stockMag'] ?? json['qteStock']),
+      photoUrl: (json['photoUrl'] ?? json['imageUrl'])?.toString(),
       operationCodes: _parseOpCodes(json['operationCodes']),
       isNouveaute: json['isNouveaute'] == true || json['nouveaute'] == true,
     );
@@ -84,6 +93,11 @@ class InfoTarifArticleItem {
     if (raw is num) return raw.toDouble();
     if (raw is String) return double.tryParse(raw.replaceAll(',', '.')) ?? 0;
     return 0;
+  }
+
+  static int _toInt(Object? raw) {
+    if (raw is num) return raw.toInt();
+    return int.tryParse('${raw ?? ''}') ?? 0;
   }
 
   static Set<String> _parseOpCodes(Object? raw) {

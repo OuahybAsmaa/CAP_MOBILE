@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cap_mobile/core/api/api_constants.dart';
 import 'package:cap_mobile/swapp/models/reb/reb.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,7 +11,13 @@ import '../mappers/reb_mapper.dart';
 /// Point d'acces aux donnees REB. Remplacer uniquement les corps des methodes
 /// par les appels HTTP quand le backend sera disponible.
 class RebApiService {
-  static const _baseUrl = 'https://vstoreapi.chaussea.net/api';
+  static String get _baseUrl => ApiConstants.apiUrl('/api');
+
+  Map<String, String> get _headers => {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'User-Agent': 'CapMobile/1.0',
+  };
 
   Future<List<RebItem>> fetchRebs({
     required int codeMag,
@@ -30,7 +37,7 @@ class RebApiService {
 
     try {
       final response = await http
-          .get(uri, headers: const {'Accept': 'application/json'})
+          .get(uri, headers: _headers)
           .timeout(const Duration(seconds: 20));
 
       if (response.statusCode != 200) {
@@ -46,6 +53,11 @@ class RebApiService {
           .whereType<Map>()
           .map((item) => Map<String, dynamic>.from(item))
           .map(RebMapper.itemFromJson)
+          .map(
+            (item) => item.copyWith(
+              statut: enAttente ? RebStatut.enAttente : RebStatut.traitee,
+            ),
+          )
           .toList(growable: false);
     } on SocketException {
       throw Exception('Impossible de joindre le serveur des remises en banque');
@@ -91,7 +103,36 @@ class RebApiService {
   }
 
   Future<RebItem> createReb(RebCreateRequest request) async {
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    return RebMapper.createdItemFromRequest(request);
+    final proofPath = request.bordereauLocalPath;
+    if (proofPath == null || proofPath.trim().isEmpty) {
+      throw Exception('Le justificatif est obligatoire');
+    }
+    final proofFile = File(proofPath);
+    if (!await proofFile.exists()) {
+      throw Exception('Le fichier justificatif est introuvable');
+    }
+
+    final mediaReb = base64Encode(await proofFile.readAsBytes());
+    final uri = Uri.parse('$_baseUrl/magasins/${request.codeMag}/rebs');
+    try {
+      final response = await http
+          .post(
+            uri,
+            headers: _headers,
+            body: jsonEncode(request.toApiJson(mediaReb: mediaReb)),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+          _apiMessage(response.body) ??
+              'Erreur création REB (${response.statusCode})',
+        );
+      }
+      return RebMapper.createdItemFromRequest(request);
+    } on SocketException {
+      throw Exception('Impossible de joindre le serveur des remises en banque');
+    } on FormatException {
+      throw Exception('Réponse de création REB invalide');
+    }
   }
 }

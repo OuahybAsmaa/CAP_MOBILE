@@ -8,7 +8,7 @@ import '../api/api_constants.dart';
 //  SERVICE
 // ──────────────────────────────────────────────────────────────
 class RfidSseService {
-  static const String _baseUrl = ApiConstants.baseUrl;
+  static const String _baseUrl = ApiConstants.digitalStoreBaseUrl;
 
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',

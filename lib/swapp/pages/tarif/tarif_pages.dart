@@ -9,3 +9,4 @@
 export 'info_tarif_articles_page.dart';
 export 'info_tarif_page.dart';
 export 'info_tarif_page2.dart';
+export 'info_tarif_product_page.dart';

@@ -5,7 +5,7 @@ import 'dart:io';
 import '../api/api_constants.dart';
 
 class AuthService {
-  static const String _baseUrl = ApiConstants.baseUrl;
+  static const String _baseUrl = ApiConstants.digitalStoreBaseUrl;
 
   Future<CollaborateurModel> getCollaborateur(String codeCollab) async {
     final uri = Uri.parse('$_baseUrl/api/collaborateurs/$codeCollab/');
