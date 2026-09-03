@@ -7,6 +7,7 @@ import '../models/exp_model.dart';
 import '../providers/exp_provider.dart';
 import '../../../features/rfid/providers/rfid_provider.dart';
 import 'exp_inventory_page.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 // ─────────────────────────────────────────────────────────────
 //  PAGE PRINCIPALE — Contrôle EXP
@@ -162,8 +163,8 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'CONTRÔLE EXP',
+                  Text(
+                    context.f.expControlTitle,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
@@ -172,7 +173,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                     ),
                   ),
                   Text(
-                    'Réception · Expédition',
+                    context.f.expControlSubtitle,
                     style: TextStyle(
                       fontSize: 10,
                       color: Colors.white.withValues(alpha: .7),
@@ -231,7 +232,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
             ),
             const SizedBox(width: 5),
             Text(
-              connected != null ? 'Connected' : 'Disconnected',
+              connected != null ? context.f.expReaderConnected : context.f.expReaderDisconnected,
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
@@ -258,8 +259,8 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
           children: [
             Row(
               children: [
-                const Text(
-                  'RFID Reader',
+                Text(
+                  context.f.expRfidReaderTitle,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -286,9 +287,9 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
             ),
             const SizedBox(height: 12),
             if (uniqueReaders.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No reader available',
+                child: Text(context.f.expNoReaderAvailable,
                     style: TextStyle(color: Colors.grey, fontSize: 11)),
               )
             else
@@ -399,8 +400,8 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Scanner le code d\'export',
+                Text(
+                  context.f.expScanTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -410,8 +411,8 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 const SizedBox(height: 8),
                 Text(
                   _magValid
-                      ? 'Pointez le scanner DataWedge\nvers le code-barres de réception'
-                      : 'Entrez d\'abord le code magasin',
+                      ? context.f.expScanSubtitleReady
+                      : context.f.expScanSubtitleNotReady,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
@@ -422,8 +423,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                 const SizedBox(height: 32),
                 _buildInfoCard(
                   icon: Icons.info_outline_rounded,
-                  text: 'Le scan du code réception affiche automatiquement '
-                      'les articles attendus dans ce colis.',
+                  text: context.f.expScanInfo,
                 ),
               ],
             ),
@@ -447,12 +447,12 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Label au dessus ──
-            const Row(
+            Row(
               children: [
                 Icon(Icons.store_rounded, color: _indigoMid, size: 16),
                 SizedBox(width: 6),
                 Text(
-                  'Code magasin',
+                  context.f.expMagLabel,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -539,8 +539,8 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Chargement de la réception...',
+            Text(
+              context.f.expLoadingTitle,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -578,8 +578,8 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                   size: 36, color: Color(0xFFD32F2F)),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Une erreur est survenue',
+            Text(
+              context.f.expErrorTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -601,7 +601,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
               onPressed: () =>
                   ref.read(expProvider.notifier).reset(),
               icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
-              label: const Text('Scanner à nouveau'),
+              label: Text(context.f.expBtnScanAgain),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _indigoMid,
                 foregroundColor: Colors.white,
@@ -697,7 +697,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
           // Expéditeur → Destinataire
           _buildTransferRow(
             icon: Icons.store_rounded,
-            label: 'De',
+            label: context.f.expReceptionFrom,
             value: r.nomMag,
             color: const Color(0xFF5E35B1),
           ),
@@ -709,7 +709,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
           const SizedBox(height: 8),
           _buildTransferRow(
             icon: Icons.store_mall_directory_rounded,
-            label: 'Vers',
+            label: context.f.expReceptionTo,
             value: r.nomMagDest,
             color: const Color(0xFF2E7D32),
           ),
@@ -723,7 +723,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                   size: 13, color: Color(0xFF757575)),
               const SizedBox(width: 6),
               Text(
-                'Expédié le ${r.dateExpFormatted}',
+                '${context.f.expReceptionDate} ${r.dateExpFormatted}',
                 style: const TextStyle(
                     fontSize: 12, color: Color(0xFF757575)),
               ),
@@ -736,7 +736,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${r.totalAttendu} article${r.totalAttendu > 1 ? 's' : ''}',
+                  '${r.totalAttendu} ${r.totalAttendu > 1 ? context.f.expReceptionArticles : context.f.expReceptionArticle}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -865,14 +865,14 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
               border: Border.all(
                   color: const Color(0xFFD32F2F).withValues(alpha: .3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(Icons.warning_amber_rounded,
                     color: Color(0xFFD32F2F), size: 16),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Connectez un lecteur RFID avant de commencer.',
+                    context.f.expNoRfidWarning,
                     style: TextStyle(
                         fontSize: 11,
                         color: Color(0xFFD32F2F),
@@ -907,7 +907,7 @@ class _ExpControlPageState extends ConsumerState<ExpControlPage>
             )
                 : null,
             icon: const Icon(Icons.nfc_rounded, size: 20),
-            label: const Text('Lancer le contrôle RFID',
+            label: Text(context.f.expBtnLaunchRfid,
                 style: TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w800)),
             style: ElevatedButton.styleFrom(

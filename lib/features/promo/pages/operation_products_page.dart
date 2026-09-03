@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/promo_provider.dart';
 import '../models/promo_model.dart';
 import '../../../core/services/article_service.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 class OperationProductsPage extends ConsumerStatefulWidget {
   final int codePromo;
@@ -59,7 +60,7 @@ class _OperationProductsPageState extends ConsumerState<OperationProductsPage> {
                       ElevatedButton.icon(
                         onPressed: () => ref.refresh(operationModelesProvider(widget.codePromo)),
                         icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Réessayer'),
+                        label: Text(context.f.promoRetry),
                         style: ElevatedButton.styleFrom(
                             backgroundColor: _indigo, foregroundColor: Colors.white),
                       ),
@@ -76,8 +77,8 @@ class _OperationProductsPageState extends ConsumerState<OperationProductsPage> {
                   return Center(
                     child: Text(
                       _onlyNouveaute
-                          ? 'Aucune nouveauté dans cette opération'
-                          : 'Aucun article dans cette opération',
+                          ? context.f.operationNoNouveaute
+                          : context.f.operationNoArticle,
                       style: const TextStyle(color: Colors.grey),
                     ),
                   );
@@ -166,7 +167,7 @@ class _OperationProductsPageState extends ConsumerState<OperationProductsPage> {
         children: [
           const Icon(Icons.fiber_new_rounded, size: 20, color: _amber),
           const SizedBox(width: 8),
-          const Text('les nouveautés',
+          Text(context.f.operationFilterNouveautes,
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
           const Spacer(),
           Switch(
@@ -185,25 +186,25 @@ class _OperationProductsPageState extends ConsumerState<OperationProductsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          const Expanded(
-            child: Text('Article',
+          Expanded(
+            child: Text(context.f.operationColArticle,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.grey)),
           ),
           SizedBox(
             width: 48,
-            child: Text('PV Ini', textAlign: TextAlign.center,
+            child: Text(context.f.operationColPvIni, textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.grey[700])),
           ),
           const SizedBox(width: 6),
           SizedBox(
             width: 48,
-            child: Text('Promo', textAlign: TextAlign.center,
+            child: Text(context.f.operationColPromo, textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _green)),
           ),
           const SizedBox(width: 6),
           SizedBox(
             width: 48,
-            child: Text('Stock', textAlign: TextAlign.center,
+            child: Text(context.f.operationColStock, textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.grey[700])),
           ),
         ],
@@ -258,7 +259,7 @@ class _OperationProductsPageState extends ConsumerState<OperationProductsPage> {
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: _amber.withOpacity(.4)),
                     ),
-                    child: const Text('NOUVEAUTÉ',
+                    child: Text(context.f.operationNouveaute,
                         style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _amber)),
                   ),
                 ],

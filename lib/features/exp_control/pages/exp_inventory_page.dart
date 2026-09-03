@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/exp_model.dart';
 import '../providers/exp_provider.dart';
 import '../../rfid/providers/rfid_provider.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 // ─────────────────────────────────────────────────────────────
 //  PAGE INVENTAIRE RFID — Contrôle EXP
@@ -121,9 +122,9 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Contrôle EXP',
+                      context.f.expInventoryTitle,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -163,7 +164,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            isRunning ? 'Lecture...' : 'En attente',
+                            isRunning ? context.f.expInventoryRunning : context.f.expInventoryWaiting,
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -209,7 +210,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                         ),
                       ),
                       Text(
-                        '${s.totalLu} / ${s.totalAttendu} articles',
+                        '${s.totalLu} / ${s.totalAttendu} ${context.f.expInventoryArticles}',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: .8),
@@ -253,8 +254,8 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
           Expanded(
             child: Text(
               isConnected
-                  ? 'Lecteur : ${reader!.name}'
-                  : 'Aucun lecteur connecté',
+                  ? '${context.f.expInventoryReaderPrefix}${reader!.name}'
+                  : context.f.expInventoryNoReader,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -324,18 +325,18 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
               borderRadius:
               BorderRadius.vertical(top: Radius.circular(13)),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                     flex: 2,
-                    child: Text('Taille',
+                    child: Text(context.f.expTableSize,
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                             color: Colors.white))),
                 Expanded(
                     flex: 2,
-                    child: Text('Attendu',
+                    child: Text(context.f.expTableExpected,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 11,
@@ -343,7 +344,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                             color: Colors.white))),
                 Expanded(
                     flex: 2,
-                    child: Text('Lu',
+                    child: Text(context.f.expTableRead,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 11,
@@ -351,7 +352,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                             color: Colors.white))),
                 Expanded(
                     flex: 2,
-                    child: Text('Statut',
+                    child: Text(context.f.expTableStatus,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 11,
@@ -531,18 +532,18 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
           borderRadius:
           BorderRadius.vertical(bottom: Radius.circular(13)),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Expanded(
                 flex: 2,
-                child: Text('TOTAL',
+                child: Text(context.f.expTableTotal,
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         color: Colors.grey))),
             Expanded(
                 flex: 6,
-                child: Text('— En attente du lancement —',
+                child: Text(context.f.expTableWaiting,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 11,
@@ -566,7 +567,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
         children: [
           Expanded(
               flex: 2,
-              child: Text('TOTAL',
+              child: Text(context.f.expTableTotal,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
@@ -598,7 +599,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  allOk ? 'Conforme' : 'Écart',
+                  allOk ? context.f.expTableConform : context.f.expTableGap,
                   maxLines: 1,
                   overflow: TextOverflow.visible,
                   style: const TextStyle(
@@ -629,14 +630,14 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
               border:
               Border.all(color: _red.withValues(alpha: .3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(Icons.warning_amber_rounded,
                     color: _red, size: 16),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Connectez un lecteur RFID avant de commencer.',
+                    context.f.expNoRfidWarning,
                     style: TextStyle(
                         fontSize: 11,
                         color: _red,
@@ -655,7 +656,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                 .startInventory()
                 : null,
             icon: const Icon(Icons.play_arrow_rounded, size: 20),
-            label: const Text('Démarrer le contrôle',
+            label: Text(context.f.expBtnStart,
                 style: TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w800)),
             style: ElevatedButton.styleFrom(
@@ -681,7 +682,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
         onPressed: () =>
             ref.read(expProvider.notifier).stopInventory(),
         icon: const Icon(Icons.stop_rounded, size: 18),
-        label: const Text('Arrêter la lecture',
+        label: Text(context.f.expBtnStop,
             style: TextStyle(
                 fontSize: 14, fontWeight: FontWeight.w800)),
         style: ElevatedButton.styleFrom(
@@ -709,7 +710,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
           children: [
             Icon(Icons.check_circle_rounded, color: _green, size: 13),
             const SizedBox(width: 4),
-            Text('$ok conforme${ok > 1 ? 's' : ''}',
+            Text('$ok ${context.f.expTableConform}${ok > 1 ? 's' : ''}',
                 style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -742,7 +743,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
             ),
             const SizedBox(width: 4),
             Text(
-              isOk ? 'Conforme' : 'Écart : $ecart',
+              isOk ? context.f.expTableConform : '${context.f.expTableGap} : $ecart',
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -760,7 +761,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                 onPressed: () =>
                     ref.read(expProvider.notifier).resetInventory(),
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Refaire',
+                label: Text(context.f.expBtnRedo,
                     style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w800)),
                 style: ElevatedButton.styleFrom(
@@ -783,7 +784,7 @@ class _ExpInventoryPageState extends ConsumerState<ExpInventoryPage>
                 },
                 icon: const Icon(Icons.check_circle_rounded,
                     size: 16),
-                label: const Text('Terminer',
+                label: Text(context.f.expBtnFinish,
                     style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w800)),
                 style: ElevatedButton.styleFrom(

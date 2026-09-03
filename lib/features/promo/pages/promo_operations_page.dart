@@ -8,6 +8,7 @@ import '../models/promo_model.dart';
 import 'operation_products_page.dart';
 import 'promo_scan_page.dart';
 import '../../auth/providers/auth_provider.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 class PromoOperationsPage extends ConsumerStatefulWidget {
   const PromoOperationsPage({Key? key}) : super(key: key);
@@ -105,7 +106,7 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Mettre à jour mes FDS :)',
+              context.f.promoUpdateFds,
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -158,8 +159,8 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
               ),
               const SizedBox(width: 12),
               // Titre
-              const Expanded(
-                child: Text('Opérations Commerciales',
+              Expanded(
+                child: Text(context.f.promoTitle,
                     style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w900,
                         color: Colors.white)),
@@ -280,7 +281,7 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
                 onPressed: () =>
                     ref.read(promoProvider.notifier).loadOperations(),
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Réessayer'),
+                label: Text(context.f.promoRetry),
                 style: ElevatedButton.styleFrom(
                     backgroundColor: _indigo,
                     foregroundColor: Colors.white),
@@ -292,8 +293,8 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
     }
 
     if (state.operations.isEmpty) {
-      return const Center(
-        child: Text('Aucune opération commerciale disponible',
+      return Center(
+        child: Text(context.f.promoNoOps,
             style: TextStyle(color: Colors.grey)),
       );
     }
@@ -306,11 +307,11 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
             children: [
               const Icon(Icons.event_busy_rounded, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
-              const Text('Aucune opération sur cette période',
+              Text(context.f.promoNoOpsFiltered,
                   style: TextStyle(color: Colors.grey)),
               TextButton(
                 onPressed: () => ref.read(promoProvider.notifier).clearDateFilter(),
-                child: const Text('Réinitialiser le filtre'),
+                child: Text(context.f.promoResetFilter),
               ),
             ],
           ),
@@ -323,7 +324,7 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Text(
-            'Sélectionnez une ou plusieurs opérations à vérifier',
+            context.f.promoSelectHint,
             style: TextStyle(fontSize: 13, color: Colors.grey[600]),
           ),
         ),
@@ -436,7 +437,7 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            isActive ? 'Active' : 'Inactive',
+                            isActive ? context.f.promoActive : context.f.promoInactive,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -498,8 +499,8 @@ class _PromoOperationsPageState extends ConsumerState<PromoOperationsPage> {
                       ),
                       child: Text(
                         op.typeApplication == 'E'
-                            ? 'Application Enseigne'
-                            : 'Application Produit',
+                            ? context.f.promoAppEnseigne
+                            : context.f.promoAppProduit,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,

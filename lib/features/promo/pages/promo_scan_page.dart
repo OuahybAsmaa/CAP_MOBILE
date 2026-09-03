@@ -6,6 +6,7 @@ import '../models/promo_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../features/rfid/providers/rfid_provider.dart';
 import '../../../core/services/datawedge_service.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
 class PromoScanPage extends ConsumerStatefulWidget {
   const PromoScanPage({Key? key}) : super(key: key);
@@ -124,9 +125,9 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(
-                      'Consulter Tarif',
+                      context.f.promoScanTitle,
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -135,7 +136,7 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Scanner un article',
+                      context.f.promoScanSubtitle,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -173,18 +174,18 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Saisir le gencode',
+        title: Text(context.f.promoScanDialogTitle,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-        content: SingleChildScrollView(          // <-- ajoute ce wrapper
+        content: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,        // <-- ajoute
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Ex: 34544068037110',
+                decoration: InputDecoration(
+                  hintText: context.f.promoScanHint,
                   border: OutlineInputBorder(),
                 ),
                 onSubmitted: (_) => _submitKeyboardGencode(controller.text),
@@ -195,13 +196,13 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(context.f.promoScanCancel),
           ),
           ElevatedButton(
             onPressed: () => _submitKeyboardGencode(controller.text),
             style: ElevatedButton.styleFrom(
                 backgroundColor: _indigo, foregroundColor: Colors.white),
-            child: const Text('Vérifier'),
+            child: Text(context.f.promoScanVerify),
           ),
         ],
       ),
@@ -257,7 +258,7 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
             ),
             const SizedBox(width: 5),
             Text(
-              connected != null ? 'Connected' : 'Disconnected',
+              connected != null ? context.f.promoReaderConnected : context.f.promoReaderDisconnected,
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
@@ -285,8 +286,8 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
           children: [
             Row(
               children: [
-                const Text(
-                  'RFID Reader',
+                Text(
+                  context.f.promoRfidReaderTitle,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -313,9 +314,9 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
             ),
             const SizedBox(height: 12),
             if (uniqueReaders.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No reader available',
+                child: Text(context.f.promoNoReaderAvailable,
                     style: TextStyle(
                         color: Colors.grey, fontSize: 11)),
               )
@@ -386,13 +387,13 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
 
   Widget _buildBody(PromoState state) {
     if (state.isLoadingPromo) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(color: _indigo),
             SizedBox(height: 16),
-            Text('Vérification en cours...',
+            Text(context.f.promoScanLoading,
                 style: TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w700,
                     color: Color(0xFF1A1A2E))),
@@ -436,13 +437,13 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Scanner un article',
+            Text(context.f.promoScanWaiting,
                 style: TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w800,
                     color: Color(0xFF1A1A2E))),
             const SizedBox(height: 8),
             Text(
-              'Pointez le scanner vers le code-barres\nde l\'article à vérifier',
+              context.f.promoScanWaitingSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 13, color: Colors.grey[600], height: 1.5),
@@ -473,7 +474,7 @@ class _PromoScanPageState extends ConsumerState<PromoScanPage>
               child: ElevatedButton.icon(
                 onPressed: () => ref.read(promoProvider.notifier).resetScan(),
                 icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                label: const Text('Scanner un autre article',
+                label: Text(context.f.promoScanAgain,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _indigo,
