@@ -1,5 +1,6 @@
 import 'package:cap_mobile/core/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_features.dart';
 
 class AppLocalizationsScope extends InheritedWidget {
   final AppLocalizations l10n;
@@ -24,4 +25,9 @@ class AppLocalizationsScope extends InheritedWidget {
 
 extension AppLocalizationsContext on BuildContext {
   AppLocalizations get l10n => AppLocalizationsScope.of(this);
+}
+extension AppLocalizationsFeaturesContext on BuildContext {
+  AppLocalizationsFeatures get f => AppLocalizationsFeatures(
+    AppLocalizationsScope.of(this).appLanguage,
+  );
 }

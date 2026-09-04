@@ -5,6 +5,7 @@ import '../models/promo_model.dart';
 import '../../../core/services/article_service.dart';
 import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 
+
 class OperationProductsPage extends ConsumerStatefulWidget {
   final int codePromo;
   final String libPromo;

@@ -2,8 +2,8 @@
 // CapMobile — Constantes API recherche client
 // -----------------------------------------------------------------------------
 
-import '../api/apiswapp/api_constants.dart';
-
+//import '../api/apiswapp/api_constants.dart';
+import '../../api/api_constants.dart';
 class ClientApiConstants {
   ClientApiConstants._();
 

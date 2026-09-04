@@ -35,6 +35,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/apiswap/produit/data/product_test_data.dart';
+
+
 const _depotPurple = Color(0xFF7C3AED);
 
 /// UI : 0 bleu, stock >0 vert foncé, <0 rouge (tableau v2).
@@ -180,10 +183,9 @@ class _DetailProduitPage2State extends ConsumerState<DetailProduitPage2> {
     if (!mounted) return;
     final current = ref.read(swappProductProvider).product?.reference ??
         SwappApiConstants.defaultCodeModele;
-    final code = await showDialog<String>(
-      context: context,
-      barrierColor: AppColors.primaryDark.withOpacity(0.45),
-      builder: (_) => ArticleCodeDialog(initialCode: current),
+    final code = await showArticleCodeDialog(
+      context,
+      initialCode: current,
     );
     if (!mounted || code == null || code.isEmpty) return;
     await ref.read(swappProductProvider.notifier).fetchModele(

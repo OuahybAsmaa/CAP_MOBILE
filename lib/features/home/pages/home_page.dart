@@ -9,7 +9,7 @@ import '../../rfid/pages/rfid_page.dart';
 import '../../exp_control/pages/exp_control_page.dart';
 import '../../../swapp/pages/menu/swapp_menu_page.dart';
 import '../../promo/pages/promo_operations_page.dart';
-import 'package:cap_mobile/l10n/app_localizations.dart';
+import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
@@ -92,16 +92,16 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final modules = <_Module>[
       _Module(
-        title: AppLocalizations.of(context)!.moduleRfidTitle,
-        subtitle: AppLocalizations.of(context)!.moduleRfidSubtitle,
+        title: context.f.moduleRfidTitle,
+        subtitle: context.f.moduleRfidSubtitle,
         icon: Icons.nfc_rounded,
         color: _C.primary,
         bgColor: _C.primarySoft,
         onTap: () => Navigator.push(context, _fadeRoute(const RfidPage())),
       ),
       _Module(
-        title: AppLocalizations.of(context)!.moduleQcTitle,
-        subtitle: AppLocalizations.of(context)!.moduleQcSubtitle,
+        title: context.f.moduleQcTitle,
+        subtitle: context.f.moduleQcSubtitle,
         icon: Icons.fact_check_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
@@ -117,8 +117,8 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
       ),
       _Module(
-        title: AppLocalizations.of(context)!.moduleExpTitle,
-        subtitle: AppLocalizations.of(context)!.moduleExpSubtitle,
+        title: context.f.moduleExpTitle,
+        subtitle: context.f.moduleExpSubtitle,
         icon: Icons.local_shipping_rounded,
         color: const Color(0xFF01667E),
         bgColor: const Color(0xFFE0F2FE),
@@ -144,8 +144,8 @@ class _HomePageState extends ConsumerState<HomePage>
         onTap: () => Navigator.push(context, SwappMenuPage.fadeRoute()),
       ),
     _Module(
-        title: AppLocalizations.of(context)!.modulePromoTitle,
-        subtitle: AppLocalizations.of(context)!.modulePromoSubtitle,
+        title: context.f.modulePromoTitle,
+        subtitle: context.f.modulePromoSubtitle,
         icon: Icons.local_offer_rounded,
         color: const Color(0xFF7B1FA2),
         bgColor: const Color(0xFFF3E5F5),
@@ -270,7 +270,7 @@ class _HomePageState extends ConsumerState<HomePage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                      Text(
-                      AppLocalizations.of(context)!.appTitle,
+                      context.f.appTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -414,7 +414,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 children: [
                   _drawerItem(
                     icon: Icons.person_outline_rounded,
-                    label: AppLocalizations.of(context)!.drawerMyProfile,
+                    label: context.f.drawerMyProfile,
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(context, _fadeRoute(const ProfilePage()));
@@ -422,12 +422,12 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   _drawerItem(
                     icon: Icons.store_outlined,
-                    label: AppLocalizations.of(context)!.drawerMyStore,
+                    label: context.f.drawerMyStore,
                     badge: collab.magasinNom,
                   ),
                   _drawerItem(
                     icon: Icons.admin_panel_settings_outlined,
-                    label: AppLocalizations.of(context)!.drawerAdministration,
+                    label: context.f.drawerAdministration,
                     visible: collab.estAdministrateur,
                   ),
                   const Padding(
@@ -436,11 +436,11 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   _drawerItem(
                     icon: Icons.settings_outlined,
-                    label: AppLocalizations.of(context)!.drawerSettings,
+                    label: context.f.drawerSettings,
                   ),
                   _drawerItem(
                     icon: Icons.help_outline_rounded,
-                    label: AppLocalizations.of(context)!.drawerHelp,
+                    label: context.f.drawerHelp,
                   ),
                 ],
               ),
@@ -462,7 +462,7 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   icon: const Icon(Icons.logout_rounded, size: 18),
                   label: Text(
-                    AppLocalizations.of(context)!.drawerLogout,
+                    context.f.drawerLogout,
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   onPressed: () {
@@ -573,7 +573,7 @@ class _HomePageState extends ConsumerState<HomePage>
               ),
               const SizedBox(width: 10),
               Text(
-                AppLocalizations.of(context)!.modulesAvailableSection,
+                context.f.modulesAvailableSection,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -632,7 +632,7 @@ class _HomePageState extends ConsumerState<HomePage>
   // ── Bannière salutation ──
   Widget _buildGreetingBanner(BuildContext context, collab) {
     final hour = DateTime.now().hour;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.f;
     final greeting = hour < 12
         ? l10n.greetingMorning
         : hour < 18
@@ -787,7 +787,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      AppLocalizations.of(context)!.comingSoonBadge,
+                      context.f.comingSoonBadge,
                       style: TextStyle(
                         fontSize: 9,
                         color: _C.textMuted,
