@@ -24,6 +24,12 @@ class AppLocalizationsFeatures {
   String get modulePromoTitle => _t('Opérations Commerciales', 'Commercial Operations', 'Commerciële Operaties');
   String get modulePromoSubtitle => _t('Vérification des promotions', 'Promotions verification', 'Promoties verificatie');
   String get language => _t('Langue', 'Language', 'Taal');
+  String get moduleControleRfidTitle => _t('Contrôle RFID', 'RFID Control', 'RFID Controle');
+  String get moduleControleRfidSubtitle => _t('Qualité & Export', 'Quality & Export', 'Kwaliteit & Export');
+
+// ── Swapp ──
+  String get moduleSwappTitle => _t('Swapp', 'Swapp', 'Swapp');
+  String get moduleSwappSubtitle => _t('Stock & ventes magasin', 'Store stock & sales', 'Winkelvoorraad & verkoop');
 
   // ── Salutations ──
   String get greetingMorning => _t('Bonjour', 'Good morning', 'Goedemorgen');
@@ -50,6 +56,11 @@ class AppLocalizationsFeatures {
   String get welcomeErrorRetry => _t('Relance du scan dans 2 secondes...', 'Restarting scan in 2 seconds...', 'Scan herstart in 2 seconden...');
   String get welcomeZebraConnected => _t('Système Zebra connecté', 'Zebra system connected', 'Zebra systeem verbonden');
   String get welcomeZebraConnecting => _t('Connexion Zebra...', 'Connecting Zebra...', 'Zebra verbinden...');
+  String get manualEntry => _t('Saisir manuellement', 'Enter manually', 'Handmatig invoeren');
+  String get manualEntryTitle => _t('Saisie manuelle', 'Manual entry', 'Handmatige invoer');
+  String get manualEntryHint => _t('Ex: 12345', 'Ex: 12345', 'Bv: 12345');
+  String get manualEntryValidate => _t('Valider', 'Confirm', 'Bevestigen');
+  String get manualEntryCancel => _t('Annuler', 'Cancel', 'Annuleren');
 
   // ── Profile page ──
   String get profileSectionPersonal => _t('Informations personnelles', 'Personal information', 'Persoonlijke informatie');
@@ -148,4 +159,72 @@ class AppLocalizationsFeatures {
   String get promoReaderDisconnected => _t('Disconnected', 'Disconnected', 'Verbroken');
   String get promoRfidReaderTitle => _t('RFID Reader', 'RFID Reader', 'RFID Lezer');
   String get promoNoReaderAvailable => _t('No reader available', 'No reader available', 'Geen lezer beschikbaar');
+
+  // ── PVA Control ──
+  String get pvaControlTitle => _t('Contrôle PAV', 'PAV Control', 'PAV Controle');
+  String get pvaControlSubtitle => _t('Vérification des articles PAV', 'PAV items verification', 'PAV-artikelen verificatie');
+  String get pvaReaderConnected => _t('Connecté', 'Connected', 'Verbonden');
+  String get pvaReaderDisconnected => _t('Non connecté', 'Not connected', 'Niet verbonden');
+  String get pvaReaderDialogTitle => _t('Lecteur RFID', 'RFID Reader', 'RFID Lezer');
+  String get pvaNoReaderAvailable => _t('Aucun lecteur disponible', 'No reader available', 'Geen lezer beschikbaar');
+  String get pvaScanTitle => _t('Scanner un code PAV', 'Scan a PAV code', 'Scan een PAV-code');
+  String get pvaScanSubtitleReady => _t(
+      'Scannez le code-barres du support PAV\npour charger les articles à contrôler.',
+      'Scan the PAV support barcode\nto load the items to control.',
+      'Scan de streepjescode van de PAV-drager\nom de te controleren artikelen te laden.');
+  String get pvaScanSubtitleNotReady => _t(
+      'Connectez un lecteur RFID\npour activer le scan.',
+      'Connect an RFID reader\nto enable scanning.',
+      'Verbind een RFID-lezer\nom scannen te activeren.');
+  String get pvaNoReaderWarning => _t(
+      'Aucun lecteur RFID connecté. Appuyez sur le badge en haut à droite pour en sélectionner un.',
+      'No RFID reader connected. Tap the badge at the top right to select one.',
+      'Geen RFID-lezer verbonden. Tik op het label rechtsboven om er een te selecteren.');
+  String get pvaScanInfo => _t(
+      'Pointez le scanner vers le code-barres du support PAV pour démarrer le contrôle.',
+      'Point the scanner at the PAV support barcode to start the control.',
+      'Richt de scanner op de streepjescode van de PAV-drager om de controle te starten.');
+  String get pvaLoadingTitle => _t('Chargement des articles...', 'Loading items...', 'Artikelen laden...');
+  String get pvaLoadingCodePrefix => _t('Code : ', 'Code: ', 'Code: ');
+  String get pvaErrorTitle => _t('Code PAV introuvable', 'PAV code not found', 'PAV-code niet gevonden');
+  String get pvaBtnScanAgain => _t('Scanner à nouveau', 'Scan again', 'Opnieuw scannen');
+  String get pvaArticle => _t('article', 'item', 'artikel');
+  String get pvaArticles => _t('articles', 'items', 'artikelen');
+  String get pvaBtnLaunch => _t('Lancer le contrôle', 'Launch control', 'Controle starten');
+  String get pvaNoReaderCannotLaunch => _t(
+      'Aucun lecteur RFID connecté. Impossible de lancer le contrôle.',
+      'No RFID reader connected. Cannot launch the control.',
+      'Geen RFID-lezer verbonden. Kan de controle niet starten.');
+  String get pvaTableArticle => _t('Article', 'Item', 'Artikel');
+  String get pvaTableSize => _t('Taille', 'Size', 'Maat');
+  String get pvaTableQty => _t('Qté', 'Qty', 'Aant.');
+
+  // ── PVA Inventory ──
+  String get pvaInventoryTitle => _t('Inventaire PAV', 'PAV Inventory', 'PAV-inventaris');
+  String get pvaInventoryRunning => _t('En cours', 'Running', 'Bezig');
+  String get pvaInventoryWaiting => _t('En attente', 'Waiting', 'Wachten');
+  String get pvaInventoryReaderPrefix => _t('Lecteur : ', 'Reader: ', 'Lezer: ');
+  String get pvaInventoryNoReader => _t('Aucun lecteur connecté', 'No reader connected', 'Geen lezer verbonden');
+  String get pvaTableExpected => _t('Attendu', 'Expected', 'Verwacht');
+  String get pvaTableRead => _t('Lu', 'Read', 'Gelezen');
+  String get pvaTableStatus => _t('Statut', 'Status', 'Status');
+  String get pvaTableTotal => _t('Total', 'Total', 'Totaal');
+  String get pvaTableWaitingScan => _t('En attente du scan...', 'Waiting for scan...', 'Wachten op scan...');
+  String get pvaTableConform => _t('Conforme', 'Conform', 'Conform');
+  String get pvaTableGap => _t('Écart', 'Gap', 'Verschil');
+  String get pvaNoReaderConnectedWarning => _t('Aucun lecteur RFID connecté.', 'No RFID reader connected.', 'Geen RFID-lezer verbonden.');
+  String get pvaBtnStart => _t('Démarrer le contrôle', 'Start control', 'Controle starten');
+  String get pvaBtnStop => _t('Arrêter le scan', 'Stop scan', 'Scan stoppen');
+  String get pvaConformeLabel => _t('conforme', 'conform', 'conform');
+  String get pvaGapPrefix => _t('Écart : ', 'Gap: ', 'Verschil: ');
+  String get pvaBtnRedo => _t('Refaire', 'Redo', 'Opnieuw');
+  String get pvaBtnFinish => _t('Terminer', 'Finish', 'Voltooien');
+  // ── Control RFID Menu ──
+  String get controlRfidMenuTitle => _t('Contrôle RFID', 'RFID Control', 'RFID Controle');
+  String get controlRfidMenuQcTitle => _t('Contrôle Qualité', 'Quality Control', 'Kwaliteitscontrole');
+  String get controlRfidMenuQcSubtitle => _t('Vérification qualité des articles', 'Items quality verification', 'Kwaliteitsverificatie van artikelen');
+  String get controlRfidMenuExpTitle => _t('Contrôle Export', 'Export Control', 'Export Controle');
+  String get controlRfidMenuExpSubtitle => _t('Contrôle des expéditions', 'Shipments control', 'Verzendingscontrole');
+  String get controlRfidMenuPvaTitle => _t('Contrôle PAV', 'PAV Control', 'PAV Controle');
+  String get controlRfidMenuPvaSubtitle => _t('Vérification des supports PAV', 'PAV supports verification', 'Verificatie van PAV-dragers');
 }

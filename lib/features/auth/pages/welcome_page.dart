@@ -66,6 +66,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
   late final Animation<double> _pulse;
   late final Animation<double> _scanRing;
   late final Animation<double> _shake;
+  final TextEditingController _manualController = TextEditingController();
 
   @override
   void initState() {
@@ -216,6 +217,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
     _shakeCtrl.dispose();
     _dotsCtrl.dispose();
     _gridCtrl.dispose();
+    _manualController.dispose();
     super.dispose();
   }
 
@@ -280,6 +282,29 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
                 },
               ),
             ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              right: 16,
+              child: GestureDetector(
+                onTap: _showManualEntry,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: _AppColors.cyan.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _AppColors.cyan.withValues(alpha: .3),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.keyboard_outlined,
+                    size: 20,
+                    color: _AppColors.cyan,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -289,6 +314,75 @@ class _WelcomePageState extends ConsumerState<WelcomePage>
   // ──────────────────────────────────────────────────────────────
   //  WIDGETS
   // ──────────────────────────────────────────────────────────────
+
+  void _showManualEntry() {
+    _manualController.clear();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          context.f.manualEntryTitle,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1A237E),
+          ),
+        ),
+        content: TextField(
+          controller: _manualController,
+          autofocus: true,
+          keyboardType: TextInputType.text,
+          decoration: InputDecoration(
+            hintText: context.f.manualEntryHint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: Color(0xFF3949AB),
+                width: 1.5,
+              ),
+            ),
+          ),
+          onSubmitted: (value) {
+            Navigator.pop(context);
+            if (value.trim().isNotEmpty) {
+              _onCodeScanned(value.trim());
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              context.f.manualEntryCancel,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3949AB),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              if (_manualController.text.trim().isNotEmpty) {
+                _onCodeScanned(_manualController.text.trim());
+              }
+            },
+            child: Text(context.f.manualEntryValidate),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildAnimatedGrid() {
     return AnimatedBuilder(

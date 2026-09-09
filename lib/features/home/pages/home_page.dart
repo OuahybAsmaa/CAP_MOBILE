@@ -10,6 +10,9 @@ import '../../exp_control/pages/exp_control_page.dart';
 import '../../../swapp/pages/menu/swapp_menu_page.dart';
 import '../../promo/pages/promo_operations_page.dart';
 import 'package:cap_mobile/core/l10n/app_localizations_scope.dart';
+import 'package:cap_mobile/core/l10n/language_menu_button.dart';
+
+import 'Controle_RFID_menu.dart';
 // ──────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ──────────────────────────────────────────────────────────────
@@ -100,8 +103,8 @@ class _HomePageState extends ConsumerState<HomePage>
         onTap: () => Navigator.push(context, _fadeRoute(const RfidPage())),
       ),
       _Module(
-        title: context.f.moduleQcTitle,
-        subtitle: context.f.moduleQcSubtitle,
+        title: context.f.moduleControleRfidTitle,
+        subtitle: context.f.moduleControleRfidSubtitle,
         icon: Icons.fact_check_rounded,
         color: const Color(0xFF059669),
         bgColor: const Color(0xFFECFDF5),
@@ -109,34 +112,16 @@ class _HomePageState extends ConsumerState<HomePage>
         onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, _, _) => const QcRfidPage(),
-            transitionsBuilder: (_, anim, _, child) =>
+            pageBuilder: (_, __, ___) => const ControlRfidMenuPage(),
+            transitionsBuilder: (_, anim, __, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
         ),
       ),
       _Module(
-        title: context.f.moduleExpTitle,
-        subtitle: context.f.moduleExpSubtitle,
-        icon: Icons.local_shipping_rounded,
-        color: const Color(0xFF01667E),
-        bgColor: const Color(0xFFE0F2FE),
-        available: true,
-        onTap: () => Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, _, _) => const ExpControlPage(),
-            transitionsBuilder: (_, anim, _, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 300),
-          ),
-        ),
-      ),
-      _Module(
-
-        title: 'Swapp',
-        subtitle: 'Stock & ventes magasin',
+        title: context.f.moduleSwappTitle,
+        subtitle: context.f.moduleSwappSubtitle,
         icon: Icons.swap_horiz_rounded,
         color: const Color(0xFF4640D6),
         bgColor: const Color(0xFFECEAFB),
@@ -441,6 +426,31 @@ class _HomePageState extends ConsumerState<HomePage>
                   _drawerItem(
                     icon: Icons.help_outline_rounded,
                     label: context.f.drawerHelp,
+                  ),
+
+                  ListTile(
+                    leading: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _C.primarySoft,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.language, color: _C.primary, size: 18),
+                    ),
+                    title: Text(
+                      context.f.language,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _C.textPrimary,
+                      ),
+                    ),
+                    trailing: const LanguageMenuButton(
+                      iconColor: _C.primary,
+                      iconSize: 18,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
                   ),
                 ],
               ),
